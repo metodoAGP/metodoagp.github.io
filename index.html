@@ -46,6 +46,37 @@ header .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:spac
 .plan h3{display:flex;align-items:center;gap:12px}
 .plan h3 img{width:38px;height:38px;flex:none}
 @media (max-width:560px){.tool{flex-direction:column;align-items:flex-start}}
+.dash{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:clamp(22px,4vw,44px)}
+.dash h3{display:flex;align-items:center;gap:12px}
+.dash h3 img{width:38px;height:38px;flex:none}
+.dash .frase{font:700 clamp(15px,2vw,18px)/1.3 var(--display);text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin:0 0 8px}
+.dash-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(20px,4vw,48px);align-items:start;margin-top:22px}
+.dash ul{margin:0;padding:0;list-style:none;display:grid;gap:14px}
+.dash li{padding-left:19px;position:relative}
+.dash li::before{content:"";position:absolute;left:0;top:.6em;width:9px;height:9px;border-radius:2px;background:var(--accent)}
+.dash li b{display:block}
+.dash li span{color:var(--mute)}
+.dash ul.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 28px;padding:0;list-style:none}
+.trio li{padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg);display:block}
+.trio li::before{display:none}
+.trio b{display:block;font:800 13px var(--body);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px}
+.trio li:nth-child(1) b{color:var(--a)}.trio li:nth-child(2) b{color:var(--g)}.trio li:nth-child(3) b{color:var(--p)}
+.trio span{font-size:14px;color:var(--mute)}
+.mock{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:10px}
+.dkpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dkpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.dkpi small{display:block;font:600 10.5px var(--body);letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
+.dkpi b{font:800 26px/1.1 var(--display);display:flex;align-items:center;gap:8px}
+.dkpi b i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.dkpi .ok{background:var(--g)}.dkpi .wa{background:#e0a21b}.dkpi .ba{background:var(--p)}
+.dbars{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.dbars small{font:600 10.5px var(--body);letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
+.dbars div{display:flex;align-items:flex-end;gap:5px;height:64px;margin-top:6px;border-bottom:1px solid var(--line);position:relative}
+.dbars div i{flex:1;background:var(--a);border-radius:3px 3px 0 0;opacity:.85}
+.dbars div u{position:absolute;left:0;right:0;border-top:1.5px dashed var(--p);text-decoration:none}
+.dbars em{display:flex;justify-content:space-between;font:500 10px var(--body);font-style:normal;color:var(--mute);margin-top:3px}
+.mock>small{color:var(--mute);font-size:12px}
+@media (max-width:760px){.dash-grid{grid-template-columns:1fr}.dash ul.trio{grid-template-columns:1fr}}
 .mark small{display:block;font:500 11px var(--body);letter-spacing:.14em;color:var(--mute);margin-top:4px}
 nav{display:flex;flex-wrap:wrap;gap:6px 22px;font-weight:500}
 nav a{text-decoration:none;color:var(--mute)}
@@ -128,6 +159,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
       <a href="#indicadores">Indicadores</a>
       <a href="analisis.html">Autodiagnóstico</a>
       <a href="#planificador">Planificador</a>
+      <a href="#dashboard">Dashboard</a>
       <a href="#contacto">Contacto</a>
     </nav>
   </div>
@@ -183,10 +215,10 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
       <h3>Los indicadores que miramos</h3>
       <p class="sub">Cuatro ratios de la mano de obra directa que dicen, sin opiniones, cuánto de lo que compras como tiempo llega a facturarse.</p>
       <div class="kpis">
-        <div class="kpi"><b>Rendimiento</b><code>tiempo facturado ÷ tiempo comprado</code><p>Cuántas de las horas pagadas se convierten en factura.</p></div>
-        <div class="kpi"><b>Absentismo</b><code>tiempo de ausencia ÷ tiempo comprado</code><p>Horas pagadas en las que el operario no está en el taller.</p></div>
-        <div class="kpi"><b>Productividad</b><code>tiempo invertido ÷ tiempo de presencia</code><p>Cuánto del tiempo presente se dedica a una reparación.</p></div>
-        <div class="kpi"><b>Eficiencia</b><code>tiempo facturado ÷ tiempo invertido</code><p>Cuánto se factura de lo que se trabaja.</p></div>
+        <div class="dkpi"><b>Rendimiento</b><code>tiempo facturado ÷ tiempo comprado</code><p>Cuántas de las horas pagadas se convierten en factura.</p></div>
+        <div class="dkpi"><b>Absentismo</b><code>tiempo de ausencia ÷ tiempo comprado</code><p>Horas pagadas en las que el operario no está en el taller.</p></div>
+        <div class="dkpi"><b>Productividad</b><code>tiempo invertido ÷ tiempo de presencia</code><p>Cuánto del tiempo presente se dedica a una reparación.</p></div>
+        <div class="dkpi"><b>Eficiencia</b><code>tiempo facturado ÷ tiempo invertido</code><p>Cuánto se factura de lo que se trabaja.</p></div>
       </div>
     </div>
   </section>
@@ -228,6 +260,44 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
     </div>
   </section>
 
+  <section id="dashboard" class="blk" style="padding-top:0">
+    <div class="wrap">
+      <div class="dash">
+        <ul class="trio" aria-label="Los tres pasos del Método AGP en tu taller">
+          <li><b>1 · Autodiagnóstico</b><span>Constatas dónde estás hoy.</span></li>
+          <li><b>2 · Planificador</b><span>Organizas, controlas y mides el trabajo.</span></li>
+          <li><b>3 · Dashboard</b><span>Haces seguimiento de lo que de verdad importa.</span></li>
+        </ul>
+        <p class="frase">«Lo que no se sigue, se descubre tarde.»</p>
+        <h3><img src="dashboard.png" alt="" width="38" height="38"><span>Dashboard de seguimiento</span></h3>
+        <p class="sub" style="margin-bottom:0">El autodiagnóstico te dice dónde estás; el planificador ordena el día a día. El dashboard cierra el círculo: el gerente ve en una sola pantalla si el taller va en la dirección correcta, antes de que el cierre del mes se lo cuente.</p>
+        <div class="dash-grid">
+          <ul>
+            <li><b>Pocos indicadores, los que mandan</b><span>Rendimiento, absentismo, productividad y eficiencia de la mano de obra, junto con los recambios por hora de chapa y el material de pintura por hora de pintura. Sin docenas de gráficos que nadie mira.</span></li>
+            <li><b>Cada cifra frente a su valor óptimo</b><span>Un número suelto no dice nada. Aquí cada indicador se compara con el valor de referencia del método y con tu mes anterior, con semáforo y desviación.</span></li>
+            <li><b>Evolución mensual, por cliente y por orden de reparación</b><span>Descubre qué meses, qué aseguradoras o clientes y qué órdenes se llevan el margen, y cuáles lo pierden.</span></li>
+            <li><b>De la desviación a la decisión</b><span>Cada alerta llega con su impacto en euros y una acción concreta: dónde se escapan horas, dónde se factura de menos y cuánto material de pintura se consume frente al esperado.</span></li>
+            <li><b>Siempre al día, sin duplicados</b><span>Con tus cierres mensuales y los datos del planificador, el panel se recalcula y se verifica. Lo que se acumula sustituye al periodo anterior y lo nuevo se añade al histórico.</span></li>
+          </ul>
+          <div class="mock" role="img" aria-label="Ilustración de un panel con cuatro indicadores y un gráfico de rendimiento mensual">
+            <div class="dkpis">
+              <div class="dkpi"><small>Rendimiento</small><b><i class="wa"></i>78 %</b></div>
+              <div class="dkpi"><small>Eficiencia</small><b><i class="ok"></i>96 %</b></div>
+              <div class="dkpi"><small>Recambios / h chapa</small><b><i class="ba"></i>38 €</b></div>
+              <div class="dkpi"><small>Material / h pintura</small><b><i class="ok"></i>27 €</b></div>
+            </div>
+            <div class="dbars"><small>Rendimiento por mes · objetivo 100 %</small>
+              <div><i style="height:62%"></i><i style="height:68%"></i><i style="height:66%"></i><i style="height:74%"></i><i style="height:72%"></i><i style="height:78%"></i><u style="bottom:100%"></u></div>
+              <em><span>Ene</span><span>Feb</span><span>Mar</span><span>Abr</span><span>May</span><span>Jun</span></em>
+            </div>
+            <small>Ilustración con datos de ejemplo. Demostración disponible a petición.</small>
+          </div>
+        </div>
+        <p style="margin:28px 0 0"><a class="btn" id="dashBtn" href="#contacto">Quiero ver el dashboard de mi taller</a></p>
+      </div>
+    </div>
+  </section>
+
   <section id="contacto" class="contact">
     <div class="wrap">
       <h3>Empieza por tus propios números</h3>
@@ -261,6 +331,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
   b.href = "mailto:" + EMAIL + "?subject=" + encodeURIComponent("Método AGP: quiero hablar de mi taller");
   t.textContent = EMAIL;
   document.getElementById("hablemosBtn").href = b.href;
+  document.getElementById("dashBtn").href = "mailto:" + EMAIL + "?subject=" + encodeURIComponent("Método AGP: quiero ver el dashboard de mi taller");
 </script>
 </body>
 </html>
