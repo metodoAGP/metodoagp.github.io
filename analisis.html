@@ -215,8 +215,8 @@ var F = [
  {id:"fp",   b:"A", l:"Horas facturadas de pintura", u:"h", m:"f", req:1, h:"Año completo."},
  // bloque G
  {id:"facMO",b:"G", l:"Facturación de mano de obra", u:"€/año", m:"qf", h:"Si lo dejas vacío se calcula con horas × precio."},
- {id:"rec",  b:"G", l:"Facturación de recambios", u:"€/año", m:"qf", req:1, h:"Sin IVA."},
- {id:"mat",  b:"G", l:"Facturación de material de pintura", u:"€/año", m:"qf", req:1, h:"Sin IVA."},
+ {id:"rec",  b:"G", l:"Facturación de recambios", u:"€/año", m:"qf", h:"Sin IVA. Si no lo sabes, déjalo vacío: lo indicaremos como dato pendiente."},
+ {id:"mat",  b:"G", l:"Facturación de material de pintura", u:"€/año", m:"qf", h:"Sin IVA. Si no lo sabes, déjalo vacío: lo indicaremos como dato pendiente."},
  // bloque P
  {id:"pers", b:"P", l:"Gasto de personal", u:"€/año", m:"f", h:"Toda la plantilla (directa e indirecta), con seguridad social."},
  {id:"estr", b:"P", l:"Gastos de estructura", u:"€/año", m:"f", h:"Gastos no facturables: alquiler, suministros, seguros, etc."},
@@ -286,7 +286,7 @@ function calc(){
   if(mode==="q"){ var r=v.rend/100; Fc=Cc*r; Fp=Cp*r; } else { Fc=v.fc; Fp=v.fp; }
   var Ft=Fc+Fp, R=Ft/C;
   var facMO = v.facMO!=null ? v.facMO : Ft*v.precio;
-  var rec=v.rec, mat=v.mat, tot=facMO+rec+mat;
+  var rec=v.rec, mat=v.mat, tot=facMO+(rec||0)+(mat||0);
   var o={v:v,dir:dir,C:C,Cc:Cc,Cp:Cp,Fc:Fc,Fp:Fp,Ft:Ft,R:R,facMO:facMO,rec:rec,mat:mat,tot:tot,precio:v.precio,miss:{}};
 
   // potencial
@@ -294,12 +294,14 @@ function calc(){
   o.perdidaMO = Math.max(0, moPot - Ft*v.precio);
   var potRec = T.recH*Cc, potMat = T.matH*Cp;
   o.potTot = moPot + potRec + potMat;
-  o.gapTot = Math.max(0, o.potTot - tot);
+  o.partial = (rec==null || mat==null);
+  o.potCmp = moPot + (rec!=null?potRec:0) + (mat!=null?potMat:0);
+  o.gapTot = Math.max(0, o.potCmp - tot);
 
   // ratios
-  o.recH = Fc>0 ? rec/Fc : null;
-  o.matH = Fp>0 ? mat/Fp : null;
-  o.mix = {mo:facMO/tot, mat:mat/tot, rec:rec/tot};
+  o.recH = (rec!=null && Fc>0) ? rec/Fc : null;
+  o.matH = (mat!=null && Fp>0) ? mat/Fp : null;
+  o.mix = (rec!=null && mat!=null && tot>0) ? {mo:facMO/tot, mat:mat/tot, rec:rec/tot} : null;
   o.horasRep = (v.reps>0) ? Ft/v.reps : null;
 
   // tiempos (modo completo)
@@ -343,12 +345,13 @@ function rows(o){
   }
   r.push(o.recH!=null?{n:"Recambios por hora de chapa facturada",val:eur2(o.recH),s:st(o.recH/T.recH,.95,.80),target:eur2(T.recH),dev:1-o.recH/T.recH,eur:Math.max(0,(T.recH-o.recH)*o.Fc),
     advice:"Revisa si se está facturando todo el recambio que se monta, el margen aplicado y las piezas que se compran y no se repercuten."}:
-    {n:"Recambios por hora de chapa facturada",val:"—",s:"na",miss:"Faltan horas facturadas de chapa."});
+    {n:"Recambios por hora de chapa facturada",val:"—",s:"na",miss:(o.rec==null?"Falta: facturación de recambios.":"Faltan horas facturadas de chapa.")});
   r.push(o.matH!=null?{n:"Material de pintura por hora de pintura facturada",val:eur2(o.matH),s:st(o.matH/T.matH,.95,.80),target:eur2(T.matH),dev:1-o.matH/T.matH,eur:Math.max(0,(T.matH-o.matH)*o.Fp),
     advice:"Comprueba que el material se factura según los tiempos de pintura y que se cobra lo que se consume, incluidos los productos auxiliares."}:
-    {n:"Material de pintura por hora de pintura facturada",val:"—",s:"na",miss:"Faltan horas facturadas de pintura."});
-  var d=Math.max(Math.abs(o.mix.mo-T.mix.mo),Math.abs(o.mix.mat-T.mix.mat),Math.abs(o.mix.rec-T.mix.rec));
-  r.push({n:"Reparto de la facturación (mano de obra / pintura / recambios)",val:pct(o.mix.mo)+" / "+pct(o.mix.mat)+" / "+pct(o.mix.rec),
+    {n:"Material de pintura por hora de pintura facturada",val:"—",s:"na",miss:(o.mat==null?"Falta: facturación de material de pintura.":"Faltan horas facturadas de pintura.")});
+  var d=o.mix?Math.max(Math.abs(o.mix.mo-T.mix.mo),Math.abs(o.mix.mat-T.mix.mat),Math.abs(o.mix.rec-T.mix.rec)):0;
+  if(!o.mix) r.push({n:"Reparto de la facturación (mano de obra / pintura / recambios)",val:"—",s:"na",miss:"Faltan: facturación de recambios y de material de pintura."});
+  else r.push({n:"Reparto de la facturación (mano de obra / pintura / recambios)",val:pct(o.mix.mo)+" / "+pct(o.mix.mat)+" / "+pct(o.mix.rec),
     s:d<=.05?"ok":(d<=.10?"warn":"bad"),target:pct(T.mix.mo)+" / "+pct(T.mix.mat)+" / "+pct(T.mix.rec),dev:d*2,
     advice:"Un reparto desviado suele indicar que se vende poca mano de obra en relación al recambio o que el material de pintura está infrafacturado."});
   // tiempos
@@ -393,7 +396,7 @@ function render(o){
   h+='<h2>Tu diagnóstico</h2><p class="sub">Calculado con los datos que has introducido. Cifras anuales sin IVA.</p>';
   h+='<div class="big">'+
      '<div><b>'+pct(o.R)+'</b><span>Rendimiento (horas facturadas / compradas)</span></div>'+
-     '<div class="loss"><b>'+eur(o.gapTot)+'</b><span>Facturación anual que no llega a tu taller frente al potencial con rendimiento al 100 %</span></div>'+
+     '<div class="loss"><b>'+eur(o.gapTot)+'</b><span>Facturación anual que no llega a tu taller frente al potencial con rendimiento al 100 %'+(o.partial?' (solo con los datos introducidos)':'')+'</span></div>'+
      '<div><b>'+hrs(Math.max(0,o.C-o.Ft))+'</b><span>Horas compradas que no se facturan al año</span></div>'+
      '</div>';
 
@@ -401,10 +404,10 @@ function render(o){
   h+='<div class="block"><h3>Facturación actual y potencial</h3><div class="scroll"><table class="tbl"><thead><tr><th></th><th class="n">Actual</th><th class="n">Con rendimiento al 100 %</th></tr></thead><tbody>'+
      '<tr><td>Horas facturadas (chapa + pintura)</td><td class="n">'+hrs(o.Ft)+'</td><td class="n">'+hrs(o.C)+'</td></tr>'+
      '<tr><td>Mano de obra</td><td class="n">'+eur(o.facMO)+'</td><td class="n">'+eur(o.C*o.precio)+'</td></tr>'+
-     '<tr><td>Recambios</td><td class="n">'+eur(o.rec)+'</td><td class="n">'+eur(T.recH*o.Cc)+'</td></tr>'+
-     '<tr><td>Material de pintura</td><td class="n">'+eur(o.mat)+'</td><td class="n">'+eur(T.matH*o.Cp)+'</td></tr>'+
-     '<tr><td><b>Total</b></td><td class="n"><b>'+eur(o.tot)+'</b></td><td class="n"><b>'+eur(o.potTot)+'</b></td></tr>'+
-     '</tbody></table></div></div>';
+     '<tr><td>Recambios</td><td class="n">'+(o.rec!=null?eur(o.rec):'<span class="miss">Sin dato</span>')+'</td><td class="n">'+eur(T.recH*o.Cc)+'</td></tr>'+
+     '<tr><td>Material de pintura</td><td class="n">'+(o.mat!=null?eur(o.mat):'<span class="miss">Sin dato</span>')+'</td><td class="n">'+eur(T.matH*o.Cp)+'</td></tr>'+
+     '<tr><td><b>Total</b></td><td class="n"><b>'+(o.partial?'<span class="miss">Incompleto</span>':eur(o.tot))+'</b></td><td class="n"><b>'+eur(o.potTot)+'</b></td></tr>'+
+     '</tbody></table></div>'+(o.partial?'<p class="note" style="margin-top:12px">Falta la facturación de '+(o.rec==null&&o.mat==null?'recambios y de material de pintura':(o.rec==null?'recambios':'material de pintura'))+'. Añádela para ver el total y todos los indicadores asociados.</p>':'')+'</div>';
 
   // cuellos de botella
   var cands=R.filter(function(x){return x.s==="warn"||x.s==="bad";}).sort(function(a,b){
@@ -456,7 +459,7 @@ function render(o){
 
   // CTA
   var sub="Método AGP: mi autodiagnóstico";
-  var body="Hola, he hecho el autodiagnóstico en metodoagp.com.\n\nRendimiento: "+pct(o.R)+"\nFacturación actual: "+eur(o.tot)+"\nPotencial con rendimiento al 100 %: "+eur(o.potTot)+"\nDiferencia anual: "+eur(o.gapTot)+"\n\nMe gustaría que revisarais mis resultados.\nTaller:\nTeléfono:";
+  var body="Hola, he hecho el autodiagnóstico en metodoagp.com.\n\nRendimiento: "+pct(o.R)+"\nFacturación actual: "+(o.partial?"incompleta":eur(o.tot))+"\nPotencial con rendimiento al 100 %: "+eur(o.potTot)+"\nDiferencia anual: "+eur(o.gapTot)+(o.partial?" (parcial)":"")+"\n\nMe gustaría que revisarais mis resultados.\nTaller:\nTeléfono:";
   h+='<div class="cta2 noprint"><h3>¿Quieres un plan para recuperar ese potencial?</h3><div class="actions">'+
     '<a class="btn" id="mailRes" href="mailto:'+EMAIL+'?subject='+encodeURIComponent(sub)+'&body='+encodeURIComponent(body)+'">Revisar mis resultados con un experto</a>'+
     '<button class="btn ghost" type="button" id="prt">Guardar como PDF</button></div></div>';
