@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Autodiagnóstico AGP | Método AGP</title>
 <meta name="description" content="Autodiagnóstico gratuito para talleres de chapa y pintura: calcula tu rendimiento, tu potencial de facturación y tus cuellos de botella con el Método AGP.">
-<link rel="icon" type="image/png" sizes="64x64" href="img/favicon.png">
-<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&display=swap">
@@ -133,7 +133,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
 
 <header>
   <div class="wrap">
-    <a class="mark" href="index.html"><img src="img/logo.png" alt="" width="36" height="36"><div>Método <span>AGP</span><small>EXPERTOS EN RENTABILIDAD</small></div></a>
+    <a class="mark" href="index.html"><img src="logo.png" alt="" width="36" height="36"><div>Método <span>AGP</span><small>EXPERTOS EN RENTABILIDAD</small></div></a>
     <nav aria-label="Principal"><a href="index.html">← Volver a la web</a></nav>
   </div>
 </header>
@@ -429,7 +429,7 @@ function render(o){
   var L=o.lAct, L1=o.l100, P=T.precio;
   function pr(n,k){return '<tr><td>'+n+'</td><td class="n">'+lit(L[k])+'</td><td class="n">'+eur(L[k]*P[k])+'</td><td class="n">'+lit(L1[k])+'</td><td class="n">'+eur(L1[k]*P[k])+'</td></tr>';}
   var real=(o.v.lBase!=null||o.v.lBar!=null||o.v.lFon!=null);
-  h+='<div class="block"><h3><img class="hic" src="img/pintura.png" alt="" width="26" height="26">Consumo de material de pintura</h3><p class="sub">Litros listos al uso y valor en euros que consumiría tu sección de pintura, calculados sobre las horas facturadas de pintura ('+hrs(o.Fp)+' al rendimiento actual y '+hrs(o.Cp)+' al 100 %).</p>'+
+  h+='<div class="block"><h3><img class="hic" src="pintura.png" alt="" width="26" height="26">Consumo de material de pintura</h3><p class="sub">Litros listos al uso y valor en euros que consumiría tu sección de pintura, calculados sobre las horas facturadas de pintura ('+hrs(o.Fp)+' al rendimiento actual y '+hrs(o.Cp)+' al 100 %).</p>'+
      '<div class="scroll"><table class="tbl"><thead><tr><th>Producto</th><th class="n">Litros (rend. actual)</th><th class="n">Valor</th><th class="n">Litros (100 %)</th><th class="n">Valor</th></tr></thead><tbody>'+
      pr("Color base agua","base")+pr("Barniz","barniz")+pr("Fondo","fondo")+
      '<tr><td><b>Total</b></td><td class="n"><b>'+lit(L.base+L.barniz+L.fondo)+'</b></td><td class="n"><b>'+eur(o.eAct)+'</b></td><td class="n"><b>'+lit(L1.base+L1.barniz+L1.fondo)+'</b></td><td class="n"><b>'+eur(o.e100)+'</b></td></tr>'+
