@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Método AGP</title>
+<meta name="description" content="Método AGP: analizar, gestionar y progresar para mejorar la rentabilidad de tu taller de chapa y pintura.">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: cabecera fina, portada con la frase central y los tres pasos A-G-P como banda de color, después indicadores, planificador y contacto */
+:root{
+  --bg:#f4f3f0; --surface:#ffffff; --ink:#1c1e21; --mute:#5f646b; --line:#d9d6d0;
+  --a:#1f5f8b; --g:#2f8a5b; --p:#d9572b; --accent:#d9572b; --on-color:#ffffff;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141517; --surface:#1e2023; --ink:#ecebe8; --mute:#a0a4aa; --line:#33363a;
+  --a:#4f9bd0; --g:#4fb883; --p:#ef7a50; --accent:#ef7a50; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#141517; --surface:#1e2023; --ink:#ecebe8; --mute:#a0a4aa; --line:#33363a;
+  --a:#4f9bd0; --g:#4fb883; --p:#ef7a50; --accent:#ef7a50; color-scheme:dark;}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--body);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1040px;margin-inline:auto;padding-inline:max(20px,env(safe-area-inset-left,0px))}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+
+header{border-bottom:1px solid var(--line)}
+header .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px;padding-block:16px}
+.mark{font:800 26px/1 var(--display);letter-spacing:.04em;text-transform:uppercase;text-decoration:none}
+.mark span{color:var(--accent)}
+.mark{display:flex;align-items:center;gap:12px}
+.mark img{width:36px;height:36px;flex:none}
+.tool{display:flex;gap:16px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:clamp(18px,3vw,28px);margin-bottom:clamp(16px,3vw,28px)}
+.tool img{width:52px;height:52px;flex:none;align-self:flex-start}
+.tool h3{margin-bottom:6px}
+.tool .frase{font:700 clamp(15px,2vw,18px)/1.3 var(--display);text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin:0 0 8px;max-width:none}
+.tool p{margin:0 0 14px;color:var(--mute);max-width:60ch}
+.tool .btn{padding:10px 18px}
+.plan h3{display:flex;align-items:center;gap:12px}
+.plan h3 img{width:38px;height:38px;flex:none}
+@media (max-width:560px){.tool{flex-direction:column;align-items:flex-start}}
+.dash{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:clamp(22px,4vw,44px)}
+.dash h3{display:flex;align-items:center;gap:12px}
+.dash h3 img{width:38px;height:38px;flex:none}
+.dash .frase{font:700 clamp(15px,2vw,18px)/1.3 var(--display);text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin:0 0 8px}
+.dash-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(20px,4vw,48px);align-items:start;margin-top:22px}
+.dash ul{margin:0;padding:0;list-style:none;display:grid;gap:14px}
+.dash li{padding-left:19px;position:relative}
+.dash li::before{content:"";position:absolute;left:0;top:.6em;width:9px;height:9px;border-radius:2px;background:var(--accent)}
+.dash li b{display:block}
+.dash li span{color:var(--mute)}
+.mock{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:10px}
+.dkpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.dkpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.dkpi small{display:block;font:600 10.5px var(--body);letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
+.dkpi b{font:800 26px/1.1 var(--display);display:flex;align-items:center;gap:8px}
+.dkpi b i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.dkpi .ok{background:var(--g)}.dkpi .wa{background:#e0a21b}.dkpi .ba{background:var(--p)}
+.dbars{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.dbars small{font:600 10.5px var(--body);letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
+.dbars div{display:flex;align-items:flex-end;gap:5px;height:64px;margin-top:6px;border-bottom:1px solid var(--line);position:relative}
+.dbars div i{flex:1;background:var(--a);border-radius:3px 3px 0 0;opacity:.85}
+.dbars div u{position:absolute;left:0;right:0;border-top:1.5px dashed var(--p);text-decoration:none}
+.dbars em{display:flex;justify-content:space-between;font:500 10px var(--body);font-style:normal;color:var(--mute);margin-top:3px}
+.mock>small{color:var(--mute);font-size:12px}
+@media (max-width:760px){.dash-grid{grid-template-columns:1fr}}
+.mark small{display:block;font:500 11px var(--body);letter-spacing:.14em;color:var(--mute);margin-top:4px}
+nav{display:flex;flex-wrap:wrap;gap:6px 22px;font-weight:500}
+nav a{text-decoration:none;color:var(--mute)}
+nav a:hover{color:var(--ink)}
+
+.hero{padding-block:clamp(40px,8vw,96px) clamp(32px,6vw,64px)}
+.eyebrow{font:600 12px var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin:0 0 14px}
+h1{font:800 clamp(27px,8.4vw,76px)/1 var(--display);letter-spacing:-.005em;text-transform:uppercase;margin:0}
+h1 span{display:block}
+h1 em{font-style:normal;color:var(--accent)}
+.lead{font-size:clamp(17px,2.2vw,20px);max-width:58ch;color:var(--mute);margin:22px 0 28px}
+.btn{display:inline-block;background:var(--ink);color:var(--bg);text-decoration:none;font-weight:600;padding:13px 22px;border-radius:6px}
+.btn:hover{background:var(--accent);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink);margin-left:8px}
+.btn.ghost:hover{background:var(--ink);color:var(--bg)}
+.cta{display:flex;flex-wrap:wrap;gap:10px}
+.cta .btn.ghost{margin-left:0}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr)}
+.step{padding:clamp(24px,4vw,44px) max(20px,2vw);color:var(--on-color);min-width:0}
+.step:nth-child(1){background:var(--a)}
+.step:nth-child(2){background:var(--g)}
+.step:nth-child(3){background:var(--p)}
+.step .l{font:800 clamp(64px,10vw,120px)/.85 var(--display);opacity:.95}
+.step h2{font:700 24px/1.1 var(--display);letter-spacing:.06em;text-transform:uppercase;margin:12px 0 10px}
+.step ul{margin:0;padding-left:18px}
+.step li{margin-bottom:6px}
+.step li::marker{color:rgba(255,255,255,.7)}
+
+section.blk{padding-block:clamp(44px,7vw,84px)}
+h3{font:800 clamp(30px,4.5vw,44px)/1.02 var(--display);text-transform:uppercase;margin:0 0 10px;text-wrap:balance}
+.sub{color:var(--mute);max-width:62ch;margin:0 0 28px}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0;border-top:2px solid var(--ink)}
+.kpi{padding:20px 20px 22px 0;border-bottom:1px solid var(--line)}
+.kpi b{display:block;font:700 22px/1.1 var(--display);letter-spacing:.05em;text-transform:uppercase}
+.kpi code{display:block;margin-top:10px;font:500 14px var(--body);color:var(--mute);font-variant-numeric:tabular-nums}
+.kpi p{margin:8px 0 0;font-size:15px}
+
+.plan{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(20px,4vw,48px);align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:clamp(22px,4vw,44px)}
+.plan ul{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.plan li{display:flex;gap:10px;align-items:baseline}
+.plan li::before{content:"";flex:none;width:9px;height:9px;border-radius:2px;background:var(--accent);transform:translateY(-1px)}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.col{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;display:grid;gap:6px;align-content:start}
+.col span{font:700 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.card{height:34px;border-radius:5px}
+.c1{background:#8fe04f}.c2{background:#f2d03f}.c3{background:#5fb7dc}.c4{background:#ee7767}.c5{background:#f5a03a}.c6{background:#b98ec6}
+.board small{grid-column:1/-1;color:var(--mute);font-size:12px}
+
+.contact{background:var(--ink);color:var(--bg)}
+.contact .wrap{display:flex;flex-wrap:wrap;gap:20px 40px;justify-content:space-between;align-items:center;padding-block:clamp(40px,6vw,72px)}
+.contact h3{margin:0;max-width:16ch}
+.contact .btn{background:var(--bg);color:var(--ink)}
+.contact .btn:hover{background:var(--accent);color:#fff}
+.bottomcta .wrap{display:flex;flex-wrap:wrap;gap:12px;padding-block:clamp(28px,4vw,44px)}
+.bottomcta .btn.ghost{margin-left:0}
+.mail{display:block;margin-top:12px;font-size:15px;opacity:.85;word-break:break-all}
+footer{padding-block:22px;color:var(--mute);font-size:13px}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 20px}
+
+@media (max-width:760px){
+  .steps{grid-template-columns:1fr}
+  .step{display:grid;grid-template-columns:auto 1fr;gap:4px 18px;align-items:start}
+  .step .l{grid-row:1/3;font-size:72px}
+  .step h2{margin-top:2px}
+  .plan{grid-template-columns:1fr}
+  .btn.ghost{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="mark" href="#top"><img src="logo.png" alt="" width="36" height="36"><div>Método <span>AGP</span><small>EXPERTOS EN RENTABILIDAD</small></div></a>
+    <nav aria-label="Principal">
+      <a href="#metodo">El método</a>
+      <a href="#indicadores">Indicadores</a>
+      <a href="analisis.html">Autodiagnóstico</a>
+      <a href="#planificador">Planificador</a>
+      <a href="#dashboard">Dashboard</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap hero">
+    <p class="eyebrow">Talleres de chapa y pintura</p>
+    <h1><span>La hora más cara</span> <span>es la que <em>no se vende.</em></span></h1>
+    <p class="lead">El Método AGP convierte las horas, los recambios y el material de pintura de tu taller en decisiones claras para ganar más con el mismo equipo.</p>
+  </div>
+
+  <section id="metodo" aria-label="El método en tres pasos">
+    <div class="steps">
+      <article class="step">
+        <div class="l">A</div>
+        <div>
+          <h2>Analizar</h2>
+          <ul>
+            <li>Facturación en euros y en horas</li>
+            <li>Coste y rendimiento de la mano de obra</li>
+            <li>Rentabilidad de mano de obra, recambios y pintura</li>
+          </ul>
+        </div>
+      </article>
+      <article class="step">
+        <div class="l">G</div>
+        <div>
+          <h2>Gestionar</h2>
+          <ul>
+            <li>Cuadro de mando con indicadores claros</li>
+            <li>Evolución mensual y desviaciones</li>
+            <li>Comparación por mes, cliente y orden de reparación</li>
+          </ul>
+        </div>
+      </article>
+      <article class="step">
+        <div class="l">P</div>
+        <div>
+          <h2>Progresar</h2>
+          <ul>
+            <li>Oportunidades de mejora con cifras</li>
+            <li>Decisiones concretas para el gerente</li>
+            <li>Revisión cada mes con los datos nuevos</li>
+          </ul>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="indicadores" class="blk">
+    <div class="wrap">
+      <h3>Los indicadores que miramos</h3>
+      <p class="sub">Cuatro ratios de la mano de obra directa que dicen, sin opiniones, cuánto de lo que compras como tiempo llega a facturarse.</p>
+      <div class="kpis">
+        <div class="dkpi"><b>Rendimiento</b><code>tiempo facturado ÷ tiempo comprado</code><p>Cuántas de las horas pagadas se convierten en factura.</p></div>
+        <div class="dkpi"><b>Absentismo</b><code>tiempo de ausencia ÷ tiempo comprado</code><p>Horas pagadas en las que el operario no está en el taller.</p></div>
+        <div class="dkpi"><b>Productividad</b><code>tiempo invertido ÷ tiempo de presencia</code><p>Cuánto del tiempo presente se dedica a una reparación.</p></div>
+        <div class="dkpi"><b>Eficiencia</b><code>tiempo facturado ÷ tiempo invertido</code><p>Cuánto se factura de lo que se trabaja.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="autodiagnostico" class="blk" style="padding-top:0;padding-bottom:0">
+    <div class="wrap">
+      <div class="tool">
+        <img src="autodiagnostico.png" alt="" width="52" height="52">
+        <div>
+          <p class="frase">«Si no sabes dónde estás, un mapa no te puede ayudar.»</p>
+          <h3>Autodiagnóstico gratuito</h3>
+          <p>Introduce los datos de tu taller y descubre tu rendimiento, cuánto facturación potencial se te escapa y tus tres principales cuellos de botella. Tus datos no salen de tu navegador.</p>
+          <a class="btn" href="analisis.html">Hacer mi autodiagnóstico</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="planificador" class="blk" style="padding-top:0">
+    <div class="wrap">
+      <div class="plan">
+        <div>
+          <h3><img src="planificador.png" alt="" width="38" height="38"><span>Planificador de taller</span></h3>
+          <p class="sub" style="margin-bottom:18px">Una pizarra de producción con una pregunta de fondo: dónde se para el trabajo.</p>
+          <ul>
+            <li>Carga frente a capacidad de chapa, pintura y mecánica por día</li>
+            <li>Días de permanencia en cada fase y vehículos que se acumulan</li>
+            <li>Esperas por aseguradora y por proveedor de piezas</li>
+            <li>Vehículos que no saldrán en su fecha de entrega, y por qué</li>
+          </ul>
+        </div>
+        <div class="board" role="img" aria-label="Ilustración de una pizarra con tarjetas de colores en tres columnas">
+          <div class="col"><span>Valoración</span><div class="card c4"></div><div class="card c2"></div></div>
+          <div class="col"><span>Chapa</span><div class="card c1"></div><div class="card c3"></div><div class="card c5"></div></div>
+          <div class="col"><span>Pintura</span><div class="card c6"></div><div class="card c1"></div></div>
+          <small>Ilustración. Demostración disponible a petición.</small>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="dashboard" class="blk" style="padding-top:0">
+    <div class="wrap">
+      <div class="dash">
+        <p class="frase">«Lo que no se evalúa, se devalúa.»</p>
+        <h3><img src="dashboard.png" alt="" width="38" height="38"><span>Dashboard de seguimiento</span></h3>
+        <p class="sub" style="margin-bottom:0">El autodiagnóstico te dice dónde estás; el planificador ordena el día a día. El dashboard cierra el círculo: el gerente ve en una sola pantalla si el taller va en la dirección correcta, antes de que el cierre del mes se lo cuente.</p>
+        <div class="dash-grid">
+          <ul>
+            <li><b>Margen bruto por línea de negocio</b><span>Mano de obra, recambios y material de pintura por separado, mes a mes y frente a su objetivo. Sabes qué línea genera margen y cuál lo destruye.</span></li>
+            <li><b>Capacidad no facturada, valorada en euros</b><span>Cada punto de rendimiento que pierdes es ingreso que no llega y coste fijo que no absorbes. Ves el coste real de tu hora frente al óptimo.</span></li>
+            <li><b>Desviaciones cuantificadas, antes del cierre</b><span>Variaciones sobre objetivo por mes, cliente y orden de reparación, con alertas anticipadas. Decides con información de hoy, no con la contabilidad del mes pasado.</span></li>
+          </ul>
+          <div class="mock" role="img" aria-label="Ilustración de un panel con cuatro indicadores y un gráfico de rendimiento mensual">
+            <div class="dkpis">
+              <div class="dkpi"><small>Rendimiento</small><b><i class="wa"></i>78 %</b></div>
+              <div class="dkpi"><small>Eficiencia</small><b><i class="ok"></i>96 %</b></div>
+              <div class="dkpi"><small>Recambios / h chapa</small><b><i class="ba"></i>38 €</b></div>
+              <div class="dkpi"><small>Material / h pintura</small><b><i class="ok"></i>27 €</b></div>
+            </div>
+            <div class="dbars"><small>Rendimiento por mes · objetivo 100 %</small>
+              <div><i style="height:62%"></i><i style="height:68%"></i><i style="height:66%"></i><i style="height:74%"></i><i style="height:72%"></i><i style="height:78%"></i><u style="bottom:100%"></u></div>
+              <em><span>Ene</span><span>Feb</span><span>Mar</span><span>Abr</span><span>May</span><span>Jun</span></em>
+            </div>
+            <small>Ilustración con datos de ejemplo. Demostración disponible a petición.</small>
+          </div>
+        </div>
+        <p style="margin:28px 0 0"><a class="btn" id="dashBtn" href="#contacto">Quiero ver el dashboard de mi taller</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="contacto" class="contact">
+    <div class="wrap">
+      <h3>Empieza por tus propios números</h3>
+      <div>
+        <a class="btn" id="mailBtn" href="#">Escríbeme</a>
+        <span class="mail" id="mailTxt"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="bottomcta" aria-label="Accesos rápidos">
+    <div class="wrap">
+      <a class="btn" href="analisis.html">Haz tu autodiagnóstico gratis</a>
+      <a class="btn ghost" id="hablemosBtn" href="#contacto">Hablemos de tu taller</a>
+      <a class="btn ghost" href="#metodo">Ver cómo funciona</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Expertos en Rentabilidad</span>
+    <span>Método AGP · Analizar, Gestionar, Progresar</span>
+  </div>
+</footer>
+
+<script>
+  // Cambia aquí el correo de contacto (sale en el botón y en el texto)
+  var EMAIL = "expertosenrentabilidad@gmail.com";
+  var b = document.getElementById("mailBtn"), t = document.getElementById("mailTxt");
+  b.href = "mailto:" + EMAIL + "?subject=" + encodeURIComponent("Método AGP: quiero hablar de mi taller");
+  t.textContent = EMAIL;
+  document.getElementById("hablemosBtn").href = b.href;
+  document.getElementById("dashBtn").href = "mailto:" + EMAIL + "?subject=" + encodeURIComponent("Método AGP: quiero ver el dashboard de mi taller");
+</script>
+</body>
+</html>
