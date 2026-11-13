@@ -56,12 +56,6 @@ header .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:spac
 .dash li::before{content:"";position:absolute;left:0;top:.6em;width:9px;height:9px;border-radius:2px;background:var(--accent)}
 .dash li b{display:block}
 .dash li span{color:var(--mute)}
-.dash ul.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 28px;padding:0;list-style:none}
-.trio li{padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg);display:block}
-.trio li::before{display:none}
-.trio b{display:block;font:800 13px var(--body);letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px}
-.trio li:nth-child(1) b{color:var(--a)}.trio li:nth-child(2) b{color:var(--g)}.trio li:nth-child(3) b{color:var(--p)}
-.trio span{font-size:14px;color:var(--mute)}
 .mock{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:10px}
 .dkpis{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .dkpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
@@ -76,7 +70,7 @@ header .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:spac
 .dbars div u{position:absolute;left:0;right:0;border-top:1.5px dashed var(--p);text-decoration:none}
 .dbars em{display:flex;justify-content:space-between;font:500 10px var(--body);font-style:normal;color:var(--mute);margin-top:3px}
 .mock>small{color:var(--mute);font-size:12px}
-@media (max-width:760px){.dash-grid{grid-template-columns:1fr}.dash ul.trio{grid-template-columns:1fr}}
+@media (max-width:760px){.dash-grid{grid-template-columns:1fr}}
 .mark small{display:block;font:500 11px var(--body);letter-spacing:.14em;color:var(--mute);margin-top:4px}
 nav{display:flex;flex-wrap:wrap;gap:6px 22px;font-weight:500}
 nav a{text-decoration:none;color:var(--mute)}
@@ -263,12 +257,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
   <section id="dashboard" class="blk" style="padding-top:0">
     <div class="wrap">
       <div class="dash">
-        <ul class="trio" aria-label="Los tres pasos del Método AGP en tu taller">
-          <li><b>1 · Autodiagnóstico</b><span>Constatas dónde estás hoy.</span></li>
-          <li><b>2 · Planificador</b><span>Organizas, controlas y mides el trabajo.</span></li>
-          <li><b>3 · Dashboard</b><span>Haces seguimiento de lo que de verdad importa.</span></li>
-        </ul>
-        <p class="frase">«Lo que no se sigue, se descubre tarde.»</p>
+        <p class="frase">«Lo que no se evalúa, se devalúa.»</p>
         <h3><img src="dashboard.png" alt="" width="38" height="38"><span>Dashboard de seguimiento</span></h3>
         <p class="sub" style="margin-bottom:0">El autodiagnóstico te dice dónde estás; el planificador ordena el día a día. El dashboard cierra el círculo: el gerente ve en una sola pantalla si el taller va en la dirección correcta, antes de que el cierre del mes se lo cuente.</p>
         <div class="dash-grid">
