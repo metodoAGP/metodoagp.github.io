@@ -101,6 +101,8 @@ h3{font:800 clamp(30px,4.5vw,44px)/1.02 var(--display);text-transform:uppercase;
 .contact h3{margin:0;max-width:16ch}
 .contact .btn{background:var(--bg);color:var(--ink)}
 .contact .btn:hover{background:var(--accent);color:#fff}
+.bottomcta .wrap{display:flex;flex-wrap:wrap;gap:12px;padding-block:clamp(28px,4vw,44px)}
+.bottomcta .btn.ghost{margin-left:0}
 .mail{display:block;margin-top:12px;font-size:15px;opacity:.85;word-break:break-all}
 footer{padding-block:22px;color:var(--mute);font-size:13px}
 footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 20px}
@@ -136,11 +138,6 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
     <p class="eyebrow">Talleres de chapa y pintura</p>
     <h1><span>La hora más cara</span> <span>es la que <em>no se vende.</em></span></h1>
     <p class="lead">El Método AGP convierte las horas, los recambios y el material de pintura de tu taller en decisiones claras para ganar más con el mismo equipo.</p>
-    <div class="cta">
-      <a class="btn" href="analisis.html">Haz tu autodiagnóstico gratis</a>
-      <a class="btn ghost" href="#contacto">Hablemos de tu taller</a>
-      <a class="btn ghost" href="#metodo">Ver cómo funciona</a>
-    </div>
   </div>
 
   <section id="metodo" aria-label="El método en tres pasos">
@@ -240,6 +237,14 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
       </div>
     </div>
   </section>
+
+  <section class="bottomcta" aria-label="Accesos rápidos">
+    <div class="wrap">
+      <a class="btn" href="analisis.html">Haz tu autodiagnóstico gratis</a>
+      <a class="btn ghost" id="hablemosBtn" href="#contacto">Hablemos de tu taller</a>
+      <a class="btn ghost" href="#metodo">Ver cómo funciona</a>
+    </div>
+  </section>
 </main>
 
 <footer>
@@ -255,6 +260,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
   var b = document.getElementById("mailBtn"), t = document.getElementById("mailTxt");
   b.href = "mailto:" + EMAIL + "?subject=" + encodeURIComponent("Método AGP: quiero hablar de mi taller");
   t.textContent = EMAIL;
+  document.getElementById("hablemosBtn").href = b.href;
 </script>
 </body>
 </html>
