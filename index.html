@@ -53,6 +53,7 @@ header .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:spac
 .dash h3{display:flex;align-items:center;gap:12px}
 .dash h3 img{width:38px;height:38px;flex:none}
 .dash .frase{font:700 clamp(15px,2vw,18px)/1.3 var(--display);text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin:0 0 8px}
+.shot{display:block}.shot img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:10px}.shotc{display:block;margin-top:8px;color:var(--mute);font-size:13px}
 .dash-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(20px,4vw,48px);align-items:start;margin-top:22px}
 .dash ul{margin:0;padding:0;list-style:none;display:grid;gap:14px}
 .dash li{padding-left:19px;position:relative}
@@ -212,10 +213,10 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
       <h3>Los indicadores que miramos</h3>
       <p class="sub">Cuatro ratios de la mano de obra directa que dicen, sin opiniones, cuánto de lo que compras como tiempo llega a facturarse.</p>
       <div class="kpis">
-        <div class="dkpi"><b>Rendimiento</b><code>tiempo facturado ÷ tiempo comprado</code><p>Cuántas de las horas pagadas se convierten en factura.</p></div>
-        <div class="dkpi"><b>Absentismo</b><code>tiempo de ausencia ÷ tiempo comprado</code><p>Horas pagadas en las que el operario no está en el taller.</p></div>
-        <div class="dkpi"><b>Productividad</b><code>tiempo invertido ÷ tiempo de presencia</code><p>Cuánto del tiempo presente se dedica a una reparación.</p></div>
-        <div class="dkpi"><b>Eficiencia</b><code>tiempo facturado ÷ tiempo invertido</code><p>Cuánto se factura de lo que se trabaja.</p></div>
+        <div class="kpi"><b>Rendimiento</b><code>tiempo facturado ÷ tiempo comprado</code><p>Cuántas de las horas pagadas se convierten en factura.</p></div>
+        <div class="kpi"><b>Absentismo</b><code>tiempo de ausencia ÷ tiempo comprado</code><p>Horas pagadas en las que el operario no está en el taller.</p></div>
+        <div class="kpi"><b>Productividad</b><code>tiempo invertido ÷ tiempo de presencia</code><p>Cuánto del tiempo presente se dedica a una reparación.</p></div>
+        <div class="kpi"><b>Eficiencia</b><code>tiempo facturado ÷ tiempo invertido</code><p>Cuánto se factura de lo que se trabaja.</p></div>
       </div>
     </div>
   </section>
@@ -265,23 +266,12 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
         <p class="sub" style="margin-bottom:0">El autodiagnóstico te dice dónde estás; el planificador ordena el día a día. El dashboard cierra el círculo: el gerente ve en una sola pantalla si el taller va en la dirección correcta, antes de que el cierre del mes se lo cuente.</p>
         <div class="dash-grid">
           <ul>
-            <li><b>Margen bruto por línea de negocio</b><span>Mano de obra, recambios y material de pintura por separado, mes a mes y frente a su objetivo. Sabes qué línea genera margen y cuál lo destruye.</span></li>
-            <li><b>Capacidad no facturada, valorada en euros</b><span>Cada punto de rendimiento que pierdes es ingreso que no llega y coste fijo que no absorbes. Ves el coste real de tu hora frente al óptimo.</span></li>
-            <li><b>Desviaciones cuantificadas, antes del cierre</b><span>Variaciones sobre objetivo por mes, cliente y orden de reparación, con alertas anticipadas. Decides con información de hoy, no con la contabilidad del mes pasado.</span></li>
+            <li><b>Las tres horas de tu taller, en una sola pantalla</b><span>Precio de venta, coste óptimo y coste real de la hora, lado a lado. Sabes si pierdes dinero por tarifa o por rendimiento, y cuántos euros te cuesta cada causa.</span></li>
+            <li><b>Cada punto de rendimiento, valorado en euros</b><span>Horas compradas frente a horas facturadas, año contra año y en TAM de 12 meses, con fechas claras de inicio y fin. Ves cuánta facturación se te escapa y dónde.</span></li>
+            <li><b>Margen por línea y rentabilidad por compañía</b><span>Mano de obra, recambios y pintura por separado, y facturación, horas y valores por hora de cada aseguradora. Datos para negociar, no sensaciones.</span></li>
           </ul>
-          <div class="mock" role="img" aria-label="Ilustración de un panel con cuatro indicadores y un gráfico de rendimiento mensual">
-            <div class="dkpis">
-              <div class="dkpi"><small>Rendimiento</small><b><i class="wa"></i>78 %</b></div>
-              <div class="dkpi"><small>Eficiencia</small><b><i class="ok"></i>96 %</b></div>
-              <div class="dkpi"><small>Recambios / h chapa</small><b><i class="ba"></i>38 €</b></div>
-              <div class="dkpi"><small>Material / h pintura</small><b><i class="ok"></i>27 €</b></div>
-            </div>
-            <div class="dbars"><small>Rendimiento por mes · objetivo 100 %</small>
-              <div><i style="height:62%"></i><i style="height:68%"></i><i style="height:66%"></i><i style="height:74%"></i><i style="height:72%"></i><i style="height:78%"></i><u style="bottom:100%"></u></div>
-              <em><span>Ene</span><span>Feb</span><span>Mar</span><span>Abr</span><span>May</span><span>Jun</span></em>
-            </div>
-            <small>Ilustración con datos de ejemplo.</small>
-          </div>
+          <div><a class="shot" href="dashboard-demo.html"><img src="dashboard-extracto.png" alt="Extracto del dashboard de seguimiento: indicadores clave y los tres valores de la hora de mano de obra" loading="lazy"></a>
+            <small class="shotc">Extracto del dashboard, con datos de ejemplo. Púlsalo para verlo completo.</small></div>
         </div>
         <p style="margin:28px 0 0;display:flex;gap:12px;flex-wrap:wrap"><a class="btn" href="dashboard-demo.html">Ver el dashboard en funcionamiento</a><a class="btn" id="dashBtn" href="#contacto">Quiero el dashboard de mi taller</a></p>
       </div>
