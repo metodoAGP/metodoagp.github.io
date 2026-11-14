@@ -22,7 +22,7 @@ h2{font-size:24px;color:var(--ink)}
 .tabs{display:flex;gap:8px;flex-wrap:wrap}
 .tabs button{font:inherit;font-weight:600;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:8px 16px;cursor:pointer}
 .tabs button[aria-pressed=true]{background:var(--a);border-color:var(--a);color:#fff}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 .tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
 .tile .l{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
 .tile .v{font-family:'Barlow Condensed',Inter,sans-serif;font-size:34px;font-weight:700;line-height:1.1;margin-top:4px}
@@ -106,7 +106,7 @@ function render(){
  <li>El coste real de la hora es ${E(B.cReal,2)} frente a un precio medio de venta de ${E(B.precio,2)}: cada hora facturada se vende ${B.precio<B.cReal?'por debajo':'por encima'} de su coste total.</li>
  ${hGap>0?`<li>Con el rendimiento del periodo anterior y las mismas horas compradas se habrían facturado unas <b>${N(hGap)} h</b> más, unos <b>${E(hGap*B.precio)}</b> solo en mano de obra.</li>`:''}</ul>`;
  // tiles
- const T=[['Facturación',E(B.fact),dlt(A.fact,B.fact,E,1),p.la+': '+E(A.fact)],['Rendimiento',P(B.rend),dlt(A.rend,B.rend,P,1,1),p.la+': '+P(A.rend)],['Horas facturadas',H(B.hf),dlt(A.hf,B.hf,H,1),p.la+': '+H(A.hf)],['Coste real de la hora',E(B.cReal,2),dlt(A.cReal,B.cReal,0,-1),p.la+': '+E(A.cReal,2)],['Recambios / h chapa',E(B.recH,1),dlt(A.recH,B.recH,0,1),'por hora de chapa facturada'],['Material pintura / h pintura',E(B.matH,1),dlt(A.matH,B.matH,0,1),'por hora de pintura facturada']];
+ const T=[['Facturación',E(B.fact),dlt(A.fact,B.fact,E,1),p.la+': '+E(A.fact)],['Rendimiento',P(B.rend),dlt(A.rend,B.rend,P,1,1),p.la+': '+P(A.rend)],['Horas facturadas',H(B.hf),dlt(A.hf,B.hf,H,1),p.la+': '+H(A.hf)],['Material pintura / h pintura',E(B.matH,1),dlt(A.matH,B.matH,0,1),'por hora de pintura facturada'],['Recambios / h chapa',E(B.recH,1),dlt(A.recH,B.recH,0,1),'por hora de chapa facturada']];
  document.getElementById('tiles').innerHTML=T.map(t=>`<div class="tile"><div class="l">${t[0]}</div><div class="v">${t[1]}</div><div class="d ${t[2][1]}">${t[2][0]}</div><div class="s">${t[3]}</div></div>`).join('');
  // tabla
  let h=`<tr><th></th><th>${p.la}</th><th>${p.lb}</th><th>Variación</th></tr>`;
