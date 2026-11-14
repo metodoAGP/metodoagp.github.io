@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard de seguimiento · Método AGP</title>
+<meta name="robots" content="noindex">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#f6f7f8;--surface:#fff;--ink:#16202a;--mute:#5d6b78;--line:#dde3e8;--a:#1f5f8b;--g:#2f8a5b;--p:#d9572b;--bad:#b3341a;--good:#1f7a4d;--soft:#eef3f7}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f161c;--surface:#17212a;--ink:#e8eef3;--mute:#9aabb8;--line:#2a3945;--a:#6fb0dd;--g:#5fc08c;--p:#ff8a5c;--bad:#ff8f78;--good:#6fd39e;--soft:#1d2a35;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f161c;--surface:#17212a;--ink:#e8eef3;--mute:#9aabb8;--line:#2a3945;--a:#6fb0dd;--g:#5fc08c;--p:#ff8a5c;--bad:#ff8f78;--good:#6fd39e;--soft:#1d2a35;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.w{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2{font-family:'Barlow Condensed',Inter,sans-serif;text-transform:uppercase;letter-spacing:.02em;margin:0;text-wrap:balance}
+h1{font-size:clamp(30px,6vw,46px);line-height:1.05}
+h2{font-size:24px;color:var(--ink)}
+.kick{color:var(--g);font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.sub{color:var(--mute);margin:6px 0 0;max-width:70ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0}
+.card p{margin:8px 0 0;max-width:75ch}
+.lead{border-left:4px solid var(--p)}
+.lead ul{margin:10px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tabs button{font:inherit;font-weight:600;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:8px 16px;cursor:pointer}
+.tabs button[aria-pressed=true]{background:var(--a);border-color:var(--a);color:#fff}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
+.tile .l{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
+.tile .v{font-family:'Barlow Condensed',Inter,sans-serif;font-size:34px;font-weight:700;line-height:1.1;margin-top:4px}
+.tile .d{font-size:13px;margin-top:2px;font-weight:600}
+.tile .s{font-size:12px;color:var(--mute);margin-top:2px}
+.up{color:var(--good)}.dn{color:var(--bad)}.ne{color:var(--mute)}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px;font-variant-numeric:tabular-nums}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+th{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+tr.sec td{background:var(--soft);font-weight:600;color:var(--a);text-align:left;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:16px}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--mute);font:11px Inter,sans-serif}
+.leg{display:flex;gap:16px;font-size:13px;color:var(--mute);margin-top:6px;flex-wrap:wrap}
+.leg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.note{font-size:13px;color:var(--mute)}
+.opp{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px}
+.opp .card b{display:block;font-family:'Barlow Condensed',Inter,sans-serif;font-size:30px;color:var(--p);line-height:1.1}
+.warn{border-left:4px solid var(--a)}
+.warn ul{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+</style>
+<body><div class="w">
+<header>
+<div class="kick"><a href="index.html#dashboard" style="color:inherit;text-decoration:none">← Método AGP</a> · Dashboard de seguimiento</div>
+<h1>Taller de ejemplo</h1>
+<p class="sub">Demostración con datos ilustrativos, no corresponden a ningún taller real. Compara el año en curso con el anterior en el mismo periodo y el TAM (últimos 12 meses móviles) con el TAM anterior.</p>
+</header>
+<div class="tabs" role="group" aria-label="Periodo"><button id="b1" aria-pressed="true">2026 vs 2025 (ene–oct)</button><button id="b2" aria-pressed="false">TAM vs TAM anterior</button></div>
+<section class="card lead" id="lead"></section>
+<section class="tiles" id="tiles"></section>
+<section class="card"><h2>Cuadro comparativo</h2><div class="tw"><table id="tab"></table></div><p class="note" id="tabnote"></p></section>
+<section class="grid2">
+<div class="card"><h2>Facturación mensual</h2><p class="note">€ por mes, enero–octubre.</p><div id="c1"></div><div class="leg"><span><i style="background:var(--a)"></i>2025</span><span><i style="background:var(--p)"></i>2026</span></div></div>
+<div class="card"><h2>Rendimiento mensual</h2><p class="note">Horas facturadas / horas compradas (chapa + pintura).</p><div id="c2"></div><div class="leg"><span><i style="background:var(--a)"></i>2025</span><span><i style="background:var(--p)"></i>2026</span></div></div>
+<div class="card"><h2>Evolución del TAM</h2><p class="note">Facturación de los 12 meses anteriores, cada mes (oct-25 a oct-26).</p><div id="c3"></div></div>
+<div class="card"><h2>Coste real de la hora vs precio de venta</h2><p class="note">Coste total (directo + indirecto + estructura) / horas facturadas, TAM móvil.</p><div id="c4"></div><div class="leg"><span><i style="background:var(--p)"></i>Coste real de la hora</span><span><i style="background:var(--g)"></i>Precio medio de venta</span></div></div>
+</section>
+<section><h2 style="margin-bottom:12px">Oportunidades cuantificadas</h2><div class="opp" id="opp"></div></section>
+<section class="card warn"><h2>Esto es una demostración</h2><p>En el dashboard de tu taller los indicadores se calculan con tus propios datos de facturación, compras y personal, se actualizan cada mes y se comparan con los valores óptimos del método. Si quieres ver el tuyo, escríbenos a <b>expertosenrentabilidad@gmail.com</b>.</p></section>
+</div>
+<script>
+const D={"y25":{"fact":290266.52,"nfac":363,"hf_ch":2055.11,"hf_pi":2026.46,"mo_ch":60525.48,"mo_pi":55512.34,"mat":39902.28,"rec":134326.41,"hc_ch":1754.61,"hc_pi":3083.34,"c_dir":61403.0,"c_ind":44693.3,"estr":42849.2,"cr_rec":77468.77,"cr_pin":24787.55},"y26":{"fact":273099.65,"nfac":395,"hf_ch":1977.66,"hf_pi":1923.6,"mo_ch":59863.38,"mo_pi":54937.91,"mat":39270.14,"rec":119060.92,"hc_ch":2091.18,"hc_pi":3478.02,"c_dir":85770.36,"c_ind":46310.16,"estr":47671.24,"cr_rec":68756.33,"cr_pin":21008.82},"tam":{"fact":332555.9,"nfac":458,"hf_ch":2318.08,"hf_pi":2229.93,"mo_ch":70083.59,"mo_pi":64168.35,"mat":46390.56,"rec":151946.09,"hc_ch":2355.6,"hc_pi":3903.9,"c_dir":95052.36,"c_ind":55777.8,"estr":56929.22,"cr_rec":87311.29,"cr_pin":24232.91},"tam0":{"fact":348633.82,"nfac":428,"hf_ch":2380.53,"hf_pi":2348.34,"mo_ch":70628.04,"mo_pi":65618.83,"mat":46412.72,"rec":165974.23,"hc_ch":2028.78,"hc_pi":3593.46,"c_dir":72120.75,"c_ind":53755.78,"estr":49039.33,"cr_rec":95683.55,"cr_pin":28335.99},"mon":{"2024-11":{"fact":26830.83,"nfac":35,"hf_ch":145.63,"hf_pi":165.43,"mo_ch":4596.89,"mo_pi":5193.61,"mat":3056.08,"rec":13984.25,"hc_ch":140.79,"hc_pi":270.66,"c_dir":5350.96,"c_ind":4507.28,"estr":2691.27,"cr_rec":12736.0,"cr_pin":1922.65},"2024-12":{"fact":31536.48,"nfac":30,"hf_ch":179.8,"hf_pi":156.44,"mo_ch":5505.67,"mo_pi":4912.88,"mat":3454.36,"rec":17663.56,"hc_ch":133.38,"hc_pi":239.46,"c_dir":5366.79,"c_ind":4555.2,"estr":3498.85,"cr_rec":5478.78,"cr_pin":1625.79},"2025-01":{"fact":24167.01,"nfac":38,"hf_ch":173.34,"hf_pi":191.78,"mo_ch":5253.58,"mo_pi":5673.48,"mat":3257.76,"rec":9982.2,"hc_ch":106.08,"hc_pi":247.26,"c_dir":5196.46,"c_ind":4555.82,"estr":3069.23,"cr_rec":5903.44,"cr_pin":2475.09},"2025-02":{"fact":31504.08,"nfac":27,"hf_ch":175.2,"hf_pi":195.94,"mo_ch":5296.28,"mo_pi":5909.75,"mat":3234.36,"rec":17063.69,"hc_ch":128.7,"hc_pi":248.04,"c_dir":5117.1,"c_ind":4366.38,"estr":4258.5,"cr_rec":7103.39,"cr_pin":1388.1},"2025-03":{"fact":29290.77,"nfac":41,"hf_ch":193.61,"hf_pi":234.2,"mo_ch":5787.16,"mo_pi":6139.72,"mat":5646.43,"rec":11717.46,"hc_ch":195.78,"hc_pi":265.2,"c_dir":5908.65,"c_ind":4359.37,"estr":3687.54,"cr_rec":7552.32,"cr_pin":4438.54},"2025-04":{"fact":33001.64,"nfac":37,"hf_ch":214.59,"hf_pi":197.89,"mo_ch":6520.78,"mo_pi":6015.95,"mat":4057.39,"rec":16407.53,"hc_ch":209.82,"hc_pi":334.62,"c_dir":6176.82,"c_ind":4000.62,"estr":4249.84,"cr_rec":9447.13,"cr_pin":2844.71},"2025-05":{"fact":36807.23,"nfac":42,"hf_ch":216.8,"hf_pi":213.19,"mo_ch":6552.91,"mo_pi":6562.69,"mat":4806.96,"rec":18884.67,"hc_ch":228.93,"hc_pi":496.86,"c_dir":8926.86,"c_ind":4555.82,"estr":5272.81,"cr_rec":11467.59,"cr_pin":2653.33},"2025-06":{"fact":34306.0,"nfac":45,"hf_ch":347.7,"hf_pi":228.86,"mo_ch":8889.95,"mo_pi":7133.89,"mat":5020.7,"rec":13261.47,"hc_ch":227.76,"hc_pi":325.26,"c_dir":6515.47,"c_ind":4492.12,"estr":5902.66,"cr_rec":7086.06,"cr_pin":1824.97},"2025-07":{"fact":28003.26,"nfac":37,"hf_ch":172.37,"hf_pi":329.98,"mo_ch":5205.93,"mo_pi":4797.23,"mat":3132.75,"rec":14867.35,"hc_ch":202.02,"hc_pi":377.52,"c_dir":6836.7,"c_ind":4550.52,"estr":4019.11,"cr_rec":12728.35,"cr_pin":3290.64},"2025-08":{"fact":23433.72,"nfac":25,"hf_ch":154.88,"hf_pi":97.87,"mo_ch":4770.69,"mo_pi":3062.18,"mat":2809.75,"rec":12791.1,"hc_ch":137.28,"hc_pi":148.2,"c_dir":5557.68,"c_ind":4550.93,"estr":3559.17,"cr_rec":4507.43,"cr_pin":832.96},"2025-09":{"fact":24087.92,"nfac":35,"hf_ch":202.95,"hf_pi":174.03,"mo_ch":5993.32,"mo_pi":5139.47,"mat":3677.22,"rec":9277.91,"hc_ch":174.72,"hc_pi":315.9,"c_dir":5427.24,"c_ind":4488.12,"estr":4493.42,"cr_rec":3646.04,"cr_pin":3218.06},"2025-10":{"fact":25664.88,"nfac":34,"hf_ch":203.66,"hf_pi":162.71,"mo_ch":6254.87,"mo_pi":5077.99,"mat":4258.97,"rec":10073.04,"hc_ch":143.52,"hc_pi":324.48,"c_dir":5740.02,"c_ind":4773.6,"estr":4336.92,"cr_rec":8027.02,"cr_pin":1821.15},"2025-11":{"fact":36861.95,"nfac":38,"hf_ch":219.33,"hf_pi":212.19,"mo_ch":6585.55,"mo_pi":6404.21,"mat":4594.54,"rec":19277.65,"hc_ch":109.2,"hc_pi":287.04,"c_dir":5598.06,"c_ind":4722.12,"estr":4229.07,"cr_rec":8169.21,"cr_pin":1727.89},"2025-12":{"fact":22594.31,"nfac":24,"hf_ch":121.09,"hf_pi":94.14,"mo_ch":3634.67,"mo_pi":2826.23,"mat":2525.89,"rec":13607.52,"hc_ch":155.22,"hc_pi":138.84,"c_dir":3683.94,"c_ind":4745.52,"estr":5028.9,"cr_rec":10385.75,"cr_pin":1496.19},"2026-01":{"fact":18496.87,"nfac":35,"hf_ch":142.09,"hf_pi":204.64,"mo_ch":4345.09,"mo_pi":4474.17,"mat":2718.89,"rec":6958.73,"hc_ch":122.46,"hc_pi":251.16,"c_dir":5756.4,"c_ind":4633.98,"estr":3883.3,"cr_rec":6815.11,"cr_pin":1979.39},"2026-02":{"fact":34481.6,"nfac":44,"hf_ch":223.04,"hf_pi":180.56,"mo_ch":6876.34,"mo_pi":5572.53,"mat":4557.96,"rec":17474.77,"hc_ch":224.64,"hc_pi":288.6,"c_dir":7251.66,"c_ind":4116.84,"estr":4966.87,"cr_rec":9831.79,"cr_pin":2116.38},"2026-03":{"fact":29578.2,"nfac":39,"hf_ch":173.23,"hf_pi":169.86,"mo_ch":5228.25,"mo_pi":5175.25,"mat":3604.66,"rec":15570.04,"hc_ch":278.46,"hc_pi":302.64,"c_dir":7930.26,"c_ind":4672.98,"estr":5032.1,"cr_rec":6502.46,"cr_pin":1446.37},"2026-04":{"fact":27121.08,"nfac":29,"hf_ch":176.37,"hf_pi":129.14,"mo_ch":5555.31,"mo_pi":4055.84,"mat":3182.61,"rec":14327.33,"hc_ch":238.68,"hc_pi":308.88,"c_dir":8974.68,"c_ind":4609.8,"estr":4707.37,"cr_rec":6883.0,"cr_pin":2652.27},"2026-05":{"fact":28288.28,"nfac":46,"hf_ch":178.53,"hf_pi":202.36,"mo_ch":5540.95,"mo_pi":6742.73,"mat":5124.87,"rec":10879.74,"hc_ch":120.12,"hc_pi":462.54,"c_dir":8854.56,"c_ind":4672.98,"estr":5478.07,"cr_rec":7611.33,"cr_pin":2381.47},"2026-06":{"fact":24009.5,"nfac":33,"hf_ch":155.76,"hf_pi":143.99,"mo_ch":4965.14,"mo_pi":4631.69,"mat":3519.41,"rec":10893.26,"hc_ch":118.56,"hc_pi":371.28,"c_dir":7602.66,"c_ind":4609.8,"estr":5654.81,"cr_rec":3259.1,"cr_pin":2369.9},"2026-07":{"fact":37324.51,"nfac":46,"hf_ch":358.8,"hf_pi":264.44,"mo_ch":9577.25,"mo_pi":8104.88,"mat":5529.73,"rec":14112.64,"hc_ch":298.74,"hc_pi":460.2,"c_dir":10427.82,"c_ind":4763.46,"estr":4836.96,"cr_rec":4793.71,"cr_pin":1569.86},"2026-08":{"fact":12346.25,"nfac":23,"hf_ch":81.31,"hf_pi":126.43,"mo_ch":2547.19,"mo_pi":2869.0,"mat":1646.91,"rec":5283.16,"hc_ch":141.96,"hc_pi":215.28,"c_dir":10193.04,"c_ind":4764.24,"estr":4085.71,"cr_rec":5748.57,"cr_pin":1532.06},"2026-09":{"fact":30494.27,"nfac":51,"hf_ch":250.73,"hf_pi":208.88,"mo_ch":8137.27,"mo_pi":6433.15,"mat":4393.57,"rec":11530.28,"hc_ch":274.56,"hc_pi":414.96,"c_dir":8323.38,"c_ind":4701.84,"estr":4183.01,"cr_rec":10700.7,"cr_pin":3573.33},"2026-10":{"fact":30959.07,"nfac":49,"hf_ch":237.8,"hf_pi":293.31,"mo_ch":7090.59,"mo_pi":6878.68,"mat":4991.53,"rec":12030.97,"hc_ch":273.0,"hc_pi":402.48,"c_dir":10455.9,"c_ind":4764.24,"estr":4843.04,"cr_rec":6610.57,"cr_pin":1387.79}}};
+const N=(v,d=0)=>isNaN(v)?'—':v.toLocaleString('es-ES',{minimumFractionDigits:d,maximumFractionDigits:d,useGrouping:'always'});
+const E=(v,d=0)=>N(v,d)+' €', H=v=>N(v,0)+' h', P=(v,d=1)=>N(v*100,d)+' %';
+const MN=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function kp(r){const hf=r.hf_ch+r.hf_pi,hc=r.hc_ch+r.hc_pi,mo=r.mo_ch+r.mo_pi,cost=r.c_dir+r.c_ind+r.estr;
+ return{...r,hf,hc,mo,cost,rend:hf/hc,precio:mo/hf,recH:r.rec/r.hf_ch,matH:r.mat/r.hf_pi,wmo:mo/r.fact,wmat:r.mat/r.fact,wrec:r.rec/r.fact,
+ cOpt:cost/hc,cReal:cost/hf,mMO:1-(cost/hf)/(mo/hf),mRec:1-r.cr_rec/r.rec,mPin:1-r.cr_pin/r.mat,wEst:r.estr/cost,wInd:r.c_ind/(r.c_ind+r.c_dir),ticket:r.fact/r.nfac,hrep:hf/r.nfac,rendPi:r.hf_pi/r.hc_pi}}
+const PER={ytd:{a:'y25',b:'y26',la:'ene–oct 2025',lb:'ene–oct 2026',name:'Ene–oct'},tam:{a:'tam0',b:'tam',la:'TAM anterior',lb:'TAM',name:'TAM'}};
+let cur='ytd';
+// filas: [etiqueta, fn, fmt, mejor (1 sube, -1 baja, 0 neutro)]
+const ROWS=[['sec','Facturación y horas'],
+['Facturación total',k=>k.fact,E,1],['Nº de facturas',k=>k.nfac,v=>N(v),1],['Facturación media por factura',k=>k.ticket,E,1],
+['Horas facturadas (chapa + pintura)',k=>k.hf,H,1],['Horas facturadas por factura',k=>k.hrep,v=>N(v,1)+' h',0],['Precio medio de la hora de mano de obra',k=>k.precio,v=>E(v,2),1],
+['sec','Capacidad y rendimiento'],
+['Horas compradas (mano de obra directa)',k=>k.hc,H,0],['Rendimiento global',k=>k.rend,P,1],
+['sec','Mix de facturación'],
+['Mano de obra',k=>k.wmo,P,0],['Material de pintura',k=>k.wmat,P,0],['Recambios',k=>k.wrec,P,0],
+['Recambios por hora de chapa facturada',k=>k.recH,v=>E(v,1),1],['Material de pintura por hora de pintura facturada',k=>k.matH,v=>E(v,1),1],
+['sec','Costes'],
+['Coste de mano de obra directa',k=>k.c_dir,E,-1],['Coste de mano de obra indirecta',k=>k.c_ind,E,-1],['Gastos de estructura',k=>k.estr,E,-1],
+['Peso de la estructura sobre el coste total',k=>k.wEst,P,-1],['Coste óptimo de la hora (sobre horas compradas)',k=>k.cOpt,v=>E(v,2),-1],['Coste real de la hora (sobre horas facturadas)',k=>k.cReal,v=>E(v,2),-1],
+['sec','Rentabilidad'],
+['Margen bruto de la mano de obra',k=>k.mMO,P,1],['Margen bruto de recambios (provisional)',k=>k.mRec,P,1],['Margen bruto de pintura (provisional)',k=>k.mPin,P,1]];
+function dlt(a,b,f,best,pct){ if(a===0||isNaN(a)||isNaN(b)) return ['','ne'];
+ let t,diff=b-a; if(pct) {t=(diff>=0?'+':'')+N(diff*100,1)+' pp'} else {t=(diff>=0?'+':'')+N(diff/Math.abs(a)*100,1)+' %'}
+ let c='ne'; if(best&&Math.abs(diff)>1e-9) c=(diff>0)===(best>0)?'up':'dn'; return [(diff>=0?'▲ ':'▼ ')+t,c]}
+const isPct=f=>f===P;
+function render(){
+ const p=PER[cur],A=kp(D[p.a]),B=kp(D[p.b]);
+ document.getElementById('b1').setAttribute('aria-pressed',cur==='ytd');document.getElementById('b2').setAttribute('aria-pressed',cur==='tam');
+ // lectura
+ const dF=B.fact/A.fact-1,dHf=B.hf/A.hf-1,dHc=B.hc/A.hc-1,dCd=B.c_dir/A.c_dir-1;
+ const hGap=B.hc*A.rend-B.hf, vGap=hGap*B.precio;
+ document.getElementById('lead').innerHTML=`<div class="kick">Lectura para el gerente · ${p.lb} frente a ${p.la}</div><ul>
+ <li>La facturación ${dF<0?'baja':'sube'} un <b>${N(Math.abs(dF)*100,1)} %</b> (${E(A.fact)} → ${E(B.fact)}) y las horas facturadas ${dHf<0?'bajan':'suben'} un ${N(Math.abs(dHf)*100,1)} %.</li>
+ <li>Las horas compradas ${dHc<0?'bajan':'suben'} un <b>${N(Math.abs(dHc)*100,1)} %</b> y el coste de mano de obra directa ${dCd<0?'baja':'sube'} un ${N(Math.abs(dCd)*100,1)} %. El rendimiento pasa de <b>${P(A.rend)}</b> a <b>${P(B.rend)}</b>.</li>
+ <li>El coste real de la hora es ${E(B.cReal,2)} frente a un precio medio de venta de ${E(B.precio,2)}: cada hora facturada se vende ${B.precio<B.cReal?'por debajo':'por encima'} de su coste total.</li>
+ ${hGap>0?`<li>Con el rendimiento del periodo anterior y las mismas horas compradas se habrían facturado unas <b>${N(hGap)} h</b> más, unos <b>${E(hGap*B.precio)}</b> solo en mano de obra.</li>`:''}</ul>`;
+ // tiles
+ const T=[['Facturación',E(B.fact),dlt(A.fact,B.fact,E,1),p.la+': '+E(A.fact)],['Rendimiento',P(B.rend),dlt(A.rend,B.rend,P,1,1),p.la+': '+P(A.rend)],['Horas facturadas',H(B.hf),dlt(A.hf,B.hf,H,1),p.la+': '+H(A.hf)],['Coste real de la hora',E(B.cReal,2),dlt(A.cReal,B.cReal,0,-1),p.la+': '+E(A.cReal,2)],['Recambios / h chapa',E(B.recH,1),dlt(A.recH,B.recH,0,1),'por hora de chapa facturada'],['Material pintura / h pintura',E(B.matH,1),dlt(A.matH,B.matH,0,1),'por hora de pintura facturada']];
+ document.getElementById('tiles').innerHTML=T.map(t=>`<div class="tile"><div class="l">${t[0]}</div><div class="v">${t[1]}</div><div class="d ${t[2][1]}">${t[2][0]}</div><div class="s">${t[3]}</div></div>`).join('');
+ // tabla
+ let h=`<tr><th></th><th>${p.la}</th><th>${p.lb}</th><th>Variación</th></tr>`;
+ ROWS.forEach(r=>{ if(r[0]==='sec'){h+=`<tr class="sec"><td colspan="4">${r[1]}</td></tr>`;return}
+  const a=r[1](A),b=r[1](B),d=dlt(a,b,r[2],r[3],isPct(r[2]));
+  h+=`<tr><td>${r[0]}</td><td>${r[2](a)}</td><td><b>${r[2](b)}</b></td><td class="${d[1]}">${d[0]}</td></tr>`});
+ document.getElementById('tab').innerHTML=h;
+ document.getElementById('tabnote').textContent='Verde = mejora, rojo = empeora; en las filas sin color no hay un sentido bueno o malo. Coste de la hora = (mano de obra directa + indirecta + estructura) / horas.';
+ // oportunidades
+ const gRend=hGap>0?hGap*B.precio:0, gRend2=(B.hc*.85-B.hf)>0?(B.hc*.85-B.hf):0;
+ document.getElementById('opp').innerHTML=`
+  <div class="card"><b>${E(gRend)}</b><p>Mano de obra: recuperar el rendimiento del periodo anterior (${P(A.rend)}) con las horas compradas actuales. Equivale a ${H(Math.max(0,hGap))} más facturadas.</p></div>
+ <div class="card"><b>${E(Math.max(0,B.cReal-B.precio),2)} por hora</b><p>Diferencia entre el coste real de la hora y su precio medio de venta. Con ${H(B.hf)} facturadas, el desfase total es de ${E(Math.max(0,B.cReal-B.precio)*B.hf)} en el periodo.</p></div>`;
+ charts(cur);
+}
+// gráficos SVG
+function bars(el,series,labels,cols,fmt){
+ const W=520,Ht=220,m={l:44,r:8,t:10,b:24},n=labels.length,max=Math.max(...series.flat().filter(x=>x!=null))*1.1;
+ const gw=(W-m.l-m.r)/n,bw=Math.min(18,gw/ (series.length+.6));
+ let s=`<svg viewBox="0 0 ${W} ${Ht}" role="img">`;
+ for(let i=0;i<=4;i++){const y=m.t+(Ht-m.t-m.b)*(1-i/4);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${m.l-6}" y="${y+4}" text-anchor="end">${fmt(max*i/4)}</text>`}
+ labels.forEach((l,i)=>{const cx=m.l+gw*i+gw/2;s+=`<text x="${cx}" y="${Ht-8}" text-anchor="middle">${l}</text>`;
+  series.forEach((se,j)=>{const v=se[i];if(v==null)return;const h=(Ht-m.t-m.b)*v/max,x=cx-bw*series.length/2+j*bw;s+=`<rect x="${x}" y="${Ht-m.b-h}" width="${bw-1}" height="${h}" rx="2" fill="${cols[j]}"><title>${l}: ${fmt(v)}</title></rect>`})});
+ return s+'</svg>'}
+function lines(el,series,labels,cols,fmt,min,max,ref){
+ const W=520,Ht=220,m={l:44,r:22,t:10,b:24},n=labels.length;
+ const X=i=>m.l+(W-m.l-m.r)*i/(n-1),Y=v=>m.t+(Ht-m.t-m.b)*(1-(v-min)/(max-min));
+ let s=`<svg viewBox="0 0 ${W} ${Ht}" role="img">`;
+ for(let i=0;i<=4;i++){const v=min+(max-min)*i/4,y=Y(v);s+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${m.l-6}" y="${y+4}" text-anchor="end">${fmt(v)}</text>`}
+ labels.forEach((l,i)=>{if(n<=12||i%2===0)s+=`<text x="${X(i)}" y="${Ht-8}" text-anchor="middle">${l}</text>`});
+ series.forEach((se,j)=>{let d='';se.forEach((v,i)=>{if(v!=null)d+=(d?'L':'M')+X(i)+' '+Y(v)});s+=`<path d="${d}" fill="none" stroke="${cols[j]}" stroke-width="2.5" stroke-linejoin="round"/>`;se.forEach((v,i)=>{if(v!=null)s+=`<circle cx="${X(i)}" cy="${Y(v)}" r="3" fill="${cols[j]}"><title>${labels[i]}: ${fmt(v)}</title></circle>`})});
+ return s+'</svg>'}
+function charts(){
+ const M=D.mon,mk=(y,m)=>y+'-'+String(m).padStart(2,'0'),L=MN.slice(0,10);
+ const f=y=>L.map((_,i)=>M[mk(y,i+1)]?.fact??null), rd=y=>L.map((_,i)=>{const r=M[mk(y,i+1)];return r?(r.hf_ch+r.hf_pi)/(r.hc_ch+r.hc_pi):null});
+ const css=getComputedStyle(document.documentElement),a=css.getPropertyValue('--a').trim(),pp=css.getPropertyValue('--p').trim(),g=css.getPropertyValue('--g').trim();
+ // 2025 enero-octubre; el mes 2025-11/12 no se usa aquí
+ document.getElementById('c1').innerHTML=bars(0,[f(2025),f(2026)],L,[a,pp],v=>N(v/1000,0)+' k');
+ document.getElementById('c2').innerHTML=lines(0,[rd(2025),rd(2026)],L,[a,pp],v=>N(v*100,0)+' %',0.3,1.2);
+ // TAM móvil
+ const keys=Object.keys(M).sort(),tam=[],lab=[],cr=[],pv=[];
+ for(let i=11;i<keys.length;i++){const w=keys.slice(i-11,i+1).map(k=>M[k]);const s=w.reduce((o,r)=>{for(const k in r)o[k]=(o[k]||0)+r[k];return o},{});const k=kp(s);tam.push(k.fact);cr.push(k.cReal);pv.push(k.precio);const[y,mm]=keys[i].split('-');lab.push(MN[+mm-1]+' '+y.slice(2))}
+ document.getElementById('c3').innerHTML=lines(0,[tam],lab,[a],v=>N(v/1000,0)+' k',Math.floor(Math.min(...tam)/20000)*20000,Math.ceil(Math.max(...tam)/20000)*20000);
+ document.getElementById('c4').innerHTML=lines(0,[cr,pv],lab,[pp,g],v=>N(v,0)+' €',20,Math.ceil(Math.max(...cr)/10)*10);
+}
+document.getElementById('b1').onclick=()=>{cur='ytd';render()};document.getElementById('b2').onclick=()=>{cur='tam';render()};
+render();
+</script></body></html>
