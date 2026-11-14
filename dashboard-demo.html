@@ -55,6 +55,7 @@ svg text{fill:var(--mute);font:11px Inter,sans-serif}
 <div class="tabs" role="group" aria-label="Periodo"><button id="b1" aria-pressed="true">2026 vs 2025 (ene–oct)</button><button id="b2" aria-pressed="false">TAM vs TAM anterior</button></div>
 <section class="card lead" id="lead"></section>
 <section class="tiles" id="tiles"></section>
+<section class="card" id="mo"><h2>Mano de obra: los tres valores de la hora</h2><p class="note">Precio medio de venta = mano de obra facturada / horas facturadas. Coste óptimo = (estructura + personal) / horas compradas. Coste real = (estructura + personal) / horas facturadas.</p><div class="grid2" style="margin-top:12px"><div id="mo3"></div><div id="modx"></div></div></section>
 <section class="card"><h2>Cuadro comparativo</h2><div class="tw"><table id="tab"></table></div><p class="note" id="tabnote"></p></section>
 <section class="grid2">
 <div class="card"><h2>Facturación mensual</h2><p class="note">€ por mes, enero–octubre.</p><div id="c1"></div><div class="leg"><span><i style="background:var(--a)"></i>2025</span><span><i style="background:var(--p)"></i>2026</span></div></div>
@@ -119,6 +120,25 @@ function render(){
  document.getElementById('opp').innerHTML=`
   <div class="card"><b>${E(gRend)}</b><p>Mano de obra: recuperar el rendimiento del periodo anterior (${P(A.rend)}) con las horas compradas actuales. Equivale a ${H(Math.max(0,hGap))} más facturadas.</p></div>
  <div class="card"><b>${E(Math.max(0,B.cReal-B.precio),2)} por hora</b><p>Diferencia entre el coste real de la hora y su precio medio de venta. Con ${H(B.hf)} facturadas, el desfase total es de ${E(Math.max(0,B.cReal-B.precio)*B.hf)} en el periodo.</p></div>`;
+
+ // mano de obra: tres valores
+ (function(){const css=getComputedStyle(document.documentElement),a=css.getPropertyValue('--a').trim(),pp=css.getPropertyValue('--p').trim(),g=css.getPropertyValue('--g').trim(),mu=css.getPropertyValue('--mute').trim();
+  const V=[['Precio medio de venta',k=>k.precio,g],['Coste óptimo',k=>k.cOpt,a],['Coste real',k=>k.cReal,pp]];
+  const max=Math.max(...V.map(v=>Math.max(v[1](A),v[1](B))))*1.12,W=520,row=62;
+  let s=`<svg viewBox="0 0 ${W} ${V.length*row+20}" role="img" aria-label="Precio de venta, coste óptimo y coste real de la hora">`;
+  V.forEach((v,i)=>{const y=10+i*row;s+=`<text x="0" y="${y+10}" style="font-weight:600;fill:var(--ink)">${v[0]}</text>`;
+   [[A,p.la,.45],[B,p.lb,1]].forEach((q,j)=>{const val=v[1](q[0]),w=(W-110)*val/max,yy=y+16+j*20;s+=`<rect x="0" y="${yy}" width="${w}" height="16" rx="3" fill="${v[2]}" opacity="${q[2]}"/><text x="${w+6}" y="${yy+12}">${E(val,2)} · ${q[1]}</text>`})});
+  document.getElementById('mo3').innerHTML=s+'</svg>';
+  const hfB=B.hf,gT=(B.cOpt-B.precio)*hfB,gR=(B.cReal-B.cOpt)*hfB,tot=(B.cReal-B.precio)*hfB;
+  let dx;
+  if(B.precio<B.cOpt) dx=`<b>Diagnóstico: tarifa y rendimiento.</b> El precio medio de venta (${E(B.precio,2)}) no cubre ni el coste óptimo (${E(B.cOpt,2)}): aunque se facturaran todas las horas compradas, cada hora se vendería por debajo de su coste. Además, con un rendimiento del ${P(B.rend)} el coste real sube a ${E(B.cReal,2)}.`;
+  else if(B.precio<B.cReal) dx=`<b>Diagnóstico: rendimiento.</b> El precio medio de venta (${E(B.precio,2)}) cubre el coste óptimo (${E(B.cOpt,2)}), pero no el real (${E(B.cReal,2)}). El problema está en las horas compradas que no se facturan.`;
+  else dx=`<b>Diagnóstico: hora rentable.</b> El precio medio de venta (${E(B.precio,2)}) cubre el coste real (${E(B.cReal,2)}).`;
+  dx+=` En ${p.la}: precio ${E(A.precio,2)}, coste óptimo ${E(A.cOpt,2)}, coste real ${E(A.cReal,2)}.`;
+  let body=`<p style="margin:0">${dx}</p>`;
+  if(tot>0) body+=`<p>Del desfase total de la mano de obra (${E(tot)} en ${p.lb}), unos <b>${E(Math.max(0,gT))}</b> vienen de la tarifa (precio por debajo del coste óptimo) y unos <b>${E(Math.max(0,gR))}</b> del rendimiento (horas compradas sin facturar).</p>`;
+  
+  document.getElementById('modx').innerHTML=body})();
  charts(cur);
 }
 // gráficos SVG
