@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Autodiagnóstico AGP | Método AGP</title>
-<meta name="description" content="Autodiagnóstico gratuito para talleres de chapa y pintura: calcula tu rendimiento, tu potencial de facturación y tus cuellos de botella con el Método AGP.">
+<title>Autodiagnóstico AGP | métodoAGP</title>
+<meta name="description" content="Autodiagnóstico gratuito para talleres de chapa y pintura: calcula tu rendimiento, tu potencial de facturación y tus cuellos de botella con el métodoAGP.">
 <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -130,6 +130,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
   #res{padding:0}
   .top3 li,.crit,.big div{break-inside:avoid}
 }
+.mb{text-transform:none;letter-spacing:0}
 </style>
 </head>
 <body>
@@ -146,7 +147,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
     <div>
     <p class="eyebrow">Autodiagnóstico gratuito</p>
     <h1>¿Cuánto <em>deja de ganar</em> tu taller?</h1></div>
-    <p class="lead">Responde con los datos de tu taller y obtén en pocos minutos tu rendimiento, tu potencial de facturación y los tres cuellos de botella que más te cuestan, con el Método AGP.</p>
+    <p class="lead">Responde con los datos de tu taller y obtén en pocos minutos tu rendimiento, tu potencial de facturación y los tres cuellos de botella que más te cuestan, con el <span class="mb">métodoAGP</span>.</p>
     <span class="priv">Tus datos se calculan en tu propio navegador. No se envían ni se guardan en ningún servidor.</span>
   </div>
 
@@ -185,7 +186,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
 
 <footer>
   <div class="wrap">
-    <span>© 2026 Expertos en Rentabilidad · Método AGP</span>
+    <span>© 2026 Expertos en Rentabilidad · <span class="mb">métodoAGP</span></span>
     <span>Resultados orientativos calculados con los datos que introduces.</span>
   </div>
 </footer>
@@ -438,7 +439,7 @@ function render(o){
   h+='<div class="block"><div class="crit"><b>Criterios de cálculo.</b> Tiempo de convenio: 8 h × 220 días = 1.760 h por operario. Tiempo comprado: convenio + horas extra, repartido entre chapa y pintura según el número de operarios. En modo rápido el rendimiento introducido se aplica por igual a chapa y pintura. Potencial = horas compradas × precio medio de la hora, más recambios y material con los ratios por hora del método. Margen sobre la mano de obra = 1 − (gasto de personal + estructura) / horas facturadas / precio de la hora. Resultados orientativos; no incluyen datos que no hayas introducido.</div></div>';
 
   // CTA
-  var sub="Método AGP: mi autodiagnóstico";
+  var sub="métodoAGP: mi autodiagnóstico";
   var body="Hola, he hecho el autodiagnóstico en metodoagp.com.\n\nRendimiento: "+pct(o.R)+"\nFacturación actual: "+(o.partial?"incompleta":eur(o.tot))+"\nPotencial con rendimiento al 100 %: "+eur(o.potTot)+"\nDiferencia anual: "+eur(o.gapTot)+(o.partial?" (parcial)":"")+"\n\nMe gustaría que revisarais mis resultados.\nTaller:\nTeléfono:";
   h+='<div class="cta2 noprint"><h3>¿Quieres un plan para recuperar ese potencial?</h3><div class="actions">'+
     '<a class="btn" id="mailRes" href="mailto:'+EMAIL+'?subject='+encodeURIComponent(sub)+'&body='+encodeURIComponent(body)+'">Revisar mis resultados con un experto</a>'+
