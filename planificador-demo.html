@@ -1,0 +1,655 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Planificador de taller · métodoAGP</title>
+<meta name="robots" content="noindex">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: banda oscura de cabecera, filtros, resumen de capacidad por sección y tablero kanban con scroll horizontal propio */
+:root{
+  --bg:#e6e4e1; --panel:#f3f2ef; --chip:#ffffff; --ink:#1f2124; --mute:#666a70; --line:#d2cfca;
+  --bar:#2b2c2f; --bar-ink:#f2f1ee; --accent:#e5532d; --accent-ink:#ffffff;
+  --ok:#3f9d3a; --warn:#e28a1c; --bad:#d6382d;
+  --k-white:#fbfaf7; --k-red:#ee7767; --k-purple:#b98ec6; --k-green:#8fe04f; --k-blue:#5fb7dc; --k-orange:#f5a03a; --k-yellow:#f2d03f; --k-ink:#1b1c1e;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --body:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141517; --panel:#202225; --chip:#2b2d31; --ink:#ecebe8; --mute:#9a9da2; --line:#34373b; --bar:#0d0e0f; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#141517; --panel:#202225; --chip:#2b2d31; --ink:#ecebe8; --mute:#9a9da2; --line:#34373b; --bar:#0d0e0f; color-scheme:dark;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:13px;line-height:1.35}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* cabecera */
+.top{background:var(--bar);color:var(--bar-ink)}
+.top .wrap{padding-block:14px 0}
+.brand{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;justify-content:space-between}
+.brand h1{margin:0;font:800 28px/1 var(--display);letter-spacing:.01em;text-transform:uppercase;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.brand h1 small{font:500 12px var(--body);letter-spacing:.12em;color:#a8aaae}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
+.search{display:flex;background:#3a3b3f;border-radius:6px;overflow:hidden;min-width:0}
+.search input{background:transparent;border:0;padding:8px 10px;width:210px;max-width:100%;min-width:0;color:var(--bar-ink)}
+.search input::placeholder{color:#9b9da2}
+.btn{background:#3a3b3f;border:0;border-radius:6px;padding:8px 12px;color:var(--bar-ink);font-weight:600}
+.btn:hover{background:#4a4b50}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.tabs{display:flex;gap:2px;margin-top:12px;overflow-x:auto}
+.tab{background:none;border:0;border-bottom:3px solid transparent;color:#b5b7bb;padding:8px 12px 9px;font:700 15px var(--display);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.tab span{font:600 11px var(--body);background:#45464b;border-radius:4px;padding:1px 5px;margin-left:5px;color:#d5d6d9}
+.tab[aria-selected="true"]{color:#fff;border-color:var(--accent)}
+
+/* filtros */
+.filters{background:var(--panel);border-bottom:1px solid var(--line)}
+.filters .wrap{display:flex;flex-wrap:wrap;gap:8px;padding-block:10px}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:0 4px 0 9px;min-width:0}
+.chip span{color:var(--mute);white-space:nowrap}
+.chip select{background:transparent;border:0;padding:6px 4px;max-width:150px;min-width:0}
+.chip select option{color:#1f2124;background:#fff}
+.clear{background:none;border:0;color:var(--accent);font-weight:600;padding:6px 4px}
+
+/* resumen */
+.sum{background:var(--panel);border-bottom:1px solid var(--line)}
+.sum .wrap{display:flex;flex-wrap:wrap;gap:14px 26px;align-items:center;padding-block:12px}
+.big{font:800 42px/0.9 var(--display)}
+.big small{display:block;font:500 11px var(--body);letter-spacing:.12em;color:var(--mute);margin-top:4px}
+.stats{display:flex;flex-wrap:wrap;gap:6px 22px}
+.stat{font-variant-numeric:tabular-nums}
+.stat b{display:block;font:700 11px var(--body);letter-spacing:.1em;color:var(--mute);text-transform:uppercase}
+.stat span{font:700 18px var(--display);letter-spacing:.02em}
+.ops{display:flex;flex-wrap:wrap;gap:6px 10px}
+.ops label{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--mute)}
+.ops input{width:64px;background:var(--chip);border:1px solid var(--line);border-radius:5px;padding:5px 7px;font-variant-numeric:tabular-nums}
+.bars{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:8px 16px;flex:1 1 520px;min-width:0}
+.bar b{display:flex;justify-content:space-between;font:600 12px var(--body)}
+.bar b em{font-style:normal;font-weight:700;font-variant-numeric:tabular-nums}
+.track{height:6px;border-radius:3px;background:var(--line);margin:5px 0 3px;overflow:hidden}
+.track i{display:block;height:100%;border-radius:3px;background:var(--ok)}
+.track i.mid{background:var(--warn)}.track i.low{background:var(--bad)}
+.bar small{color:var(--mute);font-size:11px;font-variant-numeric:tabular-nums}
+
+/* tablero */
+.board{display:flex;gap:12px;overflow-x:auto;padding-block:14px 22px;align-items:flex-start;scroll-snap-type:x proximity}
+.col{flex:0 0 232px;scroll-snap-align:start;min-width:0}
+.col.over .stack{outline:2px dashed var(--accent);outline-offset:3px;border-radius:8px}
+.col h2{margin:0;display:flex;justify-content:space-between;align-items:baseline;font:800 17px/1.1 var(--display);letter-spacing:.02em;text-transform:uppercase;gap:6px}
+.col h2 em{font:600 12px var(--body);font-style:normal;color:var(--mute)}
+.col .tot{font-size:10.5px;color:var(--mute);margin:3px 0 8px;font-variant-numeric:tabular-nums}
+.stack{display:flex;flex-direction:column;gap:10px;min-height:60px}
+.empty{border:1px dashed var(--line);border-radius:8px;padding:14px 10px;color:var(--mute);text-align:center;font-size:12px}
+
+.card{position:relative;border-radius:8px;padding:9px 10px 8px;color:var(--k-ink);box-shadow:0 1px 0 rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.1);cursor:grab;display:flex;flex-direction:column;gap:3px}
+.card:active{cursor:grabbing}
+.card.drag{opacity:.45}
+.t-white{background:var(--k-white)}.t-red{background:var(--k-red)}.t-purple{background:var(--k-purple)}
+.t-green{background:var(--k-green)}.t-blue{background:var(--k-blue)}.t-orange{background:var(--k-orange)}.t-yellow{background:var(--k-yellow)}
+.r1{display:flex;align-items:center;gap:6px}
+.or{font:700 17px/1 var(--display);letter-spacing:.01em;flex:1}
+.cm{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:18px;border-radius:9px;background:rgba(255,255,255,.75);border:1px solid rgba(0,0,0,.25);font:600 10.5px var(--body)}
+.cm.has{background:#e5532d;color:#fff;border-color:#e5532d}
+.ct{font:600 10.5px var(--body);background:rgba(255,255,255,.75);border:1px solid rgba(0,0,0,.2);border-radius:4px;padding:1px 5px}
+.r2{display:flex;align-items:center;justify-content:flex-end;gap:6px}
+.pri{font:700 9.5px var(--body);letter-spacing:.06em;border-radius:3px;padding:2px 6px;color:#fff;margin-right:auto}
+.p-MEDIO{background:#e8872b}.p-FUERTE{background:#cf3a2e}.p-NORMAL{background:#6c6f75}.p-RÁPIDO{background:#2f6fd0}
+.plate{display:inline-flex;align-items:center;background:#fff;border:1.5px solid #222;border-radius:4px;font:700 12.5px/1 var(--display);letter-spacing:.04em;padding:2px 6px 2px 0;overflow:hidden}
+.plate i{display:block;width:8px;align-self:stretch;background:#1c46b5;margin-right:5px;margin-block:-2px}
+.car{font-size:11.5px;opacity:.9}
+.ins{font-size:11.5px;font-weight:600}
+.ics{display:flex;gap:5px;margin-block:1px}
+.ics svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.75}
+.hrs{font:600 11.5px var(--body);font-variant-numeric:tabular-nums}
+.hrs b{font-weight:700;margin-left:2px}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:2px 6px;font-size:10px;opacity:.95}
+.foot .who{flex:1 1 100%;opacity:.8}
+.due{font:700 10px var(--body);border-radius:3px;padding:2px 6px;color:#fff}
+.due.v{background:#c92f26}.due.h{background:#e8671c}.due.f{background:#fff7e0;color:#8a4b00;border:1px solid #e0a64a}.due.n{background:rgba(0,0,0,.15);color:var(--k-ink)}
+.sal{font:600 10px var(--body);opacity:.85}
+
+.msg{padding:60px 16px;text-align:center;color:var(--mute)}
+
+/* diálogos */
+.ov{position:fixed;inset:0;background:rgba(10,10,12,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.dlg{background:var(--panel);color:var(--ink);border-radius:10px;width:min(440px,100%);max-height:100%;overflow:auto;padding:18px;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+.dlg h3{margin:0 0 12px;font:800 22px var(--display);text-transform:uppercase}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid label,.dlg label.f{display:flex;flex-direction:column;gap:3px;font-size:11.5px;color:var(--mute);min-width:0}
+.grid .full{grid-column:1/-1}
+.dlg input,.dlg select{background:var(--chip);border:1px solid var(--line);border-radius:6px;padding:7px 8px;color:var(--ink);min-width:0}
+.dlg .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}
+.dlg .btn{background:var(--chip);color:var(--ink);border:1px solid var(--line)}
+.dlg .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.dlg .btn.danger{color:var(--bad)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:0 0 12px}
+.kv dt{color:var(--mute)}.kv dd{margin:0;font-variant-numeric:tabular-nums}
+.toast{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--bar);color:#fff;padding:9px 14px;border-radius:8px;z-index:30;max-width:calc(100% - 32px);box-shadow:0 4px 16px rgba(0,0,0,.35)}
+.note{color:var(--mute);font-size:11px;padding-block:0 18px}
+/* planificación */
+.plan{display:flex;flex-direction:column;gap:26px;padding-block:16px 28px}
+.pb{min-width:0;scroll-margin-top:12px}
+.pb h2{margin:0;font:800 20px/1.1 var(--display);letter-spacing:.02em;text-transform:uppercase}
+.pb .cap{margin:3px 0 10px;color:var(--mute);font-size:12px;max-width:80ch}
+.alerts{display:grid;gap:8px}
+.al{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:var(--chip);border:1px solid var(--line);border-radius:7px;padding:9px 12px}
+.al:hover{border-color:var(--mute)}
+.al span:last-child{min-width:0}
+.sev{flex:none;font:700 10px var(--body);letter-spacing:.06em;border-radius:3px;padding:3px 7px;text-transform:uppercase}
+.sev.b{background:var(--bad);color:#fff}.sev.w{background:var(--warn);color:#1b1c1e}.sev.o{background:var(--ok);color:#fff}
+.tw{overflow-x:auto;background:var(--chip);border:1px solid var(--line);border-radius:8px}
+table.t{border-collapse:collapse;width:100%;min-width:520px;font-variant-numeric:tabular-nums}
+.t th,.t td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+.t th{font:700 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.t tr:last-child td{border-bottom:0}
+.t td.n,.t th.n{text-align:right}
+.t .bad{color:var(--bad);font-weight:700}
+table.heat{min-width:640px}
+.heat td.hz{text-align:center;font-weight:700;min-width:56px;padding:6px 4px}
+.heat td.hz small{display:block;font:500 10px var(--body);color:var(--mute)}
+.heat th{text-align:center}.heat th:first-child,.heat td:first-child{text-align:left}
+.h-z{color:var(--mute)}
+.h-l{background:color-mix(in srgb,var(--mute) 14%,var(--chip))}
+.h-o{background:color-mix(in srgb,var(--ok) 30%,var(--chip))}
+.h-w{background:color-mix(in srgb,var(--warn) 45%,var(--chip))}
+.h-b{background:color-mix(in srgb,var(--bad) 50%,var(--chip))}
+.heat tr.tot td{border-top:2px solid var(--line)}
+.mb{display:inline-block;width:64px;height:6px;border-radius:3px;background:var(--line);vertical-align:middle;overflow:hidden;margin-right:6px}
+.mb i{display:block;height:100%;background:var(--ok)}.mb i.w{background:var(--warn)}.mb i.b{background:var(--bad)}
+.tag{background:var(--bad);color:#fff;font:700 10px var(--body);padding:2px 6px;border-radius:3px;margin-left:8px;text-transform:uppercase;letter-spacing:.05em}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.two h3{margin:0 0 6px;font:700 13px var(--body)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.tile{background:var(--chip);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.tile b{display:block;font:700 11px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.tile strong{display:block;font:800 30px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.tile small{color:var(--mute);font-variant-numeric:tabular-nums}
+.tile.w strong{color:var(--warn)}.tile.b strong{color:var(--bad)}
+.read{margin:10px 0 0;font-weight:600}
+@media (max-width:640px){
+  .bars{grid-template-columns:1fr 1fr}
+  .col{flex-basis:84vw;max-width:290px}
+  .big{font-size:36px}
+}
+@media (prefers-reduced-motion:no-preference){.card{transition:box-shadow .15s}.card:hover{box-shadow:0 3px 10px rgba(0,0,0,.22)}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-car" viewBox="0 0 24 24"><path d="M3 14l2-5a2 2 0 0 1 2-1.4h10A2 2 0 0 1 19 9l2 5v4h-2v-1.5H5V18H3z"/><circle cx="7.5" cy="14.5" r="1"/><circle cx="16.5" cy="14.5" r="1"/></symbol>
+  <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.5 6a4 4 0 0 0-4.8 5.2L3.5 17.5l3 3 6.3-6.2A4 4 0 0 0 18 9.5l-2.4 2.4-2.4-.6-.6-2.4z"/></symbol>
+  <symbol id="i-spray" viewBox="0 0 24 24"><rect x="8" y="9" width="8" height="12" rx="1.5"/><path d="M10 9V6h4v3M18 6h2M18 9h2M18 3h2"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24"><path d="M3 4h2.5l2 11h10l2-8H7"/><circle cx="9" cy="19" r="1.2"/><circle cx="16" cy="19" r="1.2"/></symbol>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <h1>Planificador de taller <small style="text-transform:none;letter-spacing:.02em">métodoAGP · demostración con datos ilustrativos</small></h1>
+      <div class="actions"><a class="btn" href="index.html#planificador" style="text-decoration:none">← métodoAGP</a>
+        <form class="search" id="searchForm" role="search">
+          <input id="q" type="search" placeholder="Buscar OR o matrícula" aria-label="Buscar OR o matrícula" autocomplete="off">
+          <button class="btn" type="submit">Buscar</button>
+        </form>
+        <button class="btn" id="bSet" type="button">Ajustes</button>
+        <button class="btn" id="bImp" type="button">Importar Excel</button>
+        <button class="btn primary" id="bNew" type="button">+ Nueva cita</button>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" id="tabs"></nav>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<div class="ov" id="ov" hidden><div class="dlg" role="dialog" aria-modal="true" id="dlg"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function(){
+  var $=function(s){return document.querySelector(s)};
+  var COLS=[['rec','Recepcionado'],['val','Valoración'],['apr','Pendiente de aprobación'],['pie','Pendiente de piezas'],['esp','En espera chapa'],['pch','Preparación chapa'],['cha','Chapa'],['pin','Pintura'],['mon','Montaje']];
+  var TABS=['Planificación','Producción','Entrega','Archivo','Tiempos','Informes'];
+  var COLORS=[['white','Blanco'],['red','Rojo'],['purple','Morado'],['green','Verde'],['blue','Azul'],['orange','Naranja'],['yellow','Amarillo']];
+  var KEY='agp-planificador-demo-v1';
+  var tab=0, f={q:'',as:'',ins:'',pri:'',due:'',tc:''}, toastT;
+  var today=new Date(); today.setHours(0,0,0,0);
+
+  function iso(off){var d=new Date(today);d.setDate(d.getDate()+off);var m=d.getMonth()+1,dd=d.getDate();return d.getFullYear()+'-'+(m<10?'0':'')+m+'-'+(dd<10?'0':'')+dd}
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function num(v){var n=parseFloat(String(v).replace(',','.'));return isFinite(n)&&n>=0?n:0}
+  function fh(n){return (Math.round(n*10)/10)+'h'}
+  function fe(n){return '€'+Math.round(n).toLocaleString('es-ES')}
+
+  function S(n,pr,pl,car,col,ins,c,m,p,eur,st,tc,rec,as,ge,off,ct,cm,ic){
+    return {id:n+'-2026',pr:pr,pl:pl,car:car,col:col,ins:ins,c:c,m:m,p:p,eur:eur,st:st,tc:tc,rec:rec,as:as,ge:ge,sal:iso(off),ct:ct,cm:cm,ic:ic.split(',')};
+  }
+  // [días desde la entrada, días en la fase actual, proveedor de piezas]
+  var EX={'26617-2026':[2,2],'26758-2026':[1,1],'27841-2026':[4,3],'26128-2026':[6,5],'27448-2026':[3,2],'26865-2026':[9,5],'26545-2026':[8,2],'27433-2026':[7,4],'26370-2026':[12,6,'Proveedor A'],'27756-2026':[11,4,'Proveedor B'],'27603-2026':[10,3],'27196-2026':[13,4],'26280-2026':[15,6],'27238-2026':[12,2],'26970-2026':[14,1],'27009-2026':[9,2],'26912-2026':[16,3],'27811-2026':[13,2],'26701-2026':[17,2],'27120-2026':[12,1],'26455-2026':[18,1]};
+  var OFF={'26617-2026':-1,'26758-2026':-1,'27841-2026':7,'26128-2026':7,'27448-2026':8,'26865-2026':-2,'26545-2026':6,'27433-2026':8,'26370-2026':0,'27756-2026':4,'27603-2026':-2,'27196-2026':7,'26280-2026':8,'27238-2026':-2,'26970-2026':6,'27009-2026':8,'26912-2026':5,'27811-2026':5,'26701-2026':3,'27120-2026':3,'26455-2026':-1};
+  function addX(a){return a.map(function(c){var x=EX[c.id]||[1,1];c.ent=iso(-x[0]);c.mv=iso(-x[1]);c.prov=x[2]||'';if(OFF[c.id]!==undefined)c.sal=iso(OFF[c.id]);return c})}
+  function seed(){return addX([
+    S(26617,'MEDIO','9197RPX','Lexus RX 500h','Bitono','Aseguradora Trébol',7.5,0,9,870,'rec','white',3,2,2,-1,'2/2',1,'car,cart,cart,check'),
+    S(26758,'NORMAL','9619HRR','Lexus UX 300h','Blanco','Aseguradora Alianza',7.5,1,5,1160,'rec','purple',3,1,1,-1,'0/0',0,'car,wrench,spray,box'),
+    S(27841,'FUERTE','3011GJP','Toyota Yaris Cross','Blanco','Flota cliente',25,0,11.5,2430,'val','red',4,4,2,1,'3/3',0,'car,box,spray,wrench'),
+    S(26128,'MEDIO','9011VRZ','Toyota Hilux','Azul','Aseguradora Alianza',12.5,0,11,2240,'val','white',1,4,1,2,'1/1',0,'car,wrench,spray'),
+    S(27448,'NORMAL','4417KTB','Toyota Corolla','Gris','Aseguradora Trébol',6,1,4,980,'val','white',2,3,2,3,'0/1',0,'car,box'),
+    S(26865,'MEDIO','0231NZX','Toyota Aygo X','Negro','Aseguradora Real',11.5,0,8,1960,'apr','green',3,2,2,-2,'0/2',0,'car,check,cart,box'),
+    S(26545,'NORMAL','2983NNF','Toyota Corolla Cross','Negro','Aseguradora Occidente',6,2,5,1530,'apr','green',4,1,1,0,'2/2',0,'car,wrench,spray,cart'),
+    S(27433,'RÁPIDO','7720LPD','Lexus UX 300h','Gris','Aseguradora Directa',8,0,6,1340,'apr','purple',2,3,3,2,'0/3',0,'car,box'),
+    S(26370,'MEDIO','1358JYH','Lexus UX 300h','Negro','Cliente V.O.',9,0,8,920,'pie','blue',2,2,2,0,'9/14',0,'car,wrench,check,box'),
+    S(27756,'MEDIO','4803WMT','Toyota C-HR','Bitono','Aseguradora Directa',9.5,1,8.5,1810,'pie','orange',1,1,2,0,'1/8',0,'car,wrench,check,cart'),
+    S(27603,'RÁPIDO','9198ZTS','Toyota Corolla','Blanco','Flota cliente',3.5,1,2.5,1430,'esp','white',3,3,3,-2,'1/5',0,'car,cart,box'),
+    S(27196,'FUERTE','6040JZT','Lexus NX 450h+','Blanco perla','Aseguradora Directa',19.5,0,9.5,2780,'esp','orange',3,1,2,1,'1/5',0,'car,wrench,check,cart'),
+    S(26280,'MEDIO','2255MCL','Toyota Yaris','Rojo','Aseguradora Trébol',10,0,7,1620,'esp','blue',4,2,4,2,'2/11',0,'car,box,spray'),
+    S(27238,'MEDIO','5576WLZ','Toyota RAV4','Plata','Aseguradora Occidente',9,0,9.5,1280,'pch','yellow',3,3,3,-2,'1/4',0,'car,box,spray'),
+    S(26970,'FUERTE','6962YTR','Lexus RX 500h','Bitono','Aseguradora Trébol',21.5,3,11.5,2480,'pch','blue',1,1,1,0,'1/3',0,'car,wrench,spray'),
+    S(27009,'NORMAL','8834HDG','Toyota Land Cruiser','Negro','Aseguradora Alianza',5,0,6,890,'pch','white',2,4,2,3,'2/4',0,'car,box'),
+    S(26912,'MEDIO','3320GZR','Lexus UX 300h','Azul','Aseguradora Real',14,1,10,2150,'cha','green',2,2,1,-1,'3/6',0,'car,wrench,spray,check'),
+    S(27811,'NORMAL','6109LBN','Toyota Yaris Cross','Verde','Aseguradora Occidente',12,0,8,1750,'cha','white',4,3,4,1,'4/6',0,'car,box,spray'),
+    S(26701,'FUERTE','1942KSM','Toyota Proace City','Blanco','Flota cliente',6,2,12,1980,'pin','yellow',3,1,2,0,'5/7',0,'car,spray,check'),
+    S(27120,'MEDIO','7058JVF','Lexus NX 350h','Gris','Aseguradora Trébol',3,1,9.5,1430,'pin','white',1,2,3,1,'6/7',0,'car,spray'),
+    S(26455,'RÁPIDO','5231HWC','Toyota Aygo X','Naranja','Aseguradora Alianza',2,0,3,540,'mon','green',2,4,1,-1,'7/7',0,'car,wrench,check')
+  ])}
+
+  var st={cards:seed(),ops:{c:5,m:1,p:4},days:5,hpd:8};
+  try{var raw=localStorage.getItem(KEY);if(raw){var o=JSON.parse(raw);if(o&&o.cards&&o.ops){st=o}}}catch(e){}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
+
+  function due(sal){
+    var d=Math.round((new Date(sal+'T00:00:00')-today)/864e5);
+    if(d<0)return {t:'Vencida '+(-d)+(d===-1?' día':' días'),c:'v',d:d};
+    if(d===0)return {t:'Entrega hoy',c:'h',d:d};
+    return {t:(d===1?'Falta 1 día':'Faltan '+d+' días'),c:'f',d:d};
+  }
+  function ddmm(sal){var p=sal.split('-');return p[2]+'/'+p[1]}
+
+  function visible(c){
+    if(f.q){var q=f.q.toLowerCase();if(c.id.toLowerCase().indexOf(q)<0&&c.pl.toLowerCase().indexOf(q)<0)return false}
+    if(f.as&&String(c.as)!==f.as)return false;
+    if(f.ins&&c.ins!==f.ins)return false;
+    if(f.pri&&c.pr!==f.pri)return false;
+    if(f.tc&&c.tc!==f.tc)return false;
+    if(f.due){var d=due(c.sal).d;
+      if(f.due==='v'&&d>=0)return false;
+      if(f.due==='h'&&d!==0)return false;
+      if(f.due==='f'&&d<=0)return false}
+    return true;
+  }
+
+  function sums(list){
+    var r={n:list.length,c:0,m:0,p:0,eur:0};
+    list.forEach(function(x){r.c+=x.c;r.m+=x.m;r.p+=x.p;r.eur+=x.eur});
+    r.t=r.c+r.m+r.p;return r;
+  }
+
+  function opts(arr,sel,first){
+    return '<option value="">'+first+'</option>'+arr.map(function(a){var v=Array.isArray(a)?a[0]:a,l=Array.isArray(a)?a[1]:a;return '<option value="'+esc(v)+'"'+(String(sel)===String(v)?' selected':'')+'>'+esc(l)+'</option>'}).join('');
+  }
+
+  function bar(label,h,cap){
+    var pct=cap>0?Math.round(h/cap*100):null;
+    var cls=pct===null?'':(pct>=100?'':(pct>=70?'mid':'low'));
+    return '<div class="bar"><b>'+label+' <em>'+(pct===null?'—':pct+'%')+'</em></b><div class="track"><i class="'+cls+'" style="width:'+(pct===null?0:Math.min(pct,100))+'%"></i></div><small>'+fh(h)+' / '+fh(cap)+'</small></div>';
+  }
+
+  function icons(list){return list.map(function(k){return '<svg aria-hidden="true"><use href="#i-'+k+'"/></svg>'}).join('')}
+
+  function cardHtml(c){
+    var d=due(c.sal),hrs=[];
+    if(c.c)hrs.push('C '+fh(c.c));if(c.m)hrs.push('M '+fh(c.m));if(c.p)hrs.push('P '+fh(c.p));
+    return '<article class="card t-'+c.tc+'" draggable="true" tabindex="0" data-id="'+esc(c.id)+'" aria-label="OR '+esc(c.id)+', '+esc(c.pl)+'">'+
+      '<div class="r1"><span class="or">'+esc(c.id)+'</span><span class="cm'+(c.cm?' has':'')+'" title="Comentarios">'+c.cm+'</span><span class="ct" title="Control de tareas">CT '+esc(c.ct)+'</span></div>'+
+      '<div class="r2"><span class="pri p-'+esc(c.pr)+'">'+esc(c.pr)+'</span><span class="plate"><i></i>'+esc(c.pl)+'</span></div>'+
+      '<div class="car">'+esc(c.car)+' · '+esc(c.col)+'</div>'+
+      '<div class="ins">Seguro: '+esc(c.ins)+'</div>'+
+      '<div class="ics">'+icons(c.ic)+'</div>'+
+      '<div class="hrs">'+hrs.join(' · ')+' <b>'+fe(c.eur)+'</b></div>'+
+      '<div class="foot"><span class="who">Recepción '+c.rec+' · Asesor '+c.as+' · Gestor '+c.ge+'</span><span class="due '+d.c+'">'+d.t+'</span><span class="sal">Sal. '+ddmm(c.sal)+'</span></div>'+
+    '</article>';
+  }
+
+  function renderTabs(){
+    $('#tabs').innerHTML=TABS.map(function(t,i){
+      var n=i===1?'<span>'+st.cards.length+'</span>':'';
+      return '<button class="tab" role="tab" type="button" data-t="'+i+'" aria-selected="'+(i===tab)+'">'+t+n+'</button>';
+    }).join('');
+  }
+
+  function render(){
+    renderTabs();
+    var m=$('#main');
+    if(tab===0){renderPlan();return}
+    if(tab!==1){m.innerHTML='<div class="msg wrap">La vista «'+TABS[tab]+'» no forma parte de esta demostración. Están activas Planificación y Producción.</div>';return}
+    var all=sums(st.cards),cap=function(n){return n*st.hpd*st.days};
+    var asesores=[],seguros=[];
+    st.cards.forEach(function(c){if(asesores.indexOf(String(c.as))<0)asesores.push(String(c.as));if(seguros.indexOf(c.ins)<0)seguros.push(c.ins)});
+    asesores.sort();seguros.sort();
+    var filt='<div class="filters"><div class="wrap">'+
+      '<label class="chip"><span>Asesor:</span><select data-f="as">'+opts(asesores.map(function(a){return [a,'Asesor '+a]}),f.as,'todos')+'</select></label>'+
+      '<label class="chip"><span>Seguro:</span><select data-f="ins">'+opts(seguros,f.ins,'todos')+'</select></label>'+
+      '<label class="chip"><span>Prioridad:</span><select data-f="pri">'+opts(['RÁPIDO','FUERTE','MEDIO','NORMAL'],f.pri,'todas')+'</select></label>'+
+      '<label class="chip"><span>Fecha de entrega:</span><select data-f="due">'+opts([['v','Vencidas'],['h','Hoy'],['f','Próximas']],f.due,'todos')+'</select></label>'+
+      '<label class="chip"><span>Color tarjeta:</span><select data-f="tc">'+opts(COLORS,f.tc,'todos')+'</select></label>'+
+      (f.q||f.as||f.ins||f.pri||f.due||f.tc?'<button class="clear" type="button" id="clr">Quitar filtros</button>':'')+
+    '</div></div>';
+    var sum='<div class="sum"><div class="wrap">'+
+      '<div class="big">'+all.n+'<small>VEHÍCULOS</small></div>'+
+      '<div class="stats">'+
+        '<div class="stat"><b>Total</b><span>'+fh(all.t)+'</span></div>'+
+        '<div class="stat"><b>Chapa</b><span>'+fh(all.c)+'</span></div>'+
+        '<div class="stat"><b>Mecánica</b><span>'+fh(all.m)+'</span></div>'+
+        '<div class="stat"><b>Pintura</b><span>'+fh(all.p)+'</span></div>'+
+        '<div class="stat"><b>Importe</b><span>'+fe(all.eur)+'</span></div>'+
+      '</div>'+
+      '<div class="ops">'+
+        '<label>Op. chapa<input type="number" min="0" step="1" data-op="c" value="'+st.ops.c+'"></label>'+
+        '<label>Op. mecánica<input type="number" min="0" step="1" data-op="m" value="'+st.ops.m+'"></label>'+
+        '<label>Op. pintura<input type="number" min="0" step="1" data-op="p" value="'+st.ops.p+'"></label>'+
+        '<label>Días lab.<input type="number" min="1" max="7" step="1" data-op="days" value="'+st.days+'"></label>'+
+      '</div>'+
+      '<div class="bars">'+bar('Chapa',all.c,cap(st.ops.c))+bar('Mecánica',all.m,cap(st.ops.m))+bar('Pintura',all.p,cap(st.ops.p))+bar('Total',all.t,cap(st.ops.c+st.ops.m+st.ops.p))+'</div>'+
+    '</div></div>';
+    var board='<div class="wrap"><div class="board" id="board">'+COLS.map(function(col){
+      var list=st.cards.filter(function(c){return c.st===col[0]&&visible(c)});
+      var s=sums(list);
+      return '<section class="col" data-col="'+col[0]+'"><h2>'+col[1]+'<em>'+s.n+'</em></h2>'+
+        '<div class="tot">'+fe(s.eur)+' T:'+fh(s.t)+' C:'+fh(s.c)+' M:'+fh(s.m)+' P:'+fh(s.p)+'</div>'+
+        '<div class="stack">'+(list.length?list.map(cardHtml).join(''):'<div class="empty">Sin vehículos</div>')+'</div></section>';
+    }).join('')+'</div><p class="note">Datos de ejemplo. Arrastra una tarjeta a otra columna, o ábrela para moverla. Los cambios se guardan en este navegador.</p></div>';
+    m.innerHTML=filt+sum+board;
+  }
+
+  function toast(t){var e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){e.hidden=true},2600)}
+  function openDlg(html){$('#dlg').innerHTML=html;$('#ov').hidden=false;var i=$('#dlg input,#dlg select,#dlg button');if(i)i.focus()}
+  function closeDlg(){$('#ov').hidden=true;$('#dlg').innerHTML=''}
+
+  function cardDlg(id){
+    var c=st.cards.filter(function(x){return x.id===id})[0];if(!c)return;
+    var d=due(c.sal);
+    openDlg('<h3>OR '+esc(c.id)+'</h3>'+
+      '<dl class="kv"><dt>Matrícula</dt><dd>'+esc(c.pl)+'</dd><dt>Vehículo</dt><dd>'+esc(c.car)+' · '+esc(c.col)+'</dd><dt>Seguro</dt><dd>'+esc(c.ins)+'</dd>'+
+      '<dt>Horas</dt><dd>C '+fh(c.c)+' · M '+fh(c.m)+' · P '+fh(c.p)+'</dd><dt>Importe</dt><dd>'+fe(c.eur)+'</dd>'+
+      '<dt>Salida</dt><dd>'+ddmm(c.sal)+' · '+d.t+'</dd><dt>Prioridad</dt><dd>'+esc(c.pr)+'</dd><dt>En esta fase</dt><dd>'+dIn(c)+(dIn(c)===1?' día':' días')+'</dd></dl>'+
+      '<label class="f">Mover a<select id="mv">'+COLS.map(function(k){return '<option value="'+k[0]+'"'+(k[0]===c.st?' selected':'')+'>'+k[1]+'</option>'}).join('')+'</select></label>'+
+      '<div class="row"><button class="btn danger" type="button" id="del">Eliminar</button><button class="btn" type="button" data-close>Cerrar</button><button class="btn primary" type="button" id="mvOk" data-id="'+esc(c.id)+'">Mover</button></div>');
+  }
+
+  function newDlg(){
+    openDlg('<h3>Nueva cita</h3><form id="nf"><div class="grid">'+
+      '<label>Matrícula<input id="n-pl" required maxlength="10" placeholder="0000ABC"></label>'+
+      '<label>Prioridad<select id="n-pr"><option>NORMAL</option><option>MEDIO</option><option>FUERTE</option><option>RÁPIDO</option></select></label>'+
+      '<label class="full">Vehículo<input id="n-car" required placeholder="Toyota Corolla"></label>'+
+      '<label>Seguro<input id="n-ins" placeholder="Aseguradora"></label>'+
+      '<label>Fecha de salida<input id="n-sal" type="date" required value="'+iso(5)+'"></label>'+
+      '<label>Horas chapa<input id="n-c" type="number" min="0" step="0.5" value="0"></label>'+
+      '<label>Horas pintura<input id="n-p" type="number" min="0" step="0.5" value="0"></label>'+
+      '<label>Horas mecánica<input id="n-m" type="number" min="0" step="0.5" value="0"></label>'+
+      '<label>Importe (€)<input id="n-e" type="number" min="0" step="10" value="0"></label>'+
+      '<label class="full">Columna<select id="n-st">'+COLS.map(function(k){return '<option value="'+k[0]+'">'+k[1]+'</option>'}).join('')+'</select></label>'+
+    '</div><div class="row"><button class="btn" type="button" data-close>Cancelar</button><button class="btn primary" type="submit">Añadir</button></div></form>');
+  }
+
+  function setDlg(){
+    openDlg('<h3>Ajustes</h3><label class="f">Horas por jornada<input id="s-h" type="number" min="1" max="12" step="0.5" value="'+st.hpd+'"></label>'+
+      '<p class="note" style="padding-bottom:0">La capacidad de cada sección es operarios × horas por jornada × días laborables.</p>'+
+      '<div class="row"><button class="btn danger" type="button" id="rst">Restaurar datos de ejemplo</button><button class="btn" type="button" data-close>Cerrar</button><button class="btn primary" type="button" id="sOk">Guardar</button></div>');
+  }
+
+  /* ---------- Planificación ---------- */
+  var hz=10;
+  var THR={rec:1,val:2,apr:3,pie:4,esp:3,pch:2,cha:4,pin:3,mon:1};   // días máximos razonables en cada fase
+  var CAPW={rec:4,val:4,apr:4,pie:4,esp:4,pch:4,cha:5,pin:4,mon:3};   // tope de vehículos por fase
+  var REM={rec:[1,1,1],val:[1,1,1],apr:[1,1,1],pie:[1,1,1],esp:[1,1,1],pch:[1,1,1],cha:[.5,1,1],pin:[0,.6,.5],mon:[0,0,.5]}; // pendiente [chapa,pintura,mecánica]
+  var DELAY={rec:0,val:1,apr:2,pie:3,esp:0,pch:0,cha:0,pin:0,mon:0};  // días de espera estimados antes de empezar
+  var SEC=[['c','Chapa'],['m','Mecánica'],['p','Pintura']];
+  var SECN={c:'chapa',m:'mecánica',p:'pintura'};
+  var DN=['do','lu','ma','mi','ju','vi','sá'];
+  function pad(n){return n<10?'0'+n:''+n}
+  function dm(d){return pad(d.getDate())+'/'+pad(d.getMonth()+1)}
+  function r2(n){return (Math.round(n*100)/100).toFixed(2).replace('.',',')}
+  function r1(n){return String(Math.round(n*10)/10).replace('.',',')}
+  function avg(a){return a.length?a.reduce(function(x,y){return x+y},0)/a.length:0}
+  function plural(n,s,p){return n+' '+(n===1?s:p)}
+  function colName(k){for(var i=0;i<COLS.length;i++){if(COLS[i][0]===k)return COLS[i][1]}return k}
+  function dIn(c){return Math.max(0,Math.round((today-new Date((c.mv||iso(0))+'T00:00:00'))/864e5))}
+  function wdays(n){var a=[],d=new Date(today);while(a.length<n){var w=d.getDay();if(w!==0&&w!==6)a.push(new Date(d));d.setDate(d.getDate()+1)}return a}
+
+  function filterBar(){
+    var asesores=[],seguros=[];
+    st.cards.forEach(function(c){if(asesores.indexOf(String(c.as))<0)asesores.push(String(c.as));if(seguros.indexOf(c.ins)<0)seguros.push(c.ins)});
+    asesores.sort();seguros.sort();
+    return '<div class="filters"><div class="wrap">'+
+      '<label class="chip"><span>Horizonte:</span><select data-hz="1">'+[5,10,15].map(function(n){return '<option value="'+n+'"'+(n===hz?' selected':'')+'>'+n+' días laborables</option>'}).join('')+'</select></label>'+
+      '<label class="chip"><span>Asesor:</span><select data-f="as">'+opts(asesores.map(function(a){return [a,'Asesor '+a]}),f.as,'todos')+'</select></label>'+
+      '<label class="chip"><span>Seguro:</span><select data-f="ins">'+opts(seguros,f.ins,'todos')+'</select></label>'+
+      '<label class="chip"><span>Prioridad:</span><select data-f="pri">'+opts(['RÁPIDO','FUERTE','MEDIO','NORMAL'],f.pri,'todas')+'</select></label>'+
+      (f.q||f.as||f.ins||f.pri||f.due||f.tc?'<button class="clear" type="button" id="clr">Quitar filtros</button>':'')+
+    '</div></div>';
+  }
+
+  // horas necesarias cada día para cumplir la fecha de salida: se planifica hacia atrás (pintura al final, chapa justo antes)
+  function loadMap(list,DAYS){
+    var N=DAYS.length,L={c:[],m:[],p:[]},i;
+    for(i=0;i<N;i++){L.c.push(0);L.m.push(0);L.p.push(0)}
+    function put(k,h,a,b){if(h<=0)return;if(a<0)a=0;if(b<a)b=a;var n=b-a+1;for(var j=a;j<=b&&j<N;j++)L[k][j]+=h/n}
+    var limc=2*st.hpd,limp=st.hpd;
+    list.forEach(function(c){
+      var r=REM[c.st]||[1,1,1],rc=c.c*r[0],rp=c.p*r[1],rm=c.m*r[2],s0=DELAY[c.st]||0;
+      var cd=rc>0?Math.ceil(rc/limc-1e-9):0,pd=rp>0?Math.ceil(rp/limp-1e-9):0,tot=cd+pd;
+      var sd=new Date(c.sal+'T00:00:00'),si=-1;
+      DAYS.forEach(function(d,j){if(d<=sd)si=j});
+      var e=Math.max(si,0),a=e-tot+1;
+      if(a<s0){a=s0;e=a+tot-1}
+      var ce=a+cd-1;
+      put('c',rc,a,ce);put('p',rp,ce+1,e);
+      if(tot>0)put('m',rm,a,e);else put('m',rm,Math.min(s0,e),Math.max(e,s0));
+    });
+    return L;
+  }
+
+  function phaseStats(list){
+    return COLS.map(function(k){
+      var g=list.filter(function(c){return c.st===k[0]}),days=g.map(dIn),s=sums(g);
+      var over=days.filter(function(d){return d>THR[k[0]]}).length,a=avg(days);
+      return {k:k[0],name:k[1],n:g.length,h:s.t,avg:a,over:over,thr:THR[k[0]],cap:CAPW[k[0]],score:g.length?g.length/CAPW[k[0]]+a/THR[k[0]]:0};
+    });
+  }
+
+  function waitsBy(list,col,keyf){
+    var m={};
+    list.filter(function(c){return c.st===col}).forEach(function(c){var k=keyf(c)||'Sin proveedor';(m[k]=m[k]||[]).push(c)});
+    return Object.keys(m).map(function(k){
+      var g=m[k],d=g.map(dIn),s=sums(g);
+      return {name:k,n:g.length,avg:avg(d),max:Math.max.apply(null,d),h:s.t,eur:s.eur};
+    }).sort(function(a,b){return b.avg-a.avg});
+  }
+
+  // plan con capacidad real: por orden de fecha de salida, máx. 2 chapistas y 1 pintor por vehículo
+  function schedule(list,DAYS){
+    var N=DAYS.length,cap={c:st.ops.c*st.hpd,m:st.ops.m*st.hpd,p:st.ops.p*st.hpd},used={c:[],m:[],p:[]},i;
+    for(i=0;i<N;i++){used.c.push(0);used.m.push(0);used.p.push(0)}
+    var lim={c:2*st.hpd,p:st.hpd,m:st.hpd};
+    function alloc(k,h,from){
+      if(h<=0)return from-1;
+      var j=Math.max(from,0),end=from-1;
+      while(h>1e-9&&j<N){var g=Math.min(h,lim[k],cap[k]-used[k][j]);if(g>1e-9){used[k][j]+=g;h-=g;end=j}j++}
+      return h>1e-9?N:end;
+    }
+    function need(h,l){return h>0?Math.ceil(h/l-1e-9):0}
+    return list.slice().sort(function(a,b){return a.sal<b.sal?-1:a.sal>b.sal?1:0}).map(function(c){
+      var r=REM[c.st]||[1,1,1],rc=c.c*r[0],rp=c.p*r[1],rm=c.m*r[2],s0=DELAY[c.st]||0;
+      var ec=alloc('c',rc,s0),ep=alloc('p',rp,ec+1),em=alloc('m',rm,s0);
+      var fin=Math.max(ec,ep,em,s0);
+      var ic=s0+need(rc,lim.c)-1,ip=ic+need(rp,lim.p),im=s0+need(rm,lim.m)-1;
+      var idealFin=Math.max(ic,ip,im,s0);
+      var sd=new Date(c.sal+'T00:00:00'),si=-1;
+      DAYS.forEach(function(d,j){if(d<=sd)si=j});
+      var late=(rc+rp+rm>0&&fin>si)?fin-si:0,cause='';
+      if(late>0){
+        if(idealFin>si){cause=c.st==='apr'?'Aprobación pendiente':c.st==='pie'?'Falta de piezas':'Plazo corto para las horas'}
+        else{
+          var q={c:rc>0?ec-ic:0,p:rp>0?ep-(ec+need(rp,lim.p)):0,m:rm>0?em-im:0},k='c';
+          if(q.p>q[k])k='p';if(q.m>q[k])k='m';
+          var ends={c:ec,p:ep,m:em};
+          cause=(ends[k]>=N&&cap[k]<=0)?'Sin operarios de '+SECN[k]:'Cola en '+SECN[k];
+        }
+      }
+      return {c:c,fin:fin,si:si,late:late,cause:cause};
+    });
+  }
+
+  function heatCell(h,cap){
+    if(cap<=0)return h>0.05?'<td class="hz h-b">sin cap.<small>'+fh(h)+'</small></td>':'<td class="hz h-z">—</td>';
+    var p=h/cap*100,cls=p<70?'h-l':p<100?'h-o':p<115?'h-w':'h-b';
+    return '<td class="hz '+cls+'">'+Math.round(p)+'%<small>'+fh(h)+'</small></td>';
+  }
+
+  function renderPlan(){
+    var list=st.cards.filter(visible),DAYS=wdays(40),n=hz,i;
+    var L=loadMap(list,DAYS);
+    var capD={c:st.ops.c*st.hpd,m:st.ops.m*st.hpd,p:st.ops.p*st.hpd};capD.t=capD.c+capD.m+capD.p;
+    var ph=phaseStats(list),ea=waitsBy(list,'apr',function(c){return c.ins}),ep=waitsBy(list,'pie',function(c){return c.prov});
+    var sch=schedule(list,DAYS),risk=sch.filter(function(x){return x.late>0}).sort(function(a,b){return b.late-a.late});
+
+    // alertas
+    var al=[];
+    SEC.forEach(function(s){
+      var k=s[0],mx=0,mi=0,over=0;
+      for(var j=0;j<n;j++){
+        var h=L[k][j];
+        if(capD[k]<=0){if(h>0.05){over++;mx=999;mi=j}continue}
+        var p=h/capD[k]*100;if(p>=100)over++;if(p>mx){mx=p;mi=j}
+      }
+      if(capD[k]<=0&&mx===999)al.push({s:'b',t:'Sin operarios de '+SECN[k]+' con horas pendientes.',go:'p-carga'});
+      else if(mx>=100)al.push({s:mx>=115?'b':'w',t:s[1]+' al '+Math.round(mx)+' % el '+DN[DAYS[mi].getDay()]+' '+DAYS[mi].getDate()+' ('+plural(over,'día','días')+' por encima del 100 %).',go:'p-carga'});
+    });
+    ph.filter(function(x){return x.over>0}).sort(function(a,b){return b.over-a.over}).slice(0,2).forEach(function(x){
+      al.push({s:x.over>=2?'b':'w',t:plural(x.over,'vehículo supera','vehículos superan')+' '+x.thr+' días en «'+x.name+'».',go:'p-flujo'});
+    });
+    if(ea[0]&&ea[0].avg>THR.apr)al.push({s:'w',t:ea[0].name+': espera media de '+r1(ea[0].avg)+' días en aprobación ('+plural(ea[0].n,'vehículo','vehículos')+').',go:'p-esperas'});
+    if(ep[0]&&ep[0].avg>THR.pie)al.push({s:'w',t:ep[0].name+': piezas esperando '+r1(ep[0].avg)+' días de media ('+plural(ep[0].n,'vehículo','vehículos')+').',go:'p-esperas'});
+    if(risk.length)al.push({s:'b',t:plural(risk.length,'vehículo no saldrá','vehículos no saldrán')+' en fecha con la capacidad actual.',go:'p-riesgo'});
+    al.sort(function(a,b){return (a.s==='b'?0:1)-(b.s==='b'?0:1)});
+    al=al.slice(0,6);
+    var alHtml=al.length?al.map(function(a){return '<button class="al" type="button" data-go="'+a.go+'"><span class="sev '+a.s+'">'+(a.s==='b'?'Crítica':'Atención')+'</span><span>'+esc(a.t)+'</span></button>'}).join(''):'<div class="al"><span class="sev o">Sin alertas</span><span>No se detectan cuellos de botella en el horizonte elegido.</span></div>';
+
+    // carga vs capacidad
+    var head;
+    head='<tr><th>Sección</th>';
+    for(i=0;i<n;i++)head+='<th>'+DN[DAYS[i].getDay()]+' '+DAYS[i].getDate()+'</th>';
+    head+='</tr>';
+    var rows=SEC.map(function(s){
+      var r='<tr><td>'+s[1]+' <small class="h-z">'+fh(capD[s[0]])+'/día</small></td>';
+      for(i=0;i<n;i++)r+=heatCell(L[s[0]][i],capD[s[0]]);
+      return r+'</tr>';
+    }).join('');
+    var tr='<tr class="tot"><td>Total <small class="h-z">'+fh(capD.t)+'/día</small></td>';
+    for(i=0;i<n;i++)tr+=heatCell(L.c[i]+L.m[i]+L.p[i],capD.t);
+    tr+='</tr>';
+
+    // flujo
+    var top=null;ph.forEach(function(x){if(x.n>0&&(!top||x.score>top.score))top=x});
+    var flow=ph.map(function(x){
+      var pc=Math.min(100,x.n/x.cap*100),bc=x.n>x.cap?'b':x.n===x.cap?'w':'';
+      return '<tr><td>'+esc(x.name)+(top&&top===x&&x.score>=1.4?'<span class="tag">Cuello probable</span>':'')+'</td>'+
+        '<td class="n">'+x.n+' / '+x.cap+' <span class="mb"><i class="'+bc+'" style="width:'+pc+'%"></i></span></td>'+
+        '<td class="n">'+fh(x.h)+'</td><td class="n">'+(x.n?r1(x.avg):'—')+' d</td><td class="n">'+x.thr+' d</td>'+
+        '<td class="n'+(x.over>0?' bad':'')+'">'+x.over+' de '+x.n+'</td></tr>';
+    }).join('');
+
+    // esperas
+    function waitTable(rowsW,label){
+      if(!rowsW.length)return '<div class="empty">Ningún vehículo en espera.</div>';
+      return '<div class="tw"><table class="t" style="min-width:360px"><tr><th>'+label+'</th><th class="n">Veh.</th><th class="n">Media</th><th class="n">Máx.</th><th class="n">Horas</th><th class="n">Importe</th></tr>'+
+        rowsW.map(function(x){return '<tr><td>'+esc(x.name)+'</td><td class="n">'+x.n+'</td><td class="n'+(x.avg>THR.apr?' bad':'')+'">'+r1(x.avg)+' d</td><td class="n">'+x.max+' d</td><td class="n">'+fh(x.h)+'</td><td class="n">'+fe(x.eur)+'</td></tr>'}).join('')+'</table></div>';
+    }
+
+    // equilibrio chapa → pintura
+    var c5=0,p5=0;for(i=0;i<5;i++){c5+=L.c[i];p5+=L.p[i]}
+    var cc5=capD.c*5,pc5=capD.p*5,sc=sums(list),ratio=sc.p>0?sc.c/sc.p:0,ideal=5.5/4.5;
+    function tile(label,pct,sub){var k=pct===null?'':pct>=115?'b':pct>=100?'w':'';return '<div class="tile '+k+'"><b>'+label+'</b><strong>'+(pct===null?'—':Math.round(pct)+' %')+'</strong><small>'+sub+'</small></div>'}
+    var read=!sc.p||!sc.c?'Sin datos suficientes para comparar.':ratio<ideal*.9?'Hay más pintura que chapa de lo habitual: la cabina puede ser el límite.':ratio>ideal*1.1?'Hay más chapa que pintura de lo habitual: el límite puede estar en chapa.':'La proporción está cerca de la del método.';
+
+    // riesgo
+    var riskHtml=risk.length?'<div class="tw"><table class="t"><tr><th>OR</th><th>Matrícula</th><th>Fase</th><th>Salida</th><th>Fin estimado</th><th class="n">Retraso</th><th>Causa probable</th></tr>'+
+      risk.slice(0,12).map(function(x){
+        var fe2=x.fin>=DAYS.length?'> '+dm(DAYS[DAYS.length-1]):dm(DAYS[x.fin]);
+        return '<tr><td>'+esc(x.c.id)+'</td><td>'+esc(x.c.pl)+'</td><td>'+esc(colName(x.c.st))+'</td><td>'+ddmm(x.c.sal)+'</td><td>'+fe2+'</td><td class="n bad">+'+x.late+' d</td><td>'+esc(x.cause)+'</td></tr>';
+      }).join('')+'</table></div>'+(risk.length>12?'<p class="cap">y '+(risk.length-12)+' más.</p>':''):'<div class="empty">Ningún vehículo en riesgo con la capacidad actual.</div>';
+
+    $('#main').innerHTML=filterBar()+'<div class="wrap plan">'+
+      '<section class="pb"><h2>Alertas</h2><p class="cap">Lo más urgente del horizonte. Pulsa una para ir al detalle.</p><div class="alerts">'+alHtml+'</div></section>'+
+      '<section class="pb" id="p-carga"><h2>Carga frente a capacidad</h2><p class="cap">Horas comprometidas por día según la fecha de salida de cada vehículo, frente a la capacidad diaria (operarios × jornada). Cada vehículo se planifica hacia atrás desde su salida: pintura en los últimos días y chapa justo antes. Si ya no cabe, empieza hoy. Los operarios se cambian en Producción.</p><div class="tw"><table class="t heat">'+head+rows+tr+'</table></div></section>'+
+      '<section class="pb" id="p-flujo"><h2>Flujo por fase</h2><p class="cap">Vehículos, horas y días de permanencia en cada fase. El tope de vehículos y el umbral de días son valores de ejemplo.</p><div class="tw"><table class="t"><tr><th>Fase</th><th class="n">Vehículos / tope</th><th class="n">Horas</th><th class="n">Días medios</th><th class="n">Umbral</th><th class="n">Sobre umbral</th></tr>'+flow+'</table></div></section>'+
+      '<section class="pb" id="p-esperas"><h2>Esperas externas</h2><p class="cap">Vehículos parados a la espera de terceros, con las horas y el importe que quedan inmovilizados.</p><div class="two"><div><h3>Pendiente de aprobación, por aseguradora</h3>'+waitTable(ea,'Aseguradora')+'</div><div><h3>Pendiente de piezas, por proveedor</h3>'+waitTable(ep,'Proveedor')+'</div></div></section>'+
+      '<section class="pb" id="p-equilibrio"><h2>Equilibrio chapa y pintura</h2><p class="cap">Carga de los próximos 5 días laborables y proporción de horas frente a la del método (5,5 h de chapa por 4,5 h de pintura).</p><div class="tiles">'+
+        tile('Chapa, próximos 5 días',cc5>0?c5/cc5*100:null,fh(c5)+' de '+fh(cc5))+
+        tile('Pintura, próximos 5 días',pc5>0?p5/pc5*100:null,fh(p5)+' de '+fh(pc5))+
+        '<div class="tile"><b>Proporción chapa : pintura</b><strong>'+(ratio?r2(ratio):'—')+'</strong><small>método: '+r2(ideal)+'</small></div></div><p class="read">'+read+'</p></section>'+
+      '<section class="pb" id="p-riesgo"><h2>Riesgo de entrega</h2><p class="cap">Plan con la capacidad real, asignado por orden de fecha de salida. Supone 2 chapistas y 1 pintor como máximo por vehículo, y una espera previa de 2 días en aprobación y de 3 en piezas.</p>'+riskHtml+'</section>'+
+      '<p class="note">Datos de ejemplo. Los cálculos se actualizan al mover vehículos en Producción.</p>'+
+    '</div>';
+  }
+
+  // eventos
+  document.addEventListener('click',function(e){
+    var t=e.target;
+    var tb=t.closest('.tab');if(tb){tab=+tb.dataset.t;render();return}
+    var go=t.closest('[data-go]');if(go){var el=document.getElementById(go.dataset.go);if(el)el.scrollIntoView({block:'start'});return}
+    if(t.closest('[data-close]')||t===$('#ov')){closeDlg();return}
+    if(t.id==='bNew'){newDlg();return}
+    if(t.id==='bSet'){setDlg();return}
+    if(t.id==='bImp'){toast('Importar desde Excel está disponible en la versión completa.');return}
+    if(t.id==='clr'){f={q:'',as:'',ins:'',pri:'',due:'',tc:''};$('#q').value='';render();return}
+    if(t.id==='mvOk'){var c=st.cards.filter(function(x){return x.id===t.dataset.id})[0];if(c){c.st=$('#mv').value;c.mv=iso(0);save();closeDlg();render();toast('Vehículo movido')}return}
+    if(t.id==='del'){t.textContent='Confirmar eliminar';t.id='del2';return}
+    if(t.id==='del2'){var id=$('#mvOk').dataset.id;st.cards=st.cards.filter(function(x){return x.id!==id});save();closeDlg();render();toast('Vehículo eliminado');return}
+    if(t.id==='rst'){st={cards:seed(),ops:{c:5,m:1,p:4},days:5,hpd:8};save();closeDlg();render();toast('Datos de ejemplo restaurados');return}
+    if(t.id==='sOk'){st.hpd=Math.max(1,num($('#s-h').value)||8);save();closeDlg();render();return}
+    var card=t.closest('.card');if(card&&!card.classList.contains('drag')){cardDlg(card.dataset.id)}
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'&&!$('#ov').hidden){closeDlg();return}
+    if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('card')){cardDlg(e.target.dataset.id)}
+  });
+  document.addEventListener('change',function(e){
+    var t=e.target;
+    if(t.dataset.hz!==undefined){hz=+t.value;render();return}
+    if(t.dataset.f!==undefined){f[t.dataset.f]=t.value;render();return}
+    if(t.dataset.op!==undefined){
+      var v=Math.max(0,Math.round(num(t.value)));
+      if(t.dataset.op==='days'){st.days=Math.min(7,Math.max(1,v||5))}else{st.ops[t.dataset.op]=v}
+      save();render();
+    }
+  });
+  document.addEventListener('submit',function(e){
+    e.preventDefault();
+    if(e.target.id==='searchForm'){f.q=$('#q').value.trim();render();return}
+    if(e.target.id==='nf'){
+      var max=0;st.cards.forEach(function(c){var n=parseInt(c.id,10);if(n>max)max=n});
+      st.cards.push({id:(max+1)+'-2026',pr:$('#n-pr').value,pl:$('#n-pl').value.toUpperCase().trim(),car:$('#n-car').value.trim(),col:'',ins:$('#n-ins').value.trim()||'Particular',
+        c:num($('#n-c').value),m:num($('#n-m').value),p:num($('#n-p').value),eur:num($('#n-e').value),st:$('#n-st').value,tc:'white',rec:1,as:1,ge:1,sal:$('#n-sal').value,ct:'0/0',cm:0,ic:['car'],ent:iso(0),mv:iso(0),prov:''});
+      save();closeDlg();render();toast('Cita añadida');
+    }
+  });
+  document.addEventListener('input',function(e){if(e.target.id==='q'&&e.target.value===''&&f.q){f.q='';render()}});
+
+  // arrastrar y soltar
+  var dragId=null;
+  document.addEventListener('dragstart',function(e){var c=e.target.closest&&e.target.closest('.card');if(!c)return;dragId=c.dataset.id;c.classList.add('drag');try{e.dataTransfer.setData('text/plain',dragId);e.dataTransfer.effectAllowed='move'}catch(x){}});
+  document.addEventListener('dragend',function(e){dragId=null;document.querySelectorAll('.drag,.over').forEach(function(n){n.classList.remove('drag','over')})});
+  document.addEventListener('dragover',function(e){var col=e.target.closest&&e.target.closest('.col');if(col&&dragId){e.preventDefault();document.querySelectorAll('.over').forEach(function(n){if(n!==col)n.classList.remove('over')});col.classList.add('over')}});
+  document.addEventListener('drop',function(e){
+    var col=e.target.closest&&e.target.closest('.col');if(!col||!dragId)return;e.preventDefault();
+    var c=st.cards.filter(function(x){return x.id===dragId})[0];
+    if(c&&c.st!==col.dataset.col){c.st=col.dataset.col;c.mv=iso(0);save()}
+    dragId=null;render();
+  });
+
+  render();
+})();
+</script>
+
+</body></html>
