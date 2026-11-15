@@ -301,7 +301,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
           <div><a class="shot" href="dashboard-demo.html"><img src="dashboard-extracto.png" alt="Extracto del dashboard de seguimiento: indicadores clave y los tres valores de la hora de mano de obra" loading="lazy"></a>
             <small class="shotc">Extracto del dashboard, con datos de ejemplo. Púlsalo para verlo completo.</small></div>
         </div>
-        <p style="margin:28px 0 0;display:flex;gap:12px;flex-wrap:wrap"><a class="btn" href="dashboard-demo.html">Ver el dashboard en funcionamiento</a><a class="btn ghost" href="Plantilla_Metodo_AGP.xlsx" download>Descargar plantilla de datos</a><a class="btn" id="dashBtn" href="#contacto">Quiero el dashboard de mi taller</a></p>
+        <p style="margin:28px 0 0;display:flex;gap:12px;flex-wrap:wrap"><a class="btn" href="dashboard-demo.html">Ver el dashboard en funcionamiento</a><a class="btn ghost" href="#" data-plantilla>Descargar plantilla de datos</a><a class="btn" id="dashBtn" href="#contacto">Quiero el dashboard de mi taller</a></p>
       </div>
     </div>
   </section>
@@ -341,5 +341,6 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
   document.getElementById("hablemosBtn").href = b.href;
   document.getElementById("dashBtn").href = "mailto:" + EMAIL + "?subject=" + encodeURIComponent("métodoAGP: quiero ver el dashboard de mi taller");
 </script>
+<script src="descarga.js"></script>
 </body>
 </html>
