@@ -64,6 +64,9 @@ fieldset{border:1px solid var(--line);border-radius:10px;background:var(--surfac
 legend{padding:0 10px;margin-left:-10px;font:800 22px/1 var(--display);letter-spacing:.06em;text-transform:uppercase}
 legend i{font-style:normal;display:inline-block;color:#fff;border-radius:5px;padding:3px 9px;margin-right:8px;background:var(--a)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px 20px}
+#gA{grid-template-columns:repeat(3,1fr)}
+#gA .rs{grid-column-start:1}
+@media(max-width:760px){#gA{grid-template-columns:1fr}#gA .rs{grid-column-start:auto}}
 .f{min-width:0}
 .f[hidden]{display:none!important}
 label{display:block;font-weight:600;font-size:14px;margin-bottom:5px}
@@ -196,7 +199,7 @@ var H_CONV = 1760;          // 8 h x 220 días por operario (tiempo de convenio)
 
 // Valores del método (no se muestran en pantalla salvo SHOW_TARGETS)
 var T = { recH:50, matH:28, mix:{mo:.40, mat:.15, rec:.45}, mMO:.30, mRec:.25, mMat:.50, estr:.25, indir:.30,
-          horasRep:10, hCh:5.5, hPi:4.5,
+          hCh:5.5, hPi:4.5,
           litros:{base:.06, barniz:.12, fondo:.04}, precio:{base:70, barniz:19, fondo:17} };
 
 /* ---------- campos ---------- */
@@ -204,27 +207,21 @@ var F = [
  // bloque A
  {id:"ch",  b:"A", l:"Chapistas", u:"personas", m:"qf", req:1, h:"Operarios de mano de obra directa en chapa."},
  {id:"pi",  b:"A", l:"Pintores", u:"personas", m:"qf", req:1, h:"Operarios de mano de obra directa en pintura."},
+ {id:"indir",b:"A", l:"Personal de mano de obra indirecta", u:"personas", m:"f", h:"Recepción, administración, jefe de taller, mozos…"},
+ {id:"aus",  b:"A", l:"Horas de ausencia anuales", u:"h", m:"f", row:1, h:"Bajas, retrasos, ausencias de operarios directos."},
+ {id:"extra",b:"A", l:"Horas extra anuales", u:"h", m:"f", h:"Total de horas extra de chapistas y pintores."},
+ {id:"fc",   b:"A", l:"Horas facturadas de chapa", u:"h", m:"f", req:1, row:1, h:"Año completo."},
+ {id:"fp",   b:"A", l:"Horas facturadas de pintura", u:"h", m:"f", req:1, h:"Año completo."},
  {id:"precio", b:"A", l:"Precio medio de venta de la hora", u:"€/h", m:"qf", req:1, h:"Sin IVA."},
  {id:"rend", b:"A", l:"Rendimiento actual estimado", u:"%", m:"q", req:1, h:"Horas facturadas entre horas compradas. Si no lo sabes, pon tu mejor estimación."},
- {id:"indir",b:"A", l:"Personal de mano de obra indirecta", u:"personas", m:"f", h:"Recepción, administración, jefe de taller, mozos…"},
- {id:"reps", b:"A", l:"Reparaciones al año", u:"nº", m:"f", h:"Órdenes de reparación facturadas."},
- {id:"extra",b:"A", l:"Horas extra anuales", u:"h", m:"f", h:"Total de horas extra de chapistas y pintores."},
- {id:"aus",  b:"A", l:"Horas de ausencia anuales", u:"h", m:"f", h:"Bajas, retrasos, ausencias de operarios directos."},
- {id:"inv",  b:"A", l:"Horas invertidas en reparaciones", u:"h", m:"f", h:"Horas que los operarios asignan a órdenes."},
- {id:"fc",   b:"A", l:"Horas facturadas de chapa", u:"h", m:"f", req:1, h:"Año completo."},
- {id:"fp",   b:"A", l:"Horas facturadas de pintura", u:"h", m:"f", req:1, h:"Año completo."},
- // bloque G
  {id:"facMO",b:"G", l:"Facturación de mano de obra", u:"€/año", m:"qf", h:"Si lo dejas vacío se calcula con horas × precio."},
  {id:"rec",  b:"G", l:"Facturación de recambios", u:"€/año", m:"qf", h:"Sin IVA. Si no lo sabes, déjalo vacío: lo indicaremos como dato pendiente."},
  {id:"mat",  b:"G", l:"Facturación de material de pintura", u:"€/año", m:"qf", h:"Sin IVA. Si no lo sabes, déjalo vacío: lo indicaremos como dato pendiente."},
  // bloque P
  {id:"pers", b:"P", l:"Gasto de personal", u:"€/año", m:"f", h:"Toda la plantilla (directa e indirecta), con seguridad social."},
  {id:"estr", b:"P", l:"Gastos de estructura", u:"€/año", m:"f", h:"Gastos no facturables: alquiler, suministros, seguros, etc."},
- {id:"cRec", b:"P", l:"Coste de los recambios vendidos", u:"€/año", m:"f", h:"Lo que te cuestan a ti."},
- {id:"cMat", b:"P", l:"Coste del material de pintura", u:"€/año", m:"f", h:"Lo que te cuesta a ti."},
- {id:"lBase",b:"P", l:"Litros de color base agua (listo al uso)", u:"l/año", m:"f", h:"Consumo real, si lo controlas."},
- {id:"lBar", b:"P", l:"Litros de barniz (listo al uso)", u:"l/año", m:"f", h:"Consumo real, si lo controlas."},
- {id:"lFon", b:"P", l:"Litros de fondo (listo al uso)", u:"l/año", m:"f", h:"Consumo real, si lo controlas."}
+ {id:"cRec", b:"P", l:"Costes / compra de recambios", u:"€/año", m:"f", h:"Lo que te han costado los recambios en el año, sin IVA."},
+ {id:"cMat", b:"P", l:"Costes / compra de material de pintura", u:"€/año", m:"f", h:"Lo que te ha costado el material de pintura en el año, sin IVA."}
 ];
 var mode = "q";
 var KEY = "agp-autodiag-v1";
@@ -232,7 +229,7 @@ var KEY = "agp-autodiag-v1";
 function el(t,c,h){var e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;}
 function build(){
   F.forEach(function(f){
-    var d = el("div","f"); d.id="f_"+f.id;
+    var d = el("div","f"+(f.row?" rs":"")); d.id="f_"+f.id;
     d.innerHTML='<label for="i_'+f.id+'">'+f.l+(f.req?'':' <span class="opt">(opcional)</span>')+'</label>'+
       '<div class="in"><input id="i_'+f.id+'" inputmode="decimal" autocomplete="off"><span>'+f.u+'</span></div>'+
       (f.h?'<p class="hint">'+f.h+'</p>':'');
@@ -246,7 +243,7 @@ function applyMode(){
   document.getElementById("fsP").hidden = (mode==="q");
   document.getElementById("modehint").textContent = mode==="q"
     ? "Con pocos datos obtienes rendimiento, potencial perdido y los ratios de recambios y pintura."
-    : "Añade tiempos, costes y consumos para calcular también absentismo, productividad, eficiencia, márgenes y costes de mano de obra.";
+    : "Añade tiempos, costes y consumos para calcular también absentismo, márgenes y costes de mano de obra.";
 }
 
 /* ---------- utilidades ---------- */
@@ -302,12 +299,9 @@ function calc(){
   o.recH = (rec!=null && Fc>0) ? rec/Fc : null;
   o.matH = (mat!=null && Fp>0) ? mat/Fp : null;
   o.mix = (rec!=null && mat!=null && tot>0) ? {mo:facMO/tot, mat:mat/tot, rec:rec/tot} : null;
-  o.horasRep = (v.reps>0) ? Ft/v.reps : null;
 
   // tiempos (modo completo)
   o.abs = (v.aus!=null) ? v.aus/C : null;
-  o.prod = (v.aus!=null && v.inv!=null && (C-v.aus)>0) ? v.inv/(C-v.aus) : null;
-  o.efi = (v.inv!=null && v.inv>0) ? Ft/v.inv : null;
   o.indShare = (v.indir!=null) ? v.indir/(v.indir+dir) : null;
 
   // costes y márgenes
@@ -358,12 +352,6 @@ function rows(o){
   r.push(o.abs!=null?{n:"Absentismo (ausencia / compradas)",val:pct(o.abs,1),s:"na",neutral:1,miss:"El método lo mide pero no fija un valor óptimo: marca tu propio objetivo.",
       advice:"Registra las ausencias por causa (bajas, retrasos, permisos) para saber cuáles puedes reducir."}:
     {n:"Absentismo (ausencia / compradas)",val:"—",s:"na",miss:"Falta: horas de ausencia (modo completo)."});
-  r.push(o.prod!=null?{n:"Productividad (invertidas / presencia)",val:pct(o.prod),s:st(o.prod,.90,.75),target:"100 %",dev:1-o.prod,
-      advice:"Si el operario está presente pero no imputa tiempo a órdenes, hay tiempo perdido en esperas, búsquedas o tareas sin asignar."}:
-    {n:"Productividad (invertidas / presencia)",val:"—",s:"na",miss:"Faltan: horas de ausencia y horas invertidas."});
-  r.push(o.efi!=null?{n:"Eficiencia (facturadas / invertidas)",val:pct(o.efi),s:st(o.efi,.95,.80),target:"100 %",dev:1-o.efi,
-      advice:"Si inviertes más horas de las que facturas, revisa los tiempos de valoración, los repasos y los trabajos no cobrados."}:
-    {n:"Eficiencia (facturadas / invertidas)",val:"—",s:"na",miss:"Falta: horas invertidas."});
   // costes
   r.push(o.mMO!=null?{n:"Margen bruto sobre la mano de obra",val:pct(o.mMO,1),s:st(o.mMO/T.mMO,.95,.70),target:pct(T.mMO),dev:1-o.mMO/T.mMO,
       advice:"El margen mejora subiendo el rendimiento (más horas facturadas con el mismo coste) y revisando el precio medio de la hora."}:
@@ -380,12 +368,10 @@ function rows(o){
     {n:"Peso de la mano de obra indirecta",val:"—",s:"na",miss:"Falta: personal indirecto."});
   r.push(o.mRec!=null?{n:"Margen bruto en recambios",val:pct(o.mRec,1),s:st(o.mRec/T.mRec,.95,.75),target:pct(T.mRec),dev:1-o.mRec/T.mRec,
       advice:"Negocia con proveedores y revisa el margen aplicado por tipo de recambio y por aseguradora."}:
-    {n:"Margen bruto en recambios",val:"—",s:"na",miss:"Falta: coste de los recambios."});
+    {n:"Margen bruto en recambios",val:"—",s:"na",miss:"Falta: costes / compra de recambios."});
   r.push(o.mMat!=null?{n:"Margen bruto en material de pintura",val:pct(o.mMat,1),s:st(o.mMat/T.mMat,.95,.75),target:pct(T.mMat),dev:1-o.mMat/T.mMat,
       advice:"Controla el consumo real por reparación y las compras, y asegúrate de facturar el material según tiempos."}:
-    {n:"Margen bruto en material de pintura",val:"—",s:"na",miss:"Falta: coste del material de pintura."});
-  if(o.horasRep!=null) r.push({n:"Horas facturadas por reparación",val:o.horasRep.toLocaleString("es-ES",{maximumFractionDigits:1})+" h",s:"na",neutral:1,miss:"Dato de referencia para detectar si facturas menos horas por orden que la media del sector."});
-  else r.push({n:"Horas facturadas por reparación",val:"—",s:"na",miss:"Falta: nº de reparaciones al año (modo completo)."});
+    {n:"Margen bruto en material de pintura",val:"—",s:"na",miss:"Falta: costes / compra de material de pintura."});
   return r;
 }
 
@@ -431,17 +417,11 @@ function render(o){
   // pintura
   var L=o.lAct, L1=o.l100, P=T.precio;
   function pr(n,k){return '<tr><td>'+n+'</td><td class="n">'+lit(L[k])+'</td><td class="n">'+eur(L[k]*P[k])+'</td><td class="n">'+lit(L1[k])+'</td><td class="n">'+eur(L1[k]*P[k])+'</td></tr>';}
-  var real=(o.v.lBase!=null||o.v.lBar!=null||o.v.lFon!=null);
   h+='<div class="block"><h3><img class="hic" src="pintura.png" alt="" width="26" height="26">Consumo de material de pintura</h3><p class="sub">Litros listos al uso y valor en euros que consumiría tu sección de pintura, calculados sobre las horas facturadas de pintura ('+hrs(o.Fp)+' al rendimiento actual y '+hrs(o.Cp)+' al 100 %).</p>'+
      '<div class="scroll"><table class="tbl"><thead><tr><th>Producto</th><th class="n">Litros (rend. actual)</th><th class="n">Valor</th><th class="n">Litros (100 %)</th><th class="n">Valor</th></tr></thead><tbody>'+
      pr("Color base agua","base")+pr("Barniz","barniz")+pr("Fondo","fondo")+
      '<tr><td><b>Total</b></td><td class="n"><b>'+lit(L.base+L.barniz+L.fondo)+'</b></td><td class="n"><b>'+eur(o.eAct)+'</b></td><td class="n"><b>'+lit(L1.base+L1.barniz+L1.fondo)+'</b></td><td class="n"><b>'+eur(o.e100)+'</b></td></tr>'+
      '</tbody></table></div>';
-  if(real){
-    var parts=[["Color base agua",o.v.lBase,L.base],["Barniz",o.v.lBar,L.barniz],["Fondo",o.v.lFon,L.fondo]].filter(function(p){return p[1]!=null;});
-    h+='<p class="note" style="margin-top:12px"><b>Tu consumo real frente al esperado:</b> '+parts.map(function(p){
-      var dv=p[2]>0?(p[1]-p[2])/p[2]:0; return p[0]+' '+lit(p[1])+' ('+(dv>=0?"+":"")+pct(dv)+')';}).join(" · ")+'. Un consumo por encima de lo esperado apunta a desperdicio o a material no facturado.</p>';
-  } else h+='<p class="note" style="margin-top:12px">Si introduces tus litros reales en el modo completo, compararemos tu consumo con el esperado.</p>';
   h+='</div>';
 
   // checklist
@@ -451,7 +431,7 @@ function render(o){
      'Pide y registra las autorizaciones del seguro el mismo día de la valoración, para que no paren la reparación.',
      'Ordena la entrada a cabina para que no se sature ni se quede vacía; preparación de pintura siempre por delante.',
      'Imputa el tiempo de cada operario a la orden en tiempo real, no al final del día.',
-     'Mide cada semana rendimiento, absentismo, productividad y eficiencia, y revisa las desviaciones con el equipo.',
+     'Mide cada semana rendimiento y absentismo, y revisa las desviaciones con el equipo.',
      'Factura todo lo que se monta y se consume: recambios, material de pintura y tiempos de trabajos extra.'].map(function(t){return '<li>'+t+'</li>';}).join("")+'</ul></div>';
 
   // criterios
