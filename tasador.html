@@ -64,16 +64,19 @@ textarea{resize:vertical;min-height:70px}
 
 /* coche */
 .carbox{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
-svg.car{width:100%;max-width:340px;height:auto;margin:0 auto;display:block}
-.zone{fill:var(--soft);stroke:var(--mute);stroke-width:1.6;cursor:pointer;transition:fill .12s}
-.zone:hover{fill:var(--acc-s)}
-.zone.on{fill:var(--acc);stroke:var(--ink)}
-.zone:focus-visible{outline:none;stroke:var(--acc);stroke-width:3}
-.zl{font:700 9.5px var(--body);fill:var(--mute);pointer-events:none;text-anchor:middle;letter-spacing:.03em}
-.zone.on + .zl,.on-l{fill:#fff}
-.glass{fill:var(--glass);stroke:var(--mute);stroke-width:1.2}
-.wheel{fill:var(--ink);opacity:.82}
-.dirl{font:700 10px var(--display);letter-spacing:.14em;fill:var(--mute);text-anchor:middle;text-transform:uppercase}
+svg.car{width:100%;height:auto;display:block;margin:0 auto}
+.carscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.zone{fill:var(--panel);stroke:var(--mute);stroke-width:1.5;stroke-linejoin:round;cursor:pointer;transition:fill .15s,stroke .15s}
+.zone:hover{fill:var(--acc-s);stroke:var(--acc)}
+.zone.on{fill:var(--acc);stroke:var(--acc)}
+.zone.on:hover{fill:var(--acc)}
+.zone.wh{fill:var(--soft)}.zone.wh.on,.zone.on.thin{fill:var(--acc)}.zone.thin{stroke-width:1.2}
+.zone:focus-visible{outline:none;stroke:var(--ink);stroke-width:3}
+.zl{font:700 12px var(--body);fill:var(--mute);pointer-events:none;text-anchor:middle;letter-spacing:.06em}
+.on-l{fill:#fff}
+.glass{fill:none;stroke:var(--blue);stroke-width:1.2;opacity:.55;pointer-events:none}
+.dec{fill:none;stroke:var(--mute);stroke-width:1.2;opacity:.7;pointer-events:none}
+.dirl{font:700 11px var(--display);letter-spacing:.2em;fill:var(--mute);opacity:.7;pointer-events:none;text-anchor:start}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border:1.5px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 13px;font-weight:600;font-size:14px}
 .chip[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:#fff}
@@ -130,12 +133,13 @@ svg.car{width:100%;max-width:340px;height:auto;margin:0 auto;display:block}
 .doc .totals div{display:flex;justify-content:space-between;font-size:14px}
 .doc .totals .g{font:700 20px var(--display);border-top:2px solid #1f2124;padding-top:6px;margin-top:4px;text-transform:uppercase}
 .doc .txt{margin:12px 0;font-size:13.5px;line-height:1.5}
-.doc svg.car{max-width:230px}
+.doc svg.car{max-width:640px}
 .doc .obs{background:#f1f1f1;min-height:56px;padding:8px 10px;font-size:13px;white-space:pre-wrap;margin-top:6px}
-.doc .zone{fill:#f7f7f7;stroke:#666}.doc .zone.on{fill:#e5532d;stroke:#222}.doc .zl{fill:#666}.doc .glass{fill:#d7e7f1;stroke:#777}.doc .wheel{fill:#333}.doc .dirl{fill:#666}
-.doc .zone{cursor:default}.doc .zone:hover{fill:#f7f7f7}.doc .zone.on:hover{fill:#e5532d}
+.doc .zone{fill:#fff;stroke:#777}.doc .zone.on{fill:#e5532d;stroke:#e5532d}.doc .zone.wh{fill:#f3f3f3}.doc .zl{fill:#777}.doc .on-l{fill:#fff}.doc .dirl{fill:#888}
+.doc .zone{cursor:default}.doc .zone:hover{fill:#fff;stroke:#777}.doc .zone.on:hover{fill:#e5532d;stroke:#e5532d}
 @media (max-width:900px){.grid{grid-template-columns:1fr}.sum{position:static}}
 @media (max-width:640px){
+  svg.car{min-width:560px}.doc svg.car{min-width:0}
   main{padding-block:16px 50px}.brand h1{font-size:23px}.brand .back{padding:7px 10px;font-size:13px}.logo img{width:40px;height:40px}
   .tab{padding:10px 10px;font-size:15px}h2{font-size:23px}.tot .t{font-size:46px}
   .sl{grid-template-columns:minmax(0,1fr) auto auto}.sl .hp{display:none}
@@ -224,30 +228,45 @@ function calc(){
   return {ids:ids,nb:nb,crit:crit,auto:auto,coef:coef,hPint:hPint,hCh:hCh,moP:moP,mat:mat,moC:moC,rec:rec,bruto:bruto,dtoP:dtoP,dto:dto,bi:bi,iva:iva,tot:bi+iva};
 }
 
-/* ───────── Dibujo del coche ───────── */
-var ZONES=[ // id, path, etiqueta, [x,y]
- ["pgd","M62 12 Q150 -2 238 12 L244 44 Q150 32 56 44 Z","PARAG. D",[150,30]],
- ["capo","M62 50 Q150 40 238 50 L232 177 Q150 170 68 177 Z","CAPÓ",[150,118]],
- ["adi","M38 58 L60 52 L64 178 L40 182 Z","AL. DI",[51,120]],
- ["add","M262 58 L240 52 L236 178 L260 182 Z","AL. DD",[249,120]],
- ["techo","M78 238 L222 238 L222 354 Q222 356 220 356 L80 356 Q78 356 78 354 Z","TECHO",[150,297]],
- ["pdi","M34 188 L74 188 L74 290 L34 290 Z","PTA DI",[54,240]],
- ["pti","M34 294 L74 294 L74 396 L34 396 Z","PTA TI",[54,346]],
- ["pdd","M266 188 L226 188 L226 290 L266 290 Z","PTA DD",[246,240]],
- ["ptd","M266 294 L226 294 L226 396 L266 396 Z","PTA TD",[246,346]],
- ["ati","M38 402 L70 408 L66 508 L42 504 Z","AL. TI",[53,458]],
- ["atd","M262 402 L230 408 L234 508 L258 504 Z","AL. TD",[247,458]],
- ["porton","M72 410 Q150 420 228 410 L232 508 Q150 516 68 508 Z","PORTÓN",[150,462]],
- ["pgt","M60 514 Q150 522 240 514 L244 546 Q150 560 56 546 Z","PARAG. T",[150,536]]];
+/* ───────── Dibujo del coche (plano desplegado, horizontal) ───────── */
+function zn(id,shape,on,inter,extra){
+  var isOn=!!on[id];
+  return '<'+shape+' class="zone'+(isOn?' on':'')+(extra?' '+extra:'')+'"'+(inter?' tabindex="0" role="button" aria-pressed="'+isOn+'" aria-label="'+esc(PID[id].n)+'" data-p="'+id+'"':'')+'/>';
+}
+function lb(t,x,y,on,rot){return '<text class="zl'+(on?' on-l':'')+'" x="'+x+'" y="'+y+'"'+(rot?' transform="rotate(-90 '+x+' '+y+')"':'')+'>'+t+'</text>'}
+function sideBand(top,on,inter){
+  var I=top?{al:"add",pf:"pdd",pr:"ptd",ar:"atd"}:{al:"adi",pf:"pdi",pr:"pti",ar:"ati"},
+      T=top?["AL. DD","PTA DD","PTA TD","AL. TD"]:["AL. DI","PTA DI","PTA TI","AL. TI"],
+      g='<g'+(top?'':' transform="translate(0,480) scale(1,-1)"')+'>';
+  g+=zn(I.al,'path d="M152 60 Q152 42 170 40 L334 40 L334 132 L190 132 Q154 128 152 98 Z"',on,inter);
+  g+=zn(I.pf,'rect x="340" y="40" width="140" height="92" rx="9"',on,inter);
+  g+=zn(I.pr,'rect x="486" y="40" width="140" height="92" rx="9"',on,inter);
+  g+=zn(I.ar,'path d="M632 40 L790 40 Q808 42 808 60 L806 98 Q800 128 766 132 L632 132 Z"',on,inter);
+  g+='<path class="glass" d="M352 128 L352 104 Q352 100 358 100 L418 100 L426 128 Z"/><path class="glass" d="M498 128 L498 100 L560 100 Q566 100 570 104 L590 128 Z"/>';
+  g+='<rect class="dec" x="446" y="112" width="18" height="6" rx="3"/><rect class="dec" x="592" y="112" width="18" height="6" rx="3"/>';
+  g+=zn("talo",'rect x="340" y="29" width="286" height="9" rx="4.5"',on,inter,'thin');
+  [232,716].forEach(function(x){g+=zn("llan",'circle cx="'+x+'" cy="46" r="29"',on,inter,'wh')+'<circle class="dec" cx="'+x+'" cy="46" r="14"/>'});
+  g+='</g>';
+  var ly=function(y){return top?y:480-y};
+  g+=lb(T[0],244,ly(100),on[I.al])+lb(T[1],410,ly(78),on[I.pf])+lb(T[2],556,ly(78),on[I.pr])+lb(T[3],720,ly(100),on[I.ar]);
+  return g;
+}
 function carSVG(on,interactive){
-  var s='<svg class="car" viewBox="0 0 300 580" role="img" aria-label="Esquema del vehículo visto desde arriba">';
-  [[8,92],[270,92],[8,404],[270,404]].forEach(function(w){s+='<rect class="wheel" x="'+w[0]+'" y="'+w[1]+'" width="20" height="54" rx="7"/>'});
-  s+='<path class="glass" d="M72 184 Q150 174 228 184 L222 234 L78 234 Z"/><path class="glass" d="M78 360 L222 360 L230 400 Q150 408 70 400 Z"/>';
-  ZONES.forEach(function(z){
-    var isOn=!!on[z[0]];
-    s+='<path class="zone'+(isOn?' on':'')+'"'+(interactive?' tabindex="0" role="button" aria-pressed="'+isOn+'" aria-label="'+esc(PID[z[0]].n)+'" data-p="'+z[0]+'"':'')+' d="'+z[1]+'"/><text class="zl'+(isOn?' on-l':'')+'" x="'+z[3][0]+'" y="'+z[3][1]+'">'+z[2]+'</text>';
-  });
-  s+='<text class="dirl" x="150" y="575">▼ TRASERA</text>';
+  var s='<svg class="car" viewBox="0 0 960 480" role="img" aria-label="Plano del vehículo: laterales, planta y paragolpes">';
+  s+=sideBand(true,on,interactive)+sideBand(false,on,interactive);
+  /* planta */
+  s+=zn("capo",'path d="M152 192 Q152 174 168 172 L332 156 L332 304 L168 288 Q152 286 152 268 Z"',on,interactive);
+  s+='<path class="glass" d="M337 162 L395 170 L395 290 L337 298 Z"/>';
+  s+=zn("techo",'rect x="400" y="168" width="184" height="124" rx="14"',on,interactive);
+  s+='<path class="glass" d="M589 170 L647 160 L647 300 L589 290 Z"/>';
+  s+=zn("porton",'path d="M652 158 L796 166 Q812 170 812 186 L812 274 Q812 290 796 294 L652 302 Z"',on,interactive);
+  /* extremos */
+  s+=zn("pgd",'path d="M62 170 Q44 170 44 194 L44 286 Q44 310 62 310 L98 310 Q114 310 114 296 L114 184 Q114 170 98 170 Z"',on,interactive);
+  s+='<rect class="dec" x="54" y="182" width="12" height="20" rx="5"/><rect class="dec" x="54" y="278" width="12" height="20" rx="5"/>';
+  s+=zn("pgt",'path d="M898 170 Q916 170 916 194 L916 286 Q916 310 898 310 L862 310 Q846 310 846 296 L846 184 Q846 170 862 170 Z"',on,interactive);
+  s+='<rect class="dec" x="894" y="182" width="12" height="20" rx="5"/><rect class="dec" x="894" y="278" width="12" height="20" rx="5"/>';
+  s+=lb("CAPÓ",242,236,on.capo)+lb("TECHO",492,236,on.techo)+lb("PORTÓN",732,236,on.porton)+lb("PARAG. D",86,244,on.pgd,true)+lb("PARAG. T",874,244,on.pgt,true);
+  s+='<text class="dirl" x="152" y="14">DERECHA</text><text class="dirl" x="152" y="474">IZQUIERDA</text><text class="dirl" x="44" y="146">DELANTERA</text><text class="dirl" x="916" y="146">TRASERA</text>';
   s+='</svg>';
   return s;
 }
@@ -263,10 +282,10 @@ function vPres(){
   var list=r.ids.map(function(i){var p=PID[i];return '<div class="sl"><div>'+esc(p.n)+'<small>Pintura '+hh(cfg.horas[i]*r.coef)+'</small></div><label class="mute" style="font-size:12px">Chapa h</label><input type="number" inputmode="decimal" min="0" step="0.25" data-ch="'+i+'" value="'+esc(B.sel[i].ch||"")+'" placeholder="0" aria-label="Horas de chapa de '+esc(p.n)+'"><button class="x" data-rm="'+i+'" aria-label="Quitar">×</button></div>'}).join("")||'<p class="mute" style="margin:0">Toca las piezas dañadas en el esquema. Cada una suma sus horas de pintura.</p>';
   var recs=B.recs.map(function(x,i){return '<div class="sl" style="grid-template-columns:minmax(0,1fr) 110px auto"><input type="text" style="width:100%;text-align:left" data-rd="'+i+'" value="'+esc(x.d)+'" placeholder="Pieza o recambio" aria-label="Descripción del recambio"><input type="number" inputmode="decimal" min="0" step="0.01" style="width:110px" data-ri="'+i+'" value="'+esc(x.imp||"")+'" placeholder="€" aria-label="Importe"><button class="x" data-rr="'+i+'" aria-label="Quitar">×</button></div>'}).join("");
   var critLabel=CRIT.filter(function(c){return c[0]===r.crit})[0][1];
-  return '<div class="grid"><div style="display:grid;gap:20px">'+
-   '<div class="card"><div class="row" style="justify-content:space-between"><div><h2>1 · Marca los daños</h2><p class="sub">Toca cada pieza afectada. Las horas salen de tus parámetros.</p></div><div class="row" style="gap:8px"><button class="btn" data-a="all">Vehículo completo</button><button class="btn" data-a="clear">Borrar marcas</button></div></div>'+
-   '<div class="carbox" style="margin-top:12px"><div class="dirl" style="text-align:center;font:700 11px var(--display);letter-spacing:.14em;color:var(--mute)">▲ DELANTERA</div>'+carSVG(B.sel,true)+'</div>'+
-   '<div class="sec-h" style="margin-top:14px">Accesorios</div><div class="chips">'+chips+'</div></div>'+
+  return '<div class="card" style="margin-bottom:20px"><div class="row" style="justify-content:space-between"><div><h2>1 · Marca los daños</h2><p class="sub">Toca cada pieza afectada en el plano. Las horas salen de tus parámetros.</p></div><div class="row" style="gap:8px"><button class="btn" data-a="all">Vehículo completo</button><button class="btn" data-a="clear">Borrar marcas</button></div></div>'+
+   '<div class="carscroll" style="margin-top:8px">'+carSVG(B.sel,true)+'</div>'+
+   '<div class="row" style="margin-top:6px;gap:10px"><span class="sec-h" style="margin:0">Accesorios</span><div class="chips">'+chips+'</div></div></div>'+
+   '<div class="grid"><div style="display:grid;gap:20px">'+
    '<div class="card"><h2>2 · Chapa y recambios</h2><p class="sub">Indica las horas de chapa de cada pieza y añade los recambios.</p><div class="sel" style="margin-top:10px">'+list+'</div>'+
    '<div class="sec-h" style="margin-top:16px">Recambios (sin IVA)</div>'+recs+'<button class="btn sm" data-a="addrec" style="margin-top:8px">+ Añadir recambio</button></div>'+
    '<div class="card"><h2>3 · Datos</h2><div class="cols2" style="margin-top:10px">'+
