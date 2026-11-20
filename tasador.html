@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<script src="acceso.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Tasador rápido · métodoAGP</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#f1eee6; --panel:#ffffff; --soft:#f7f4ec; --ink:#1f2124; --mute:#6a6d72; --line:#e3ded2; --bar:#1f2124; --bar-ink:#f2f1ee;
+  --acc:#e5532d; --blue:#1f5f8b; --green:#2f8f5b; --amber:#d98a14; --red:#c93b2f;
+  --blue-s:#dcebf5; --green-s:#dbeee3; --acc-s:#fbe3da; --amber-s:#faeccf; --red-s:#f6dcd8;
+  --glass:#cfe3ef; --shadow:0 6px 22px rgba(40,34,20,.08);
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --body:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141517; --panel:#202225; --soft:#2a2c30; --ink:#ecebe8; --mute:#9a9da2; --line:#363a3e; --bar:#0d0e0f;
+  --blue:#6fb4e0; --green:#58c58a; --amber:#f0b04a; --red:#ef7a6e; --acc:#f0653b;
+  --blue-s:#1e3342; --green-s:#1d3a2b; --acc-s:#43251c; --amber-s:#40331a; --red-s:#412220; --glass:#27404f; --shadow:0 6px 22px rgba(0,0,0,.35); color-scheme:dark;}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--body)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.mb{text-transform:none;letter-spacing:0}
+.top{background:var(--bar);color:var(--bar-ink)}
+.top .wrap{padding-block:14px 0}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{flex:none;display:block}.logo img{display:block;width:48px;height:48px}
+.brand h1{margin:0;font:800 28px/1 var(--display);letter-spacing:.01em;text-transform:uppercase}
+.brand h1 small{display:block;font:500 11px var(--body);letter-spacing:.14em;color:#a8aaae;margin-top:5px}
+.brand .back{margin-left:auto;background:#3a3b3f;color:var(--bar-ink);text-decoration:none;border-radius:8px;padding:8px 12px;font-weight:600;font-size:14px;white-space:nowrap}
+.tabs{display:flex;gap:2px;margin-top:14px;overflow-x:auto;scrollbar-width:none}
+.tab{background:none;border:0;border-bottom:3px solid transparent;color:#b5b7bb;padding:10px 14px;font:700 17px var(--display);letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
+.tab[aria-selected="true"]{color:#fff;border-color:var(--acc)}
+main{padding-block:22px 60px}
+h2{margin:0;font:700 26px/1.1 var(--display);letter-spacing:.02em;text-transform:uppercase}
+.sec-h{margin:0 0 10px;font:700 18px var(--display);letter-spacing:.06em;text-transform:uppercase}
+.sub{color:var(--mute);margin:4px 0 0;font-size:14px}
+.mute{color:var(--mute)}.num{font-variant-numeric:tabular-nums}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:20px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:9px 14px;font-weight:600;font-size:14px}
+.btn:hover{background:var(--soft)}
+.btn.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.acc{background:var(--acc);color:#fff;border-color:var(--acc)}
+.btn.sm{padding:5px 10px;font-size:13px;border-radius:8px}
+.btn.danger{color:var(--red)}
+.seg{display:inline-flex;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:0;background:none;padding:6px 12px;border-radius:8px;font-weight:600;font-size:14px;color:var(--mute)}
+.seg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.field{display:grid;gap:5px;min-width:0}
+.field label{font-size:13px;font-weight:600;color:var(--mute)}
+input[type=text],input[type=number],select,textarea{width:100%;border:1.5px solid var(--line);background:var(--panel);border-radius:10px;padding:9px 11px;font-size:16px;min-width:0}
+textarea{resize:vertical;min-height:70px}
+
+.grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:start}
+.cols2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+
+/* coche */
+.carbox{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+svg.car{width:100%;max-width:340px;height:auto;margin:0 auto;display:block}
+.zone{fill:var(--soft);stroke:var(--mute);stroke-width:1.6;cursor:pointer;transition:fill .12s}
+.zone:hover{fill:var(--acc-s)}
+.zone.on{fill:var(--acc);stroke:var(--ink)}
+.zone:focus-visible{outline:none;stroke:var(--acc);stroke-width:3}
+.zl{font:700 9.5px var(--body);fill:var(--mute);pointer-events:none;text-anchor:middle;letter-spacing:.03em}
+.zone.on + .zl,.on-l{fill:#fff}
+.glass{fill:var(--glass);stroke:var(--mute);stroke-width:1.2}
+.wheel{fill:var(--ink);opacity:.82}
+.dirl{font:700 10px var(--display);letter-spacing:.14em;fill:var(--mute);text-anchor:middle;text-transform:uppercase}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 13px;font-weight:600;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:#fff}
+.sel{display:grid;gap:8px}
+.sl{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:10px;align-items:center;border-top:1px solid var(--line);padding:8px 0;font-size:14px}
+.sl:first-child{border-top:0}
+.sl input{width:76px;padding:6px 8px;font-size:15px;text-align:right}
+.sl .x{border:0;background:var(--soft);width:28px;height:28px;border-radius:50%}
+.sl small{color:var(--mute);display:block;font-size:12px}
+
+/* resumen */
+.sum{position:sticky;top:12px;display:grid;gap:16px}
+.tot{background:var(--ink);color:var(--bg);border-radius:18px;padding:20px}
+.tot .t{font:700 54px/1 var(--display);font-variant-numeric:tabular-nums}
+.tot small{opacity:.75}
+.lines{display:grid;gap:0;margin-top:12px}
+.ln{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid rgba(128,128,128,.3);font-size:14px}
+.ln:first-child{border-top:0}
+.ln b{font-variant-numeric:tabular-nums}
+.mx{display:grid;gap:12px}
+.mxr{display:grid;gap:5px}
+.mxr .h{display:flex;justify-content:space-between;font-size:13.5px;gap:8px}
+.bar{position:relative;height:10px;border-radius:5px;background:var(--soft);overflow:visible}
+.bar i{display:block;height:100%;border-radius:5px;background:var(--blue)}
+.bar u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--acc);text-decoration:none}
+.tag{display:inline-block;font-size:12px;font-weight:600;border-radius:6px;padding:2px 8px;background:var(--soft)}
+.tag.ok{background:var(--green-s);color:var(--green)}.tag.lo{background:var(--amber-s);color:var(--amber)}.tag.hi{background:var(--blue-s);color:var(--blue)}
+.note{font-size:13px;color:var(--mute);line-height:1.5;margin-top:10px}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th{text-align:left;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);padding:8px 10px;border-bottom:2px solid var(--line);font-weight:600;white-space:nowrap}
+.tbl td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl td.r,.tbl th.r{text-align:right}
+.tblw{overflow-x:auto}
+.tbl input{width:84px;padding:6px 8px;font-size:15px;text-align:right}
+.toast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);background:var(--ink);color:var(--bg);padding:13px 20px;border-radius:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.hide{display:none!important}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:16px 0}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow)}
+.kpi span{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.kpi b{display:block;font:700 30px/1.1 var(--display);margin-top:3px;font-variant-numeric:tabular-nums}
+
+/* documento imprimible */
+.doc{background:#fff;color:#1f2124;border:1px solid var(--line);border-radius:14px;padding:26px;margin-top:20px;font-size:14px}
+.doc .hd{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.doc .tn{font:800 30px/1 var(--display);text-transform:uppercase;color:#c8321d}
+.doc .ttl{background:#e6e6e6;text-align:center;font:700 18px var(--display);letter-spacing:.08em;padding:7px;margin:12px 0 10px;text-transform:uppercase}
+.doc .meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 20px;font-size:13.5px}
+.doc .sect{background:#f1f1f1;text-align:center;font:700 14px var(--display);letter-spacing:.1em;padding:5px;margin:14px 0 6px;text-transform:uppercase}
+.doc .it{display:grid;grid-template-columns:minmax(0,1fr) 70px 70px 90px;gap:8px;padding:5px 2px;font-size:13.5px;border-bottom:1px solid #eee}
+.doc .it b{text-align:right;font-variant-numeric:tabular-nums}
+.doc .it span:nth-child(2),.doc .it span:nth-child(3){text-align:right}
+.doc .totals{margin:14px 0 0 auto;max-width:300px;display:grid;gap:4px}
+.doc .totals div{display:flex;justify-content:space-between;font-size:14px}
+.doc .totals .g{font:700 20px var(--display);border-top:2px solid #1f2124;padding-top:6px;margin-top:4px;text-transform:uppercase}
+.doc .txt{margin:12px 0;font-size:13.5px;line-height:1.5}
+.doc svg.car{max-width:230px}
+.doc .obs{background:#f1f1f1;min-height:56px;padding:8px 10px;font-size:13px;white-space:pre-wrap;margin-top:6px}
+.doc .zone{fill:#f7f7f7;stroke:#666}.doc .zone.on{fill:#e5532d;stroke:#222}.doc .zl{fill:#666}.doc .glass{fill:#d7e7f1;stroke:#777}.doc .wheel{fill:#333}.doc .dirl{fill:#666}
+.doc .zone{cursor:default}.doc .zone:hover{fill:#f7f7f7}.doc .zone.on:hover{fill:#e5532d}
+@media (max-width:900px){.grid{grid-template-columns:1fr}.sum{position:static}}
+@media (max-width:640px){
+  main{padding-block:16px 50px}.brand h1{font-size:23px}.brand .back{padding:7px 10px;font-size:13px}.logo img{width:40px;height:40px}
+  .tab{padding:10px 10px;font-size:15px}h2{font-size:23px}.tot .t{font-size:46px}
+  .sl{grid-template-columns:minmax(0,1fr) auto auto}.sl .hp{display:none}
+  .doc{padding:16px}.doc .meta{grid-template-columns:1fr}.doc .it{grid-template-columns:minmax(0,1fr) 60px 80px}.doc .it span:nth-child(2){display:none}
+}
+@media print{
+  body{background:#fff}
+  .top,.screen,.toast,.legal{display:none!important}
+  main{padding:0}.wrap{max-width:none;padding:0}
+  .doc{border:0;margin:0;padding:0;display:block!important}
+  @page{margin:14mm}
+}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand">
+    <a class="logo" href="index.html" title="Volver a métodoAGP"><img src="planificador-logo.png" width="48" height="48" alt="métodoAGP"></a>
+    <h1>Tasador rápido<small><span class="mb">métodoAGP</span> · VALORACIÓN DE DAÑOS EN MINUTOS</small></h1>
+    <a class="back" href="index.html">← <span class="mb">métodoAGP</span></a>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Secciones">
+    <button class="tab" role="tab" data-v="pres" aria-selected="true">Presupuesto</button>
+    <button class="tab" role="tab" data-v="hist" aria-selected="false">Guardados</button>
+    <button class="tab" role="tab" data-v="cfg" aria-selected="false">Ajustes</button>
+  </nav>
+</div></header>
+<main class="wrap" id="app"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* ───────── Parámetros (editables en Ajustes) ───────── */
+var KEY="agp-tasador-v1";
+var PIECES=[
+ {id:"capo",n:"Capó delantero",g:"b",h:2.5},{id:"add",n:"Aleta delantera dcha.",g:"b",h:1.5},{id:"adi",n:"Aleta delantera izq.",g:"b",h:1.5},
+ {id:"pgd",n:"Paragolpes delantero",g:"b",h:1.5},{id:"pdd",n:"Puerta delantera dcha.",g:"b",h:1.8},{id:"pdi",n:"Puerta delantera izq.",g:"b",h:1.8},
+ {id:"ptd",n:"Puerta trasera dcha.",g:"b",h:1.8},{id:"pti",n:"Puerta trasera izq.",g:"b",h:1.8},{id:"atd",n:"Aleta trasera dcha.",g:"b",h:2},
+ {id:"ati",n:"Aleta trasera izq.",g:"b",h:2},{id:"techo",n:"Techo",g:"b",h:2.8},{id:"porton",n:"Portón trasero",g:"b",h:2},
+ {id:"pgt",n:"Paragolpes trasero",g:"b",h:1.5},
+ {id:"mold",n:"Molduras, regatones, retrovisores, manetas",g:"a",h:0.5},{id:"mont",n:"Montantes de techo",g:"a",h:1.5},
+ {id:"llan",n:"Llantas",g:"a",h:1.8},{id:"llanc",n:"Llantas cromadas",g:"a",h:2.3},{id:"talo",n:"Taloneras",g:"a",h:1.5}];
+var PID={};PIECES.forEach(function(p){PID[p.id]=p});
+var DEF={taller:"Taller de ejemplo",precioHora:45,matH:28,iva:21,tasadores:"",
+  coef:{suelta:[0.9,0.9,1],dos:[0.8,0.85,0.9],tres:[0.7,0.8,0.9],completo:[0.7,0.8,0.9]},horas:{}};
+PIECES.forEach(function(p){DEF.horas[p.id]=p.h});
+/* Referencias del método */
+var REF={mo:40,mat:15,rec:45,recH:50,matH:28,hRep:10,hCh:5.5,hPi:4.5,litros:[["Color base agua",0.06,70],["Barniz",0.12,19],["Fondo",0.04,17]]};
+var CRIT=[["suelta","Pieza suelta"],["dos","2 piezas colindantes"],["tres","3 o más piezas"],["completo","Vehículo completo"]];
+var SIZES=["Pequeño","Mediano","Grande"];
+
+var C=load(); // {cfg, saved}
+function load(){var o=null;try{o=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+  o=o||{};var c=JSON.parse(JSON.stringify(DEF));
+  if(o.cfg){["taller","precioHora","matH","iva","tasadores"].forEach(function(k){if(o.cfg[k]!==undefined)c[k]=o.cfg[k]});
+    if(o.cfg.coef)Object.keys(c.coef).forEach(function(k){if(o.cfg.coef[k])c.coef[k]=o.cfg.coef[k]});
+    if(o.cfg.horas)Object.keys(c.horas).forEach(function(k){if(o.cfg.horas[k]!==undefined)c.horas[k]=o.cfg.horas[k]})}
+  return {cfg:c,saved:o.saved||[]}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(C))}catch(e){}}
+
+/* ───────── Estado del presupuesto en curso ───────── */
+var B={sel:{},size:1,coefMan:"",dto:0,recs:[],cliente:"",marca:"",modelo:"",mat:"",tasador:"",obs:""};
+var view="pres";
+
+/* ───────── Utilidades ───────── */
+function $(s,r){return (r||document).querySelector(s)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function nf(n,d){return (+n||0).toLocaleString("es-ES",{useGrouping:"always",minimumFractionDigits:d==null?2:d,maximumFractionDigits:d==null?2:d})}
+function eur(n){return nf(n,2)+" €"}
+function hh(n){return (Math.round((+n||0)*100)/100).toLocaleString("es-ES",{useGrouping:"always",minimumFractionDigits:0,maximumFractionDigits:2})+" h"}
+function num(v){var x=parseFloat(String(v).replace(",","."));return isFinite(x)&&x>=0?x:0}
+function toast(m){var t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(function(){t.classList.remove("show")},2400)}
+function today(){var d=new Date();return d.toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric"})}
+
+/* ───────── Cálculo ───────── */
+function calc(){
+  var cfg=C.cfg,ids=PIECES.filter(function(p){return B.sel[p.id]}).map(function(p){return p.id});
+  var nb=ids.filter(function(i){return PID[i].g==="b"}).length, crit=nb>=13?"completo":nb>=3?"tres":nb===2?"dos":"suelta";
+  var auto=cfg.coef[crit][B.size], coef=(B.coefMan!==""&&B.coefMan!=null)?Math.min(1,Math.max(0.3,num(B.coefMan))):auto;
+  if(!ids.length){auto=1;coef=B.coefMan!==""?coef:1}
+  var hPint=0,hCh=0;
+  ids.forEach(function(i){hPint+=cfg.horas[i]*coef;hCh+=num(B.sel[i].ch)});
+  var moP=hPint*cfg.precioHora,mat=hPint*cfg.matH,moC=hCh*cfg.precioHora,rec=0;
+  B.recs.forEach(function(r){rec+=num(r.imp)});
+  var bruto=moC+moP+mat+rec,dtoP=Math.min(100,num(B.dto)),dto=bruto*dtoP/100,bi=bruto-dto,iva=bi*cfg.iva/100;
+  return {ids:ids,nb:nb,crit:crit,auto:auto,coef:coef,hPint:hPint,hCh:hCh,moP:moP,mat:mat,moC:moC,rec:rec,bruto:bruto,dtoP:dtoP,dto:dto,bi:bi,iva:iva,tot:bi+iva};
+}
+
+/* ───────── Dibujo del coche ───────── */
+var ZONES=[ // id, path, etiqueta, [x,y]
+ ["pgd","M62 12 Q150 -2 238 12 L244 44 Q150 32 56 44 Z","PARAG. D",[150,30]],
+ ["capo","M62 50 Q150 40 238 50 L232 177 Q150 170 68 177 Z","CAPÓ",[150,118]],
+ ["adi","M38 58 L60 52 L64 178 L40 182 Z","AL. DI",[51,120]],
+ ["add","M262 58 L240 52 L236 178 L260 182 Z","AL. DD",[249,120]],
+ ["techo","M78 238 L222 238 L222 354 Q222 356 220 356 L80 356 Q78 356 78 354 Z","TECHO",[150,297]],
+ ["pdi","M34 188 L74 188 L74 290 L34 290 Z","PTA DI",[54,240]],
+ ["pti","M34 294 L74 294 L74 396 L34 396 Z","PTA TI",[54,346]],
+ ["pdd","M266 188 L226 188 L226 290 L266 290 Z","PTA DD",[246,240]],
+ ["ptd","M266 294 L226 294 L226 396 L266 396 Z","PTA TD",[246,346]],
+ ["ati","M38 402 L70 408 L66 508 L42 504 Z","AL. TI",[53,458]],
+ ["atd","M262 402 L230 408 L234 508 L258 504 Z","AL. TD",[247,458]],
+ ["porton","M72 410 Q150 420 228 410 L232 508 Q150 516 68 508 Z","PORTÓN",[150,462]],
+ ["pgt","M60 514 Q150 522 240 514 L244 546 Q150 560 56 546 Z","PARAG. T",[150,536]]];
+function carSVG(on,interactive){
+  var s='<svg class="car" viewBox="0 0 300 580" role="img" aria-label="Esquema del vehículo visto desde arriba">';
+  [[8,92],[270,92],[8,404],[270,404]].forEach(function(w){s+='<rect class="wheel" x="'+w[0]+'" y="'+w[1]+'" width="20" height="54" rx="7"/>'});
+  s+='<path class="glass" d="M72 184 Q150 174 228 184 L222 234 L78 234 Z"/><path class="glass" d="M78 360 L222 360 L230 400 Q150 408 70 400 Z"/>';
+  ZONES.forEach(function(z){
+    var isOn=!!on[z[0]];
+    s+='<path class="zone'+(isOn?' on':'')+'"'+(interactive?' tabindex="0" role="button" aria-pressed="'+isOn+'" aria-label="'+esc(PID[z[0]].n)+'" data-p="'+z[0]+'"':'')+' d="'+z[1]+'"/><text class="zl'+(isOn?' on-l':'')+'" x="'+z[3][0]+'" y="'+z[3][1]+'">'+z[2]+'</text>';
+  });
+  s+='<text class="dirl" x="150" y="575">▼ TRASERA</text>';
+  s+='</svg>';
+  return s;
+}
+
+/* ───────── Vistas ───────── */
+function setView(v){view=v;document.querySelectorAll(".tab").forEach(function(b){b.setAttribute("aria-selected",b.dataset.v===v)});render();window.scrollTo(0,0)}
+document.querySelectorAll(".tab").forEach(function(b){b.onclick=function(){setView(b.dataset.v)}});
+function render(){var A=$("#app");A.innerHTML=({pres:vPres,hist:vHist,cfg:vCfg})[view]();if(view==="pres")bindPres()}
+
+function vPres(){
+  var r=calc(),cfg=C.cfg;
+  var chips=PIECES.filter(function(p){return p.g==="a"}).map(function(p){return '<button class="chip" data-p="'+p.id+'" aria-pressed="'+!!B.sel[p.id]+'">'+esc(p.n)+'</button>'}).join("");
+  var list=r.ids.map(function(i){var p=PID[i];return '<div class="sl"><div>'+esc(p.n)+'<small>Pintura '+hh(cfg.horas[i]*r.coef)+'</small></div><label class="mute" style="font-size:12px">Chapa h</label><input type="number" inputmode="decimal" min="0" step="0.25" data-ch="'+i+'" value="'+esc(B.sel[i].ch||"")+'" placeholder="0" aria-label="Horas de chapa de '+esc(p.n)+'"><button class="x" data-rm="'+i+'" aria-label="Quitar">×</button></div>'}).join("")||'<p class="mute" style="margin:0">Toca las piezas dañadas en el esquema. Cada una suma sus horas de pintura.</p>';
+  var recs=B.recs.map(function(x,i){return '<div class="sl" style="grid-template-columns:minmax(0,1fr) 110px auto"><input type="text" style="width:100%;text-align:left" data-rd="'+i+'" value="'+esc(x.d)+'" placeholder="Pieza o recambio" aria-label="Descripción del recambio"><input type="number" inputmode="decimal" min="0" step="0.01" style="width:110px" data-ri="'+i+'" value="'+esc(x.imp||"")+'" placeholder="€" aria-label="Importe"><button class="x" data-rr="'+i+'" aria-label="Quitar">×</button></div>'}).join("");
+  var critLabel=CRIT.filter(function(c){return c[0]===r.crit})[0][1];
+  return '<div class="grid"><div style="display:grid;gap:20px">'+
+   '<div class="card"><div class="row" style="justify-content:space-between"><div><h2>1 · Marca los daños</h2><p class="sub">Toca cada pieza afectada. Las horas salen de tus parámetros.</p></div><div class="row" style="gap:8px"><button class="btn" data-a="all">Vehículo completo</button><button class="btn" data-a="clear">Borrar marcas</button></div></div>'+
+   '<div class="carbox" style="margin-top:12px"><div class="dirl" style="text-align:center;font:700 11px var(--display);letter-spacing:.14em;color:var(--mute)">▲ DELANTERA</div>'+carSVG(B.sel,true)+'</div>'+
+   '<div class="sec-h" style="margin-top:14px">Accesorios</div><div class="chips">'+chips+'</div></div>'+
+   '<div class="card"><h2>2 · Chapa y recambios</h2><p class="sub">Indica las horas de chapa de cada pieza y añade los recambios.</p><div class="sel" style="margin-top:10px">'+list+'</div>'+
+   '<div class="sec-h" style="margin-top:16px">Recambios (sin IVA)</div>'+recs+'<button class="btn sm" data-a="addrec" style="margin-top:8px">+ Añadir recambio</button></div>'+
+   '<div class="card"><h2>3 · Datos</h2><div class="cols2" style="margin-top:10px">'+
+   fld("Cliente","cliente",B.cliente)+fld("Marca","marca",B.marca)+fld("Modelo","modelo",B.modelo)+fld("Matrícula","mat",B.mat)+
+   '<div class="field"><label for="f-tasador">Tasador</label><input type="text" id="f-tasador" list="tl" data-f="tasador" value="'+esc(B.tasador)+'"><datalist id="tl">'+cfg.tasadores.split(",").map(function(t){t=t.trim();return t?'<option value="'+esc(t)+'">':''}).join("")+'</datalist></div>'+
+   '<div class="field"><label for="f-size">Tamaño del vehículo</label><select id="f-size" data-f="size">'+SIZES.map(function(s,i){return '<option value="'+i+'"'+(B.size===i?' selected':'')+'>'+s+'</option>'}).join("")+'</select></div>'+
+   '<div class="field"><label for="f-coef">Coeficiente ('+critLabel.toLowerCase()+': '+nf(r.auto,2)+')</label><input type="number" id="f-coef" inputmode="decimal" step="0.05" min="0.3" max="1" data-f="coefMan" value="'+esc(B.coefMan)+'" placeholder="'+nf(r.auto,2)+' (auto)"></div>'+
+   '<div class="field"><label for="f-dto">Descuento %</label><input type="number" id="f-dto" inputmode="decimal" step="0.5" min="0" max="100" data-f="dto" value="'+esc(B.dto||"")+'" placeholder="0"></div></div>'+
+   '<div class="field" style="margin-top:12px"><label for="f-obs">Observaciones</label><textarea id="f-obs" data-f="obs">'+esc(B.obs)+'</textarea></div></div></div>'+
+   '<div class="sum screen" id="sum">'+sumHTML(r)+'</div></div>'+docHTML(r);
+}
+function fld(l,k,v){return '<div class="field"><label for="f-'+k+'">'+l+'</label><input type="text" id="f-'+k+'" data-f="'+k+'" value="'+esc(v)+'"></div>'}
+
+function sumHTML(r){
+  var cfg=C.cfg,hT=r.hCh+r.hPint;
+  var tot=r.bruto, pMO=tot?(r.moC+r.moP)/tot*100:0,pMat=tot?r.mat/tot*100:0,pRec=tot?r.rec/tot*100:0;
+  function bar(l,v,ref){var w=Math.min(100,v);return '<div class="mxr"><div class="h"><span>'+l+'</span><span><b class="num">'+nf(v,1)+' %</b> <span class="mute">objetivo '+ref+' %</span></span></div><div class="bar"><i style="width:'+w+'%"></i><u style="left:'+ref+'%"></u></div></div>'}
+  var recH=r.hCh>0?r.rec/r.hCh:0, recTag=r.hCh>0&&r.rec>0?(recH>=REF.recH?'<span class="tag ok">en objetivo</span>':'<span class="tag lo">por debajo</span>'):'';
+  var matTag=cfg.matH>=REF.matH?'<span class="tag ok">en objetivo</span>':'<span class="tag lo">por debajo</span>';
+  var lit=REF.litros.map(function(l){var q=r.hPint*l[1];return '<div class="ln"><span>'+l[0]+'</span><span><b class="num">'+nf(q,2)+' l</b> · '+eur(q*l[2])+'</span></div>'}).join("");
+  var litT=REF.litros.reduce(function(a,l){return a+r.hPint*l[1]*l[2]},0);
+  return '<div class="tot"><small>TOTAL PRESUPUESTO (IVA incl.)</small><div class="t">'+eur(r.tot)+'</div>'+
+   '<div class="lines"><div class="ln"><span>Mano de obra chapa · '+hh(r.hCh)+'</span><b>'+eur(r.moC)+'</b></div><div class="ln"><span>Mano de obra pintura · '+hh(r.hPint)+'</span><b>'+eur(r.moP)+'</b></div><div class="ln"><span>Material de pintura</span><b>'+eur(r.mat)+'</b></div><div class="ln"><span>Recambios</span><b>'+eur(r.rec)+'</b></div>'+
+   (r.dto?'<div class="ln"><span>Descuento '+nf(r.dtoP,1)+' %</span><b>−'+eur(r.dto)+'</b></div>':'')+
+   '<div class="ln"><span>Base imponible</span><b>'+eur(r.bi)+'</b></div><div class="ln"><span>IVA '+nf(cfg.iva,0)+' %</span><b>'+eur(r.iva)+'</b></div></div>'+
+   '<div class="row" style="margin-top:14px"><button class="btn acc" data-a="save">Guardar</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="print">Imprimir / PDF</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="new">Nuevo</button></div></div>'+
+   '<div class="card"><div class="sec-h">Lectura métodoAGP</div>'+(tot>0?'<div class="mx">'+
+   bar("Mano de obra (chapa + pintura)",pMO,REF.mo)+bar("Material de pintura",pMat,REF.mat)+bar("Recambios",pRec,REF.rec)+'</div>'+
+   (r.rec<=0?'<p class="note">Añade los recambios para ver el reparto real. Sin ellos el peso de la mano de obra sale inflado.</p>':'')+
+   '<div class="ln" style="margin-top:12px"><span>Recambios por hora de chapa <span class="mute">(objetivo '+REF.recH+' €)</span></span><span><b class="num">'+(r.hCh>0?eur(recH):'—')+'</b> '+recTag+'</span></div>'+
+   '<div class="ln"><span>Material por hora de pintura <span class="mute">(objetivo '+REF.matH+' €)</span></span><span><b class="num">'+eur(cfg.matH)+'</b> '+matTag+'</span></div>'+
+   '<div class="ln"><span>Horas de la reparación <span class="mute">(media '+REF.hRep+' h: '+nf(REF.hCh,1)+' chapa + '+nf(REF.hPi,1)+' pintura)</span></span><span><b class="num">'+hh(r.hCh+r.hPint)+'</b></span></div>':'<p class="mute" style="margin:0">Marca daños para ver cómo encaja el presupuesto con los valores óptimos del método.</p>')+'</div>'+
+   (r.hPint>0?'<div class="card"><div class="sec-h">Consumo de pintura estimado</div><div class="lines" style="margin-top:0">'+lit+'<div class="ln"><span>Valor de estos productos</span><b>'+eur(litT)+'</b></div></div><p class="note">Litros listos al uso por hora de pintura facturada ('+nf(r.hPint,2)+' h). Cubre color, barniz y fondo; el resto del material (masillas, abrasivos…) no está incluido.</p></div>':'');
+}
+function docHTML(r){
+  var cfg=C.cfg,names=r.ids.map(function(i){return PID[i].n}),nCh=r.ids.filter(function(i){return num(B.sel[i].ch)>0}).length;
+  var txt=!r.ids.length?"Marca los daños en el esquema para componer el texto del presupuesto.":
+    (r.nb>=13?"Pintado de vehículo completo (daños marcados)":"Reparar daños marcados y pintar: "+names.join("; "));
+  return '<div class="doc" id="doc"><div class="hd"><div class="tn">'+esc(cfg.taller)+'</div><div><b>Fecha</b> '+today()+'</div></div><div class="ttl">Presupuesto de reparación</div>'+
+   '<div class="meta"><div><b>Cliente:</b> '+esc(B.cliente||"—")+'</div><div><b>Matrícula:</b> '+esc(B.mat||"—")+'</div><div><b>Marca:</b> '+esc(B.marca||"—")+'</div><div><b>Modelo:</b> '+esc(B.modelo||"—")+'</div>'+(B.tasador?'<div><b>Tasador:</b> '+esc(B.tasador)+'</div>':'')+'</div>'+
+   '<div class="sect">Trabajos a realizar</div>'+
+   '<div class="it"><span>Trabajos de chapa</span><span>'+nCh+' pzas</span><span>'+hh(r.hCh)+'</span><b>'+eur(r.moC)+'</b></div>'+
+   '<div class="it"><span>Trabajos de pintura (mano de obra y material)</span><span>'+r.ids.length+' pzas</span><span>'+hh(r.hPint)+'</span><b>'+eur(r.moP+r.mat)+'</b></div>'+
+   (r.rec>0||B.recs.length?'<div class="it"><span>Recambios</span><span>'+B.recs.filter(function(x){return num(x.imp)>0}).length+' uds</span><span></span><b>'+eur(r.rec)+'</b></div>':'')+
+   B.recs.filter(function(x){return num(x.imp)>0}).map(function(x){return '<div class="it" style="color:#666;font-size:12.5px"><span>· '+esc(x.d||"Recambio")+'</span><span></span><span></span><b>'+eur(num(x.imp))+'</b></div>'}).join("")+
+   '<div class="txt">'+esc(txt)+'</div>'+
+   '<div class="totals">'+(r.dto?'<div><span>Descuento '+nf(r.dtoP,1)+' %</span><span>−'+eur(r.dto)+'</span></div>':'')+'<div><span>Importe BI</span><span>'+eur(r.bi)+'</span></div><div><span>IVA '+nf(cfg.iva,0)+' %</span><span>'+eur(r.iva)+'</span></div><div class="g"><span>Total reparación</span><span>'+eur(r.tot)+'</span></div></div>'+
+   '<div style="margin-top:14px;text-align:center">'+carSVG(B.sel,false)+'</div>'+
+   '<div style="margin-top:12px"><b>Observaciones:</b></div><div class="obs">'+esc(B.obs)+'</div>'+
+   '<p style="font-size:11.5px;color:#777;margin:12px 0 0">Presupuesto orientativo sujeto a revisión del vehículo desmontado.</p></div>';
+}
+
+function bindPres(){}
+function refreshSum(){var r=calc();$("#sum").innerHTML=sumHTML(r);var d=$("#doc");if(d)d.outerHTML=docHTML(r)}
+function rerender(){var y=window.scrollY;render();window.scrollTo(0,y)}
+
+/* ───────── Presupuestos guardados ───────── */
+function vHist(){
+  var L=C.saved.slice().reverse();
+  if(!L.length)return '<div class="card" style="text-align:center;padding:44px 20px"><h2>Aún no hay presupuestos guardados</h2><p class="sub">Pulsa «Guardar» en un presupuesto y aparecerá aquí con su análisis.</p></div>';
+  var n=L.length,sT=0,sBI=0,sHC=0,sHP=0,sMO=0,sMat=0,sRec=0;
+  L.forEach(function(x){sT+=x.tot;sBI+=x.bi;sHC+=x.hCh;sHP+=x.hPint;sMO+=x.moC+x.moP;sMat+=x.mat;sRec+=x.rec});
+  var base=sMO+sMat+sRec;
+  var rows=L.map(function(x){return '<tr><td>'+esc(x.fecha)+'</td><td><b>'+esc(x.cliente||"—")+'</b><div class="mute" style="font-size:12px">'+esc([x.marca,x.modelo,x.matricula].filter(Boolean).join(" · "))+'</div></td><td class="r num">'+hh(x.hCh)+'</td><td class="r num">'+hh(x.hPint)+'</td><td class="r num">'+eur(x.bi)+'</td><td class="r num"><b>'+eur(x.tot)+'</b></td><td class="r"><button class="btn sm danger" data-del="'+x.id+'">Borrar</button></td></tr>'}).join("");
+  return '<div class="row" style="justify-content:space-between"><div><h2>Presupuestos guardados</h2><p class="sub">Se guardan en este navegador. Descárgalos para analizarlos con el método.</p></div><button class="btn" data-a="csv">Descargar CSV</button></div>'+
+   '<div class="kpis"><div class="kpi"><span>Presupuestos</span><b>'+n+'</b></div><div class="kpi"><span>Base media</span><b>'+eur(sBI/n)+'</b></div><div class="kpi"><span>Horas medias</span><b>'+hh((sHC+sHP)/n)+'</b></div><div class="kpi"><span>Chapa / pintura</span><b>'+hh(sHC/n)+' / '+hh(sHP/n)+'</b></div></div>'+
+   (base>0?'<div class="card" style="margin-bottom:20px"><div class="sec-h">Reparto medio de lo presupuestado</div><div class="row" style="gap:24px"><span>Mano de obra <b>'+nf(sMO/base*100,1)+' %</b> <span class="mute">(40)</span></span><span>Material pintura <b>'+nf(sMat/base*100,1)+' %</b> <span class="mute">(15)</span></span><span>Recambios <b>'+nf(sRec/base*100,1)+' %</b> <span class="mute">(45)</span></span></div></div>':'')+
+   '<div class="card"><div class="tblw"><table class="tbl"><thead><tr><th>Fecha</th><th>Cliente</th><th class="r">Chapa</th><th class="r">Pintura</th><th class="r">Base</th><th class="r">Total</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+}
+
+/* ───────── Ajustes ───────── */
+function vCfg(){
+  var c=C.cfg;
+  var hr=PIECES.map(function(p){return '<tr><td>'+esc(p.n)+'</td><td class="r"><input type="number" step="0.1" min="0" data-ch2="'+p.id+'" value="'+c.horas[p.id]+'" aria-label="Horas de pintura de '+esc(p.n)+'"></td></tr>'}).join("");
+  var cr=CRIT.map(function(k){return '<tr><td>'+k[1]+'</td>'+[0,1,2].map(function(i){return '<td class="r"><input type="number" step="0.05" min="0.3" max="1" data-cf="'+k[0]+'|'+i+'" value="'+c.coef[k[0]][i]+'" aria-label="'+k[1]+' '+SIZES[i]+'"></td>'}).join("")+'</tr>'}).join("");
+  return '<div class="row" style="justify-content:space-between"><div><h2>Ajustes del taller</h2><p class="sub">Todo lo que parametriza el presupuesto. Se guarda en este navegador.</p></div><button class="btn danger" data-a="reset">Restaurar valores</button></div>'+
+   '<div class="grid" style="margin-top:16px"><div style="display:grid;gap:20px"><div class="card"><div class="sec-h">Taller y precios</div><div class="cols2">'+
+   '<div class="field" style="grid-column:1/-1"><label for="c-taller">Nombre del taller (cabecera del presupuesto)</label><input type="text" id="c-taller" data-c="taller" value="'+esc(c.taller)+'"></div>'+
+   cf("Precio hora (€)","precioHora",c.precioHora)+cf("Material de pintura (€ por hora de pintura)","matH",c.matH)+cf("IVA (%)","iva",c.iva)+
+   '<div class="field" style="grid-column:1/-1"><label for="c-tas">Tasadores (separados por comas)</label><input type="text" id="c-tas" data-c="tasadores" value="'+esc(c.tasadores)+'" placeholder="Nombre 1, Nombre 2"></div></div>'+
+   '<p class="note">El método recomienda facturar unos '+REF.matH+' € de material de pintura por hora de pintura y unos '+REF.recH+' € de recambios por hora de chapa.</p></div>'+
+   '<div class="card"><div class="sec-h">Coeficiente por varias piezas</div><p class="sub" style="margin-bottom:8px">Se multiplica por las horas de pintura según cuántas piezas se pintan a la vez y el tamaño del vehículo.</p><div class="tblw"><table class="tbl"><thead><tr><th>Criterio</th><th class="r">Pequeño</th><th class="r">Mediano</th><th class="r">Grande</th></tr></thead><tbody>'+cr+'</tbody></table></div></div></div>'+
+   '<div class="card"><div class="sec-h">Horas de pintura por pieza</div><div class="tblw"><table class="tbl"><thead><tr><th>Pieza</th><th class="r">Horas</th></tr></thead><tbody>'+hr+'</tbody></table></div><p class="note">Valores de partida; ajústalos a los tiempos de tu taller o a los de tu sistema de peritación.</p></div></div>';
+}
+function cf(l,k,v){return '<div class="field"><label for="c-'+k+'">'+l+'</label><input type="number" id="c-'+k+'" inputmode="decimal" step="0.1" min="0" data-c="'+k+'" value="'+v+'"></div>'}
+
+/* ───────── Eventos ───────── */
+function toggle(id){if(B.sel[id])delete B.sel[id];else B.sel[id]={ch:""}}
+document.addEventListener("click",function(ev){
+  var t=ev.target,z=t.closest&&t.closest("[data-p]");
+  if(z&&view==="pres"&&!z.closest("#doc")){toggle(z.dataset.p);rerender();return}
+  var el=t.closest&&t.closest("[data-a],[data-rm],[data-rr],[data-del]");if(!el)return;
+  if(el.dataset.rm){delete B.sel[el.dataset.rm];rerender();return}
+  if(el.dataset.rr){B.recs.splice(+el.dataset.rr,1);rerender();return}
+  if(el.dataset.del){C.saved=C.saved.filter(function(x){return x.id!==el.dataset.del});save();render();return}
+  var a=el.dataset.a;
+  if(a==="all"){PIECES.forEach(function(p){if(p.g==="b"&&!B.sel[p.id])B.sel[p.id]={ch:""}});rerender()}
+  else if(a==="clear"){B.sel={};rerender()}
+  else if(a==="addrec"){B.recs.push({d:"",imp:""});rerender()}
+  else if(a==="new"){B={sel:{},size:B.size,coefMan:"",dto:0,recs:[],cliente:"",marca:"",modelo:"",mat:"",tasador:B.tasador,obs:""};rerender();toast("Presupuesto nuevo")}
+  else if(a==="print"){window.print()}
+  else if(a==="save"){var r=calc();if(!r.ids.length&&!r.rec){toast("Marca algún daño antes de guardar");return}
+    C.saved.push({id:Math.random().toString(36).slice(2,9),fecha:today(),cliente:B.cliente,marca:B.marca,modelo:B.modelo,tasador:B.tasador,matricula:B.mat,piezas:r.ids.map(function(i){return PID[i].n}),hCh:r.hCh,hPint:r.hPint,moC:r.moC,moP:r.moP,mat:r.mat,rec:r.rec,bi:r.bi,tot:r.tot});
+    save();toast("Presupuesto guardado")}
+  else if(a==="csv"){
+    var L=["fecha;cliente;marca;modelo;matricula;tasador;horas_chapa;horas_pintura;mo_chapa;mo_pintura;material_pintura;recambios;base_imponible;total"];
+    C.saved.forEach(function(x){L.push([x.fecha,x.cliente,x.marca,x.modelo,x.matricula||"",x.tasador,x.hCh,x.hPint,x.moC,x.moP,x.mat,x.rec,x.bi,x.tot].map(function(v){return typeof v==="number"?String(Math.round(v*100)/100).replace(".",","):String(v==null?"":v).replace(/;/g,",")}).join(";"))});
+    var a2=document.createElement("a");a2.href=URL.createObjectURL(new Blob(["﻿"+L.join("\n")],{type:"text/csv"}));a2.download="presupuestos-metodoAGP.csv";document.body.appendChild(a2);a2.click();a2.remove()}
+  else if(a==="reset"){if(!el.dataset.sure){el.dataset.sure="1";el.textContent="Pulsa otra vez para confirmar";return}C.cfg=JSON.parse(JSON.stringify(DEF));save();render();toast("Valores restaurados")}
+});
+document.addEventListener("keydown",function(ev){
+  if((ev.key==="Enter"||ev.key===" ")&&ev.target.matches&&ev.target.matches("svg .zone[data-p]")&&!ev.target.closest("#doc")){ev.preventDefault();toggle(ev.target.dataset.p);rerender();var z=$('svg.car .zone[data-p="'+ev.target.dataset.p+'"]');if(z)z.focus()}
+});
+document.addEventListener("input",function(ev){
+  var e=ev.target;
+  if(e.dataset.ch!==undefined&&B.sel[e.dataset.ch]){B.sel[e.dataset.ch].ch=e.value;refreshSum()}
+  else if(e.dataset.rd!==undefined){B.recs[+e.dataset.rd].d=e.value;refreshSum()}
+  else if(e.dataset.ri!==undefined){B.recs[+e.dataset.ri].imp=e.value;refreshSum()}
+  else if(e.dataset.f){var k=e.dataset.f;B[k]=k==="size"?+e.value:e.value;if(k==="size"){rerender()}else refreshSum()}
+  else if(e.dataset.c){var k2=e.dataset.c;C.cfg[k2]=(k2==="taller"||k2==="tasadores")?e.value:num(e.value);save()}
+  else if(e.dataset.ch2){C.cfg.horas[e.dataset.ch2]=num(e.value);save()}
+  else if(e.dataset.cf){var p=e.dataset.cf.split("|");C.cfg.coef[p[0]][+p[1]]=Math.min(1,Math.max(0.3,num(e.value)||1));save()}
+});
+document.addEventListener("change",function(ev){if(ev.target.dataset&&ev.target.dataset.f==="coefMan")rerender()});
+render();
+</script>
+</body>
+</html>
