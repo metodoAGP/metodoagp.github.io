@@ -43,6 +43,7 @@ button{cursor:pointer}
 .tab svg{width:18px;height:18px}
 .tab[aria-selected="true"]{color:#fff;border-color:var(--acc)}
 
+.legal{background:var(--amber-s);color:var(--ink);border-bottom:1px solid var(--amber);font-size:13px;line-height:1.4}.legal .wrap{padding-block:9px}
 main{padding-block:22px 60px}
 h2{margin:0;font:700 26px/1.1 var(--display);letter-spacing:.02em;text-transform:uppercase}
 .sub{color:var(--mute);margin:4px 0 0;font-size:14px}
@@ -187,7 +188,7 @@ input[type=text],input[type=password],input[type=number],input[type=date],input[
   h2{font-size:23px}
 }
 @media (max-width:380px){.people{grid-template-columns:1fr}}
-@media print{.top,.nav,.seg,.btn{display:none!important}}
+@media print{.legal,.top,.nav,.seg,.btn{display:none!important}}
 </style>
 </head>
 <body>
@@ -204,6 +205,7 @@ input[type=text],input[type=password],input[type=number],input[type=date],input[
     <button class="tab" role="tab" data-v="team" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-4 3.2-6 6.5-6s5.9 2 6.5 6M16 5a3.5 3.5 0 010 7M18 14c2.2.5 3.5 2.4 3.9 5"/></svg>Equipo</button>
   </nav>
 </div></header>
+<div class="legal" role="note"><div class="wrap"><b>Herramienta de gestión, no registro de jornada oficial.</b> Estos fichajes se guardan en este navegador y pueden modificarse, por lo que no sustituyen al registro horario legal (art. 34.9 del Estatuto de los Trabajadores). Úsala para medir tiempo comprado y absentismo.</div></div>
 
 <main class="wrap" id="app"></main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -326,7 +328,7 @@ function vFichar(){
   return '<div class="fich"><div><div class="card clock"><div class="t num" id="clk">00:00<i>:00</i></div><div class="d" id="dte"></div><div class="counts" id="cnt"></div></div>'+
     '<div class="card feed"><h3>Últimos fichajes</h3><ul id="feed"></ul></div></div>'+
     '<div><div class="row" style="justify-content:space-between;margin-bottom:12px"><div><h2>¿Quién ficha?</h2><p class="sub">Pulsa tu nombre para registrar tu entrada o tu salida.</p></div></div><div class="people">'+cards+'</div>'+
-    '<p class="note">Cada fichaje usa la hora de este dispositivo. Para que fiche todo el equipo, deja esta pantalla abierta en una tablet o móvil a la entrada del taller.</p></div></div>';
+    '<p class="note">Cada fichaje usa la hora de este dispositivo y no es un registro de jornada con valor legal. Para que fiche todo el equipo, deja esta pantalla abierta en una tablet o móvil a la entrada del taller.</p></div></div>';
 }
 function tick(){
   var c=$("#clk");if(!c)return;
