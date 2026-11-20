@@ -140,6 +140,20 @@ svg.car{width:100%;height:auto;display:block;margin:0 auto}
 .doc .totals .g{font:700 20px var(--display);border-top:2px solid #1f2124;padding-top:6px;margin-top:4px;text-transform:uppercase}
 .doc .txt{margin:12px 0;font-size:13.5px;line-height:1.5}
 .doc svg.car{max-width:640px}
+.doc .mute2{font-size:11.5px;color:#777}
+.doc .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:18px;align-items:start}
+.doc .pz{display:grid;grid-template-columns:minmax(0,1fr) 60px 60px;gap:8px;padding:3px 2px;font-size:13px;border-bottom:1px solid #eee}
+.doc .pz span:nth-child(2),.doc .pz span:nth-child(3){text-align:right;font-variant-numeric:tabular-nums}
+.doc .pz.ph{font:700 11px var(--display);letter-spacing:.08em;text-transform:uppercase;color:#666}
+.doc .pz.pt{font-weight:700;border-bottom:0;border-top:1.5px solid #1f2124}
+.doc .it.sub{color:#666;font-size:12.5px}
+.doc .obsl{margin-top:10px}
+.doc .acc{margin-top:14px;break-inside:avoid}
+.doc .accp{font-size:12.5px;line-height:1.45;margin:6px 0 0}
+.doc .sig{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin-top:46px}
+.doc .sig>div{display:flex;flex-direction:column;gap:3px;font-size:12px}
+.doc .sig .line{border-bottom:1.5px solid #1f2124;height:1px}
+.doc .rgpd{font-size:10px;color:#888;margin:14px 0 0}
 .doc .obs{background:#f1f1f1;min-height:56px;padding:8px 10px;font-size:13px;white-space:pre-wrap;margin-top:6px}
 .doc .zone{fill:#fff;stroke:#777}.doc .zone.on{fill:#e5532d;stroke:#e5532d}.doc .zone.wh{fill:#f3f3f3}.doc .zl{fill:#777}.doc .on-l{fill:#fff}.doc .dirl{fill:#888}
 .doc .zone{cursor:default}.doc .zone:hover{fill:#fff;stroke:#777}.doc .zone.on:hover{fill:#e5532d;stroke:#e5532d}
@@ -149,14 +163,23 @@ svg.car{width:100%;height:auto;display:block;margin:0 auto}
   main{padding-block:16px 50px}.brand h1{font-size:23px}.brand .back{padding:7px 10px;font-size:13px}.logo img{width:40px;height:40px}
   .tab{padding:10px 10px;font-size:15px}h2{font-size:23px}.tot .t{font-size:46px}
   .sl{grid-template-columns:minmax(0,1fr) auto auto}.sl .hp{display:none}
-  .doc{padding:16px}.doc .meta{grid-template-columns:1fr}.doc .it{grid-template-columns:minmax(0,1fr) 60px 80px}.doc .it span:nth-child(2){display:none}
+  .doc{padding:16px}.doc .two{grid-template-columns:1fr}.doc .sig{grid-template-columns:1fr;gap:34px}.doc .meta{grid-template-columns:1fr}.doc .it{grid-template-columns:minmax(0,1fr) 60px 80px}.doc .it span:nth-child(2){display:none}
 }
 @media print{
   body{background:#fff}
   .top,.screen,.toast,.legal{display:none!important}
+  #app>*:not(.doc){display:none!important}
   main{padding:0}.wrap{max-width:none;padding:0}
-  .doc{border:0;margin:0;padding:0;display:block!important}
-  @page{margin:14mm}
+  .doc{border:0;margin:0;padding:0;display:block!important;font-size:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .doc .tn{font-size:24px}.doc .ttl{margin:8px 0 6px;font-size:15px;padding:4px}.doc .meta,.doc .it,.doc .pz{font-size:11px}
+  .doc .sect{margin:9px 0 4px;padding:3px;font-size:12px}
+  .doc .two{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr)!important;gap:12px}
+  .doc svg.car{max-width:100%;max-height:62mm;width:100%;min-width:0!important}
+  .doc .obs{min-height:30px;font-size:11px;padding:5px 8px}
+  .doc .totals{margin-top:8px}.doc .totals .g{font-size:16px}
+  .doc .sig{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:18px;margin-top:38px}
+  .doc .accp{font-size:11px}
+  @page{size:A4;margin:10mm}
 }
 </style>
 </head>
@@ -327,21 +350,34 @@ function sumHTML(r){
    (r.hPint>0?'<div class="card"><div class="sec-h">Consumo de pintura estimado</div><div class="lines" style="margin-top:0">'+lit+'<div class="ln"><span>Valor de estos productos</span><b>'+eur(litT)+'</b></div></div><p class="note">Litros listos al uso por hora de pintura facturada ('+nf(r.hPint,2)+' h). Cubre color, barniz y fondo; el resto del material (masillas, abrasivos…) no está incluido.</p></div>':'');
 }
 function docHTML(r){
-  var cfg=C.cfg,names=r.ids.map(function(i){return PID[i].n}),nCh=r.ids.filter(function(i){return num(B.sel[i].ch)>0}).length;
-  var txt=!r.ids.length?"Marca los daños en el esquema para componer el texto del presupuesto.":
-    (r.nb>=13?"Pintado de vehículo completo (daños marcados)":"Reparar daños marcados y pintar: "+names.join("; "));
-  return '<div class="doc" id="doc"><div class="hd"><div class="tn">'+esc(cfg.taller)+'</div><div><b>Fecha</b> '+today()+'</div></div><div class="ttl">Presupuesto de reparación</div>'+
+  var cfg=C.cfg,nCh=r.ids.filter(function(i){return num(B.sel[i].ch)>0}).length;
+  var recs=B.recs.filter(function(x){return num(x.imp)>0});
+  var ref=(B.savedId||"").toUpperCase();
+  var rows=r.ids.map(function(i){var p=PID[i],hp=cfg.horas[i]*r.coef,hc=num(B.sel[i].ch);
+    return '<div class="pz"><span>'+esc(p.n)+'</span><span>'+(hc>0?hh(hc):"—")+'</span><span>'+hh(hp)+'</span></div>'}).join("");
+  var txt=r.nb>=13?"Pintado de vehículo completo":"";
+  return '<div class="doc" id="doc">'+
+   '<div class="hd"><div><div class="tn">'+esc(cfg.taller)+'</div><div class="mute2">Presupuesto de reparación'+(ref?' · Nº '+ref:'')+'</div></div><div style="text-align:right"><b>Fecha</b> '+today()+'<br><span class="mute2">Validez: 15 días</span></div></div>'+
+   '<div class="ttl">Presupuesto de reparación</div>'+
    '<div class="meta"><div><b>Cliente:</b> '+esc(B.cliente||"—")+'</div><div><b>Matrícula:</b> '+esc(B.mat||"—")+'</div><div><b>Marca:</b> '+esc(B.marca||"—")+'</div><div><b>Modelo:</b> '+esc(B.modelo||"—")+'</div>'+(B.tasador?'<div><b>Tasador:</b> '+esc(B.tasador)+'</div>':'')+'</div>'+
-   '<div class="sect">Trabajos a realizar</div>'+
-   '<div class="it"><span>Trabajos de chapa</span><span>'+nCh+' pzas</span><span>'+hh(r.hCh)+'</span><b>'+eur(r.moC)+'</b></div>'+
-   '<div class="it"><span>Trabajos de pintura (mano de obra y material)</span><span>'+r.ids.length+' pzas</span><span>'+hh(r.hPint)+'</span><b>'+eur(r.moP+r.mat)+'</b></div>'+
-   (r.rec>0||B.recs.length?'<div class="it"><span>Recambios</span><span>'+B.recs.filter(function(x){return num(x.imp)>0}).length+' uds</span><span></span><b>'+eur(r.rec)+'</b></div>':'')+
-   B.recs.filter(function(x){return num(x.imp)>0}).map(function(x){return '<div class="it" style="color:#666;font-size:12.5px"><span>· '+esc(x.d||"Recambio")+'</span><span></span><span></span><b>'+eur(num(x.imp))+'</b></div>'}).join("")+
-   '<div class="txt">'+esc(txt)+'</div>'+
+   '<div class="two"><div class="l">'+
+     '<div class="sect">Daños y piezas</div>'+
+     (r.ids.length?'<div class="pz ph"><span>Pieza</span><span>Chapa</span><span>Pintura</span></div>'+rows+'<div class="pz pt"><span>Total horas</span><span>'+hh(r.hCh)+'</span><span>'+hh(r.hPint)+'</span></div>':'<p class="mute2">Sin piezas marcadas.</p>')+
+     (txt?'<div class="txt">'+esc(txt)+'</div>':'')+
+   '</div><div class="r"><div style="text-align:center">'+carSVG(B.sel,false)+'</div></div></div>'+
+   '<div class="sect">Importes</div>'+
+   (r.hCh>0?'<div class="it"><span>Mano de obra de chapa</span><span>'+nCh+' pzas</span><span>'+hh(r.hCh)+'</span><b>'+eur(r.moC)+'</b></div>':'')+
+   '<div class="it"><span>Mano de obra de pintura</span><span>'+r.ids.length+' pzas</span><span>'+hh(r.hPint)+'</span><b>'+eur(r.moP)+'</b></div>'+
+   '<div class="it"><span>Material de pintura</span><span></span><span>'+hh(r.hPint)+'</span><b>'+eur(r.mat)+'</b></div>'+
+   (recs.length?'<div class="it"><span>Recambios</span><span>'+recs.length+' uds</span><span></span><b>'+eur(r.rec)+'</b></div>':'')+
+   recs.map(function(x){return '<div class="it sub"><span>· '+esc(x.d||"Recambio")+'</span><span></span><span></span><b>'+eur(num(x.imp))+'</b></div>'}).join("")+
    '<div class="totals">'+(r.dto?'<div><span>Descuento '+nf(r.dtoP,1)+' %</span><span>−'+eur(r.dto)+'</span></div>':'')+'<div><span>Importe BI</span><span>'+eur(r.bi)+'</span></div><div><span>IVA '+nf(cfg.iva,0)+' %</span><span>'+eur(r.iva)+'</span></div><div class="g"><span>Total reparación</span><span>'+eur(r.tot)+'</span></div></div>'+
-   '<div style="margin-top:14px;text-align:center">'+carSVG(B.sel,false)+'</div>'+
-   '<div style="margin-top:12px"><b>Observaciones:</b></div><div class="obs">'+esc(B.obs)+'</div>'+
-   '<p style="font-size:11.5px;color:#777;margin:12px 0 0">Presupuesto orientativo sujeto a revisión del vehículo desmontado.</p></div>';
+   '<div class="obsl"><b>Observaciones:</b></div><div class="obs">'+esc(B.obs)+'</div>'+
+   '<div class="acc"><div class="sect">Aceptación del presupuesto</div>'+
+   '<p class="accp">El cliente <b>acepta</b> el presupuesto de <b>'+eur(r.tot)+'</b> (IVA incluido) y <b>autoriza</b> la reparación del vehículo'+(B.mat?' matrícula <b>'+esc(B.mat)+'</b>':'')+'. El importe es orientativo y podrá ajustarse si, con el vehículo desmontado, aparecen daños ocultos; en ese caso se informará al cliente antes de continuar.</p>'+
+   '<div class="sig"><div><div class="line"></div><span>Firma del cliente</span><span class="mute2">Nombre y DNI/NIF:</span></div><div><div class="line"></div><span>Fecha de aceptación</span><span class="mute2">&nbsp;</span></div><div><div class="line"></div><span>Sello y firma del taller</span><span class="mute2">'+esc(B.tasador?"Tasador: "+B.tasador:"")+'</span></div></div>'+
+   '<p class="rgpd">Los datos se tratan para gestionar la reparación y su facturación. Puede ejercer sus derechos de acceso, rectificación y supresión dirigiéndose al taller.</p></div>'+
+   '</div>';
 }
 
 function bindPres(){}
