@@ -88,6 +88,12 @@ svg.car{width:100%;height:auto;display:block;margin:0 auto}
 .pc1 input{width:76px;padding:6px 8px;font-size:15px;text-align:right}
 .pc1 .x{border:0;background:var(--soft);width:28px;height:28px;border-radius:50%}
 .pc1 small{color:var(--mute);display:block;font-size:12px}
+.mapctl{overflow:visible}
+.mc{display:flex;flex-direction:column;gap:3px;width:100%;pointer-events:auto}
+.mc select,.mc input{width:100%;font-size:12px;padding:2px 5px;border-radius:6px;border:1.5px solid #fff;background:#fff;color:#1f2124;height:23px;text-align:left;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.mc input{text-align:right}
+@media (max-width:760px){.mapctl{display:none}}
+@media (min-width:761px){.pc2.mapped{display:none}}
 .pc2{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
 .pc2 select{width:auto;flex:1 1 170px;padding:7px 9px;font-size:15px}.pc2 input{width:110px;flex:0 0 110px;padding:7px 9px;font-size:15px;text-align:right}
 .sl input{width:76px;padding:6px 8px;font-size:15px;text-align:right}
@@ -341,7 +347,7 @@ function vPres(){
   var list=r.ids.map(function(i){var p=PID[i],s=B.sel[i],ctl="";
     if(mode==="ces")ctl='<select data-niv="'+i+'" aria-label="Nivel de daño de '+esc(p.n)+'">'+NIV.map(function(n){return '<option value="'+n[0]+'"'+((s.niv||"med")===n[0]?' selected':'')+'>'+n[1]+'</option>'}).join("")+'</select>';
     else if(mode==="cz")ctl='<select data-tipo="'+i+'" aria-label="Tipo de daño de '+esc(p.n)+'"><option value="sup"'+(s.tipo!=="lin"?' selected':'')+'>Daño superficial (dm²)</option><option value="lin"'+(s.tipo==="lin"?' selected':'')+'>Daño lineal (dm)</option></select><input type="number" inputmode="decimal" min="0" step="0.5" data-dm="'+i+'" value="'+esc(s.dm||"")+'" placeholder="'+(s.tipo==="lin"?"dm lineales":"dm²")+'" aria-label="Decímetros de '+esc(p.n)+'">';
-    return '<div class="pc"><div class="pc1"><div>'+esc(p.n)+'<small>Pintura '+hh(pieceH(i,r.coef))+(pieceTag(i)?' · '+esc(pieceTag(i)):'')+'</small></div><label class="mute" style="font-size:12px">Chapa h</label><input type="number" inputmode="decimal" min="0" step="0.25" data-ch="'+i+'" value="'+esc(s.ch||"")+'" placeholder="0" aria-label="Horas de chapa de '+esc(p.n)+'"><button class="x" data-rm="'+i+'" aria-label="Quitar">×</button></div>'+(ctl?'<div class="pc2">'+ctl+'</div>':'')+'</div>'}).join("")||'<p class="mute" style="margin:0">Toca las piezas dañadas en el esquema. Cada una suma sus horas de pintura.</p>';
+    return '<div class="pc" data-id="'+i+'"><div class="pc1"><div>'+esc(p.n)+'<small>Pintura '+hh(pieceH(i,r.coef))+(pieceTag(i)?' · '+esc(pieceTag(i)):'')+'</small></div><label class="mute" style="font-size:12px">Chapa h</label><input type="number" inputmode="decimal" min="0" step="0.25" data-ch="'+i+'" value="'+esc(s.ch||"")+'" placeholder="0" aria-label="Horas de chapa de '+esc(p.n)+'"><button class="x" data-rm="'+i+'" aria-label="Quitar">×</button></div>'+(ctl?'<div class="pc2'+(p.g==="b"?' mapped':'')+'">'+ctl+'</div>':'')+'</div>'}).join("")||'<p class="mute" style="margin:0">Toca las piezas dañadas en el esquema. Cada una suma sus horas de pintura.</p>';
   var recs=B.recs.map(function(x,i){return '<div class="sl" style="grid-template-columns:minmax(0,1fr) 110px auto"><input type="text" style="width:100%;text-align:left" data-rd="'+i+'" value="'+esc(x.d)+'" placeholder="Pieza o recambio" aria-label="Descripción del recambio"><input type="number" inputmode="decimal" min="0" step="0.01" style="width:110px" data-ri="'+i+'" value="'+esc(x.imp||"")+'" placeholder="€" aria-label="Importe"><button class="x" data-rr="'+i+'" aria-label="Quitar">×</button></div>'}).join("");
   var critLabel=CRIT.filter(function(c){return c[0]===r.crit})[0][1];
   return '<div class="card" style="margin-bottom:20px"><div class="row" style="justify-content:space-between"><div><h2>1 · Marca los daños</h2><p class="sub">Toca cada pieza afectada en el plano y elige el sistema de valoración. Las horas salen de tus parámetros.</p></div><div class="row" style="gap:8px;align-items:flex-end"><div class="field" style="min-width:210px"><label for="f-bar">Sistema de valoración</label><select id="f-bar" data-bar="1"><option value="rapido"'+(mode==="rapido"?' selected':'')+'>Estimación rápida (coeficiente)</option><option value="ces"'+(mode==="ces"?' selected':'')+'>Valoración por nivel de daños</option><option value="cz"'+(mode==="cz"?' selected':'')+'>Valoración por decímetros cuadrados</option></select></div><button class="btn" data-a="all">Vehículo completo</button><button class="btn" data-a="clear">Borrar marcas</button></div></div>'+
@@ -414,7 +420,27 @@ function docHTML(r){
    '</div>';
 }
 
-function bindPres(){}
+function mapCtl(id,mode,s,w){w=w||132;
+  var sel,inp="";
+  if(mode==="ces")sel='<select data-niv="'+id+'" aria-label="Nivel de daño">'+NIV.map(function(n){return '<option value="'+n[0]+'"'+((s.niv||"med")===n[0]?' selected':'')+'>'+n[1].replace("Daño ","").replace("Pieza nueva","Nueva").replace(/^./,function(c){return c.toUpperCase()})+'</option>'}).join("")+'</select>';
+  else{sel='<select data-tipo="'+id+'" aria-label="Tipo de daño"><option value="sup"'+(s.tipo!=="lin"?' selected':'')+'>Superficial dm²</option><option value="lin"'+(s.tipo==="lin"?' selected':'')+'>Lineal dm</option></select>';
+    inp='<input type="number" inputmode="decimal" min="0" step="0.5" data-dm="'+id+'" value="'+esc(s.dm||"")+'" placeholder="'+(w<110?(s.tipo==="lin"?"dm":"dm²"):(s.tipo==="lin"?"¿Cuántos dm?":"¿Cuántos dm²?"))+'" aria-label="Decímetros">'}
+  return '<div xmlns="http://www.w3.org/1999/xhtml" class="mc">'+sel+inp+'</div>';
+}
+function bindPres(){
+  var svg=document.querySelector(".carscroll svg.car");if(!svg)return;
+  var mode=C.cfg.baremo;if(mode==="rapido")return;
+  var vb=svg.viewBox.baseVal,R=svg.getBoundingClientRect(),k=R.width/vb.width;if(!k)return;
+  Object.keys(B.sel).forEach(function(id){
+    var z=svg.querySelector('.zone[data-p="'+id+'"]');if(!z)return;
+    var b=z.getBoundingClientRect(),x=(b.left-R.left)/k,y=(b.top-R.top)/k,w=b.width/k,h=b.height/k;
+    var W=Math.max(86,Math.min(132,w-8)),H=mode==="cz"?52:26;
+    var fx=Math.max(2,Math.min(vb.width-W-2,x+w/2-W/2)),fy=y+h-H-3;
+    var fo=document.createElementNS("http://www.w3.org/2000/svg","foreignObject");
+    fo.setAttribute("class","mapctl");fo.setAttribute("x",fx);fo.setAttribute("y",fy);fo.setAttribute("width",W);fo.setAttribute("height",H);
+    fo.innerHTML=mapCtl(id,mode,B.sel[id],W);svg.appendChild(fo);
+  });
+}
 function refreshSum(){var r=calc();$("#sum").innerHTML=sumHTML(r);var d=$("#doc");if(d)d.outerHTML=docHTML(r)}
 function rerender(){var y=window.scrollY;render();window.scrollTo(0,y)}
 
@@ -531,7 +557,7 @@ document.addEventListener("input",function(ev){
   else if(e.dataset.c){var k2=e.dataset.c;C.cfg[k2]=(k2==="taller"||k2==="tasadores")?e.value:num(e.value);save()}
   else if(e.dataset.niv){B.sel[e.dataset.niv].niv=e.value;rerender()}
   else if(e.dataset.tipo){B.sel[e.dataset.tipo].tipo=e.value;rerender()}
-  else if(e.dataset.dm!==undefined){B.sel[e.dataset.dm].dm=e.value;var sm=e.closest(".pc").querySelector("small");if(sm)sm.textContent="Pintura "+hh(pieceH(e.dataset.dm,1))+" · "+pieceTag(e.dataset.dm);refreshSum()}
+  else if(e.dataset.dm!==undefined){B.sel[e.dataset.dm].dm=e.value;var pcx=document.querySelector('.pc[data-id="'+e.dataset.dm+'"]'),sm=pcx&&pcx.querySelector("small");if(sm)sm.textContent="Pintura "+hh(pieceH(e.dataset.dm,1))+" · "+pieceTag(e.dataset.dm);document.querySelectorAll('[data-dm="'+e.dataset.dm+'"]').forEach(function(o){if(o!==e)o.value=e.value});refreshSum()}
   else if(e.dataset.bar){C.cfg.baremo=e.value;save();rerender()}
   else if(e.dataset.ces){var q=e.dataset.ces.split("|");C.cfg.ces[q[0]][+q[1]]=num(e.value);save()}
   else if(e.dataset.cz){var q2=e.dataset.cz.split("|");C.cfg.cz[q2[0]][+q2[1]]=num(e.value);save()}
