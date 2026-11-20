@@ -88,6 +88,20 @@ svg.car{width:100%;height:auto;display:block;margin:0 auto}
 .pc1 input{width:76px;padding:6px 8px;font-size:15px;text-align:right}
 .pc1 .x{border:0;background:var(--soft);width:28px;height:28px;border-radius:50%}
 .pc1 small{color:var(--mute);display:block;font-size:12px}
+.plate{display:flex;height:54px;max-width:280px;border:2.5px solid #1f2124;border-radius:9px;overflow:hidden;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.plate .eu{flex:0 0 38px;background:#0b3d91;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.plate .eu i{width:17px;height:17px;border-radius:50%;border:3px dotted #ffd200;display:block}
+.plate .eu b{color:#fff;font:700 13px/1 var(--display)}
+.plate input{flex:1;min-width:0;border:0!important;box-shadow:none!important;border-radius:0!important;background:#fff!important;color:#111!important;text-align:center;text-transform:uppercase;font:700 23px/1 var(--display)!important;letter-spacing:.06em;padding:0 4px!important;height:100%}
+.plate input::placeholder{color:#c4c4c4;font-weight:600}
+.plate:focus-within{outline:3px solid var(--acc);outline-offset:2px}
+.tag.no{background:rgba(229,83,45,.15);color:var(--acc)}
+.nump{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;font-size:13px;color:var(--mute)}
+.nump b{color:inherit;font:700 20px var(--display);letter-spacing:.04em}
+.hfs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.hfs button{border:1.5px solid var(--line);background:var(--panel);color:inherit;border-radius:999px;padding:7px 14px;font:600 13px Inter,sans-serif;cursor:pointer}
+.hfs button[aria-pressed="true"]{background:var(--ink,#1f2124);color:#fff;border-color:transparent}
+.est{width:auto;padding:5px 8px;font-size:13px}
 .mapctl{overflow:visible}
 .mc{display:flex;flex-direction:column;gap:3px;width:100%;pointer-events:auto}
 .mc select,.mc input{width:100%;font-size:12px;padding:2px 5px;border-radius:6px;border:1.5px solid #fff;background:#fff;color:#1f2124;height:23px;text-align:left;box-shadow:0 1px 4px rgba(0,0,0,.25)}
@@ -247,7 +261,15 @@ function load(){var o=null;try{o=JSON.parse(localStorage.getItem(KEY))}catch(e){
     if(o.cfg.baremo)c.baremo=o.cfg.baremo;
     if(o.cfg.ces)Object.keys(c.ces).forEach(function(k){if(o.cfg.ces[k]&&o.cfg.ces[k].length===5)c.ces[k]=o.cfg.ces[k]});
     if(o.cfg.cz)Object.keys(c.cz).forEach(function(k){if(o.cfg.cz[k]&&o.cfg.cz[k].length===2)c.cz[k]=o.cfg.cz[k]})}
-  return {cfg:c,saved:o.saved||[]}}
+  var sv=o.saved||[],seq=o.seq||{},yr0=String(new Date().getFullYear());
+  sv.forEach(function(x){if(!x.estado)x.estado="pend";
+    if(!x.num){var m=String(x.fecha||"").match(/(\d{4})/),y=m?m[1]:yr0;seq[y]=(seq[y]||0)+1;x.num=y+"-"+("00"+seq[y]).slice(-3)}});
+  return {cfg:c,saved:sv,seq:seq}}
+function pad3(n){return ("00"+n).slice(-3)}
+function nextNum(){var y=String(new Date().getFullYear());return y+"-"+pad3((C.seq[y]||0)+1)}
+function assignNum(){var y=String(new Date().getFullYear());C.seq[y]=(C.seq[y]||0)+1;return y+"-"+pad3(C.seq[y])}
+var EST={pend:["Pendiente","lo"],acep:["Aceptado","ok"],rech:["Rechazado","no"]};
+var hf="pend";
 function save(){try{localStorage.setItem(KEY,JSON.stringify(C))}catch(e){}}
 
 /* ───────── Estado del presupuesto en curso ───────── */
@@ -357,7 +379,7 @@ function vPres(){
    '<div class="card"><h2>2 · Chapa y recambios</h2><p class="sub">Indica las horas de chapa de cada pieza y añade los recambios.</p><div class="sel" style="margin-top:10px">'+list+'</div>'+
    '<div class="sec-h" style="margin-top:16px">Recambios (sin IVA)</div>'+recs+'<button class="btn sm" data-a="addrec" style="margin-top:8px">+ Añadir recambio</button></div>'+
    '<div class="card"><h2>3 · Datos</h2><div class="cols2" style="margin-top:10px">'+
-   fld("Cliente","cliente",B.cliente)+fld("Marca","marca",B.marca)+fld("Modelo","modelo",B.modelo)+fld("Matrícula","mat",B.mat)+
+   fld("Cliente","cliente",B.cliente)+fld("Marca","marca",B.marca)+fld("Modelo","modelo",B.modelo)+plateFld(B.mat)+
    '<div class="field"><label for="f-tasador">Tasador</label><input type="text" id="f-tasador" list="tl" data-f="tasador" value="'+esc(B.tasador)+'"><datalist id="tl">'+cfg.tasadores.split(",").map(function(t){t=t.trim();return t?'<option value="'+esc(t)+'">':''}).join("")+'</datalist></div>'+
    (mode!=="rapido"?'<div class="field" style="grid-column:1/-1"><p class="note" style="margin:0">Con la valoración '+(mode==="ces"?"por nivel de daños":"por decímetros cuadrados")+' las horas de pintura salen del daño de cada pieza; el coeficiente por varias piezas no se aplica.</p></div>':
    '<div class="field"><label for="f-size">Tamaño del vehículo</label><select id="f-size" data-f="size">'+SIZES.map(function(s,i){return '<option value="'+i+'"'+(B.size===i?' selected':'')+'>'+s+'</option>'}).join("")+'</select></div>'+
@@ -366,6 +388,7 @@ function vPres(){
    '<div class="field" style="margin-top:12px"><label for="f-obs">Observaciones</label><textarea id="f-obs" data-f="obs">'+esc(B.obs)+'</textarea></div></div></div>'+
    '<div class="sum screen" id="sum">'+sumHTML(r)+'</div></div>'+docHTML(r);
 }
+function plateFld(v){return '<div class="field"><label for="f-mat">Matrícula</label><div class="plate"><span class="eu"><i></i><b>E</b></span><input type="text" id="f-mat" data-f="mat" maxlength="10" autocomplete="off" autocapitalize="characters" spellcheck="false" value="'+esc(v)+'" placeholder="0000 ABC" aria-label="Matrícula"></div></div>'}
 function fld(l,k,v){return '<div class="field"><label for="f-'+k+'">'+l+'</label><input type="text" id="f-'+k+'" data-f="'+k+'" value="'+esc(v)+'"></div>'}
 
 function sumHTML(r){
@@ -376,11 +399,13 @@ function sumHTML(r){
   var matTag=cfg.matH>=REF.matH?'<span class="tag ok">en objetivo</span>':'<span class="tag lo">por debajo</span>';
   var lit=REF.litros.map(function(l){var q=r.hPint*l[1];return '<div class="ln"><span>'+l[0]+'</span><span><b class="num">'+nf(q,2)+' l</b> · '+eur(q*l[2])+'</span></div>'}).join("");
   var litT=REF.litros.reduce(function(a,l){return a+r.hPint*l[1]*l[2]},0);
-  return '<div class="tot"><small>TOTAL PRESUPUESTO (IVA incl.)</small><div class="t">'+eur(r.tot)+'</div>'+
+  var cur=B.savedId&&C.saved.filter(function(x){return x.id===B.savedId})[0];
+  var nump='<div class="nump"><span>Presupuesto nº <b>'+(cur?cur.num:nextNum())+'</b></span><span class="tag '+EST[cur?cur.estado:"pend"][1]+'">'+(cur?EST[cur.estado][0]:"Nuevo")+'</span></div>';
+  return nump+'<div class="tot"><small>TOTAL PRESUPUESTO (IVA incl.)</small><div class="t">'+eur(r.tot)+'</div>'+
    '<div class="lines"><div class="ln"><span>Mano de obra chapa · '+hh(r.hCh)+'</span><b>'+eur(r.moC)+'</b></div><div class="ln"><span>Mano de obra pintura · '+hh(r.hPint)+'</span><b>'+eur(r.moP)+'</b></div><div class="ln"><span>Material de pintura</span><b>'+eur(r.mat)+'</b></div><div class="ln"><span>Recambios</span><b>'+eur(r.rec)+'</b></div>'+
    (r.dto?'<div class="ln"><span>Descuento '+nf(r.dtoP,1)+' %</span><b>−'+eur(r.dto)+'</b></div>':'')+
    '<div class="ln"><span>Base imponible</span><b>'+eur(r.bi)+'</b></div><div class="ln"><span>IVA '+nf(cfg.iva,0)+' %</span><b>'+eur(r.iva)+'</b></div></div>'+
-   '<div class="row" style="margin-top:14px"><button class="btn acc" data-a="save">Guardar</button><button class="btn" style="background:#2f8f5b;border-color:#2f8f5b;color:#fff" data-a="toplan">Aceptado → Planificador</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="print">Imprimir / PDF</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="new">Nuevo</button></div></div>'+
+   '<div class="row" style="margin-top:14px"><button class="btn acc" data-a="save">Guardar</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="rech">Rechazado</button><button class="btn" style="background:#2f8f5b;border-color:#2f8f5b;color:#fff" data-a="toplan">Aceptado → Planificador</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="print">Imprimir / PDF</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="new">Nuevo</button></div></div>'+
    '<div class="card"><div class="sec-h">Lectura métodoAGP</div>'+(tot>0?'<div class="mx">'+
    bar("Mano de obra (chapa + pintura)",pMO,REF.mo)+bar("Material de pintura",pMat,REF.mat)+bar("Recambios",pRec,REF.rec)+'</div>'+
    (r.rec<=0?'<p class="note">Añade los recambios para ver el reparto real. Sin ellos el peso de la mano de obra sale inflado.</p>':'')+
@@ -392,14 +417,14 @@ function sumHTML(r){
 function docHTML(r){
   var cfg=C.cfg,nCh=r.ids.filter(function(i){return num(B.sel[i].ch)>0}).length;
   var recs=B.recs.filter(function(x){return num(x.imp)>0});
-  var ref=(B.savedId||"").toUpperCase();
+  var cur2=B.savedId&&C.saved.filter(function(x){return x.id===B.savedId})[0],ref=cur2?cur2.num:nextNum();
   var rows=r.ids.map(function(i){var p=PID[i],hp=pieceH(i,r.coef),hc=num(B.sel[i].ch);
     return '<div class="pz"><span>'+esc(p.n)+(pieceTag(i)?' <em class="mute2" style="font-style:normal">· '+esc(pieceTag(i))+'</em>':'')+'</span><span>'+(hc>0?hh(hc):"—")+'</span><span>'+hh(hp)+'</span></div>'}).join("");
   var txt=r.nb>=13?"Pintado de vehículo completo":"";
   return '<div class="doc" id="doc">'+
    '<div class="hd"><div><div class="tn">'+esc(cfg.taller)+'</div><div class="mute2">Presupuesto de reparación'+(ref?' · Nº '+ref:'')+'</div></div><div style="text-align:right"><b>Fecha</b> '+today()+'<br><span class="mute2">Validez: 15 días</span></div></div>'+
    '<div class="ttl">Presupuesto de reparación</div>'+
-   '<div class="meta"><div><b>Cliente:</b> '+esc(B.cliente||"—")+'</div><div><b>Matrícula:</b> '+esc(B.mat||"—")+'</div><div><b>Marca:</b> '+esc(B.marca||"—")+'</div><div><b>Modelo:</b> '+esc(B.modelo||"—")+'</div>'+(B.tasador?'<div><b>Tasador:</b> '+esc(B.tasador)+'</div>':'')+'</div>'+
+   '<div class="meta"><div><b>Cliente:</b> '+esc(B.cliente||"—")+'</div><div><b>Matrícula:</b> <span style="display:inline-block;border:1.5px solid #1f2124;border-radius:4px;padding:0 8px 0 0;overflow:hidden;font:700 15px var(--display);letter-spacing:.1em"><span style="display:inline-block;background:#0b3d91;color:#fff;font-size:10px;padding:1px 5px;margin-right:6px">E</span>'+esc(B.mat||"—")+'</span></div><div><b>Marca:</b> '+esc(B.marca||"—")+'</div><div><b>Modelo:</b> '+esc(B.modelo||"—")+'</div>'+(B.tasador?'<div><b>Tasador:</b> '+esc(B.tasador)+'</div>':'')+'</div>'+
    '<div class="two"><div class="l">'+
      '<div class="sect">Daños y piezas'+(cfg.baremo==="ces"?' · valoración por nivel de daños':cfg.baremo==="cz"?' · valoración por decímetros cuadrados':'')+'</div>'+
      (r.ids.length?'<div class="pz ph"><span>Pieza</span><span>Chapa</span><span>Pintura</span></div>'+rows+'<div class="pz pt"><span>Total horas</span><span>'+hh(r.hCh)+'</span><span>'+hh(r.hPint)+'</span></div>':'<p class="mute2">Sin piezas marcadas.</p>')+
@@ -445,12 +470,12 @@ function refreshSum(){var r=calc();$("#sum").innerHTML=sumHTML(r);var d=$("#doc"
 function rerender(){var y=window.scrollY;render();window.scrollTo(0,y)}
 
 /* ───────── Guardar y enviar al planificador ───────── */
-function saveCurrent(flag){
+function saveCurrent(flag,estado){
   var r=calc();if(!r.ids.length&&!r.rec){toast("Marca algún daño antes de continuar");return null}
   var rec={fecha:today(),cliente:B.cliente,marca:B.marca,modelo:B.modelo,matricula:B.mat,tasador:B.tasador,piezas:r.ids.map(function(i){return PID[i].n}),hCh:r.hCh,hPint:r.hPint,moC:r.moC,moP:r.moP,mat:r.mat,rec:r.rec,bi:r.bi,tot:r.tot};
   var ex=B.savedId&&C.saved.filter(function(x){return x.id===B.savedId})[0];
-  if(ex){for(var k in rec)ex[k]=rec[k];rec=ex}else{rec.id=Math.random().toString(36).slice(2,9);C.saved.push(rec);B.savedId=rec.id}
-  if(flag)rec.plan=flag;save();return rec;
+  if(ex){for(var k in rec)ex[k]=rec[k];rec=ex}else{rec.id=Math.random().toString(36).slice(2,9);rec.num=assignNum();rec.estado="pend";C.saved.push(rec);B.savedId=rec.id}
+  if(estado)rec.estado=estado;if(flag)rec.plan=flag;save();return rec;
 }
 function closeOv(){var o=$("#ov");if(o)o.remove()}
 function ovOpen(html){closeOv();var d=document.createElement("div");d.id="ov";d.className="ov";d.dataset.a="ovclose";d.innerHTML='<div class="modal" role="dialog" aria-modal="true">'+html+'</div>';document.body.appendChild(d)}
@@ -462,7 +487,7 @@ function openPlan(){
   var dias=Math.max(2,Math.ceil((r.hCh+r.hPint)/8)+3);
   ovOpen('<button class="x" data-a="planx" aria-label="Cerrar">×</button><h3>Llevar al planificador</h3><p class="sub">La reparación aceptada entrará como una tarjeta nueva con sus horas de chapa y pintura.</p>'+
    '<div class="cols2" style="margin-top:14px">'+
-   '<div class="field"><label for="p-mat">Matrícula</label><input type="text" id="p-mat" maxlength="10" value="'+esc(B.mat)+'" placeholder="0000ABC"></div>'+
+   '<div class="field"><label for="p-mat">Matrícula</label><div class="plate"><span class="eu"><i></i><b>E</b></span><input type="text" id="p-mat" maxlength="10" autocapitalize="characters" value="'+esc(B.mat)+'" placeholder="0000 ABC"></div></div>'+
    '<div class="field"><label for="p-car">Vehículo</label><input type="text" id="p-car" value="'+esc((B.marca+" "+B.modelo).trim())+'" placeholder="Marca y modelo"></div>'+
    '<div class="field"><label for="p-ins">Seguro / tipo de cliente</label><input type="text" id="p-ins" value="Particular"></div>'+
    '<div class="field"><label for="p-sal">Fecha de salida prevista</label><input type="date" id="p-sal" value="'+addDays(dias)+'"></div>'+
@@ -472,10 +497,10 @@ function openPlan(){
    '<div class="row" style="margin-top:6px"><button class="btn acc" data-a="planok">Enviar al planificador</button><button class="btn" data-a="planx">Cancelar</button></div>');
 }
 function sendPlan(){
-  var mat=$("#p-mat").value.trim(),car=$("#p-car").value.trim(),sal=$("#p-sal").value;
+  var mat=$("#p-mat").value.trim().toUpperCase(),car=$("#p-car").value.trim(),sal=$("#p-sal").value;
   if(!car){$("#perr").textContent="Indica el vehículo.";return}
   if(!sal){$("#perr").textContent="Indica la fecha de salida prevista.";return}
-  var r=calc(),rec=saveCurrent("Planificador");if(!rec)return;
+  var r=calc(),rec=saveCurrent("Planificador","acep");if(!rec)return;
   var q=[];try{q=JSON.parse(localStorage.getItem(QKEY))||[]}catch(e){}
   var uid=rec.id,st=$("#p-st").value;
   q.push({uid:uid,pl:mat,car:car,ins:$("#p-ins").value.trim()||"Particular",sal:sal,pr:$("#p-pr").value,st:st,c:r.hCh,p:r.hPint,m:0,eur:r.bi,cliente:B.cliente,obs:B.obs,piezas:r.ids.map(function(i){return PID[i].n}),tas:B.tasador});
@@ -488,16 +513,25 @@ function sendPlan(){
 
 /* ───────── Presupuestos guardados ───────── */
 function vHist(){
-  var L=C.saved.slice().reverse();
-  if(!L.length)return '<div class="card" style="text-align:center;padding:44px 20px"><h2>Aún no hay presupuestos guardados</h2><p class="sub">Pulsa «Guardar» en un presupuesto y aparecerá aquí con su análisis.</p></div>';
-  var n=L.length,sT=0,sBI=0,sHC=0,sHP=0,sMO=0,sMat=0,sRec=0;
-  L.forEach(function(x){sT+=x.tot;sBI+=x.bi;sHC+=x.hCh;sHP+=x.hPint;sMO+=x.moC+x.moP;sMat+=x.mat;sRec+=x.rec});
+  var A=C.saved.slice().reverse();
+  if(!A.length)return '<div class="card" style="text-align:center;padding:44px 20px"><h2>Aún no hay presupuestos guardados</h2><p class="sub">Pulsa «Guardar» en un presupuesto y aparecerá aquí con su número y su estado.</p></div>';
+  var cnt={pend:0,acep:0,rech:0},imp={pend:0,acep:0,rech:0};
+  A.forEach(function(x){var e=x.estado||"pend";cnt[e]++;imp[e]+=x.bi});
+  var n=A.length,dec=cnt.acep+cnt.rech,tasa=dec?cnt.acep/dec*100:null,tasaImp=(imp.acep+imp.rech)?imp.acep/(imp.acep+imp.rech)*100:null;
+  var sBI=0,sHC=0,sHP=0,sMO=0,sMat=0,sRec=0;
+  A.forEach(function(x){sBI+=x.bi;sHC+=x.hCh;sHP+=x.hPint;sMO+=x.moC+x.moP;sMat+=x.mat;sRec+=x.rec});
   var base=sMO+sMat+sRec;
-  var rows=L.map(function(x){return '<tr><td>'+esc(x.fecha)+'</td><td><b>'+esc(x.cliente||"—")+'</b><div class="mute" style="font-size:12px">'+esc([x.marca,x.modelo,x.matricula].filter(Boolean).join(" · "))+'</div></td><td class="r num">'+hh(x.hCh)+'</td><td class="r num">'+hh(x.hPint)+'</td><td class="r num">'+eur(x.bi)+'</td><td class="r num"><b>'+eur(x.tot)+'</b>'+(x.plan?'<div><span class="tag ok">En planificador</span></div>':'')+'</td><td class="r"><button class="btn sm danger" data-del="'+x.id+'">Borrar</button></td></tr>'}).join("");
-  return '<div class="row" style="justify-content:space-between"><div><h2>Presupuestos guardados</h2><p class="sub">Se guardan en este navegador. Descárgalos para analizarlos con el método.</p></div><button class="btn" data-a="csv">Descargar CSV</button></div>'+
-   '<div class="kpis"><div class="kpi"><span>Presupuestos</span><b>'+n+'</b></div><div class="kpi"><span>Base media</span><b>'+eur(sBI/n)+'</b></div><div class="kpi"><span>Horas medias</span><b>'+hh((sHC+sHP)/n)+'</b></div><div class="kpi"><span>Chapa / pintura</span><b>'+hh(sHC/n)+' / '+hh(sHP/n)+'</b></div></div>'+
-   (base>0?'<div class="card" style="margin-bottom:20px"><div class="sec-h">Reparto medio de lo presupuestado</div><div class="row" style="gap:24px"><span>Mano de obra <b>'+nf(sMO/base*100,1)+' %</b> <span class="mute">(40)</span></span><span>Material pintura <b>'+nf(sMat/base*100,1)+' %</b> <span class="mute">(15)</span></span><span>Recambios <b>'+nf(sRec/base*100,1)+' %</b> <span class="mute">(45)</span></span></div></div>':'')+
-   '<div class="card"><div class="tblw"><table class="tbl"><thead><tr><th>Fecha</th><th>Cliente</th><th class="r">Chapa</th><th class="r">Pintura</th><th class="r">Base</th><th class="r">Total</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+  var L=hf==="all"?A:A.filter(function(x){return (x.estado||"pend")===hf});
+  var chips=[["pend","Pendientes ("+cnt.pend+")"],["acep","Aceptados ("+cnt.acep+")"],["rech","Rechazados ("+cnt.rech+")"],["all","Todos ("+n+")"]].map(function(c){return '<button data-hf="'+c[0]+'" aria-pressed="'+(hf===c[0])+'">'+c[1]+'</button>'}).join("");
+  var rows=L.map(function(x){var e=x.estado||"pend";return '<tr><td><b>'+esc(x.num)+'</b><div class="mute" style="font-size:12px">'+esc(x.fecha)+'</div></td><td><b>'+esc(x.cliente||"—")+'</b><div class="mute" style="font-size:12px">'+esc([x.marca,x.modelo,x.matricula].filter(Boolean).join(" · "))+'</div></td><td class="r num">'+hh(x.hCh+x.hPint)+'</td><td class="r num"><b>'+eur(x.tot)+'</b>'+(x.plan?'<div><span class="tag ok">En planificador</span></div>':'')+'</td><td><select class="est" data-est="'+x.id+'" aria-label="Estado del presupuesto '+esc(x.num)+'">'+["pend","acep","rech"].map(function(k){return '<option value="'+k+'"'+(e===k?' selected':'')+'>'+EST[k][0]+'</option>'}).join("")+'</select></td><td class="r"><button class="btn sm danger" data-del="'+x.id+'">Borrar</button></td></tr>'}).join("");
+  var empty=hf==="pend"?'Bandeja limpia: no tienes presupuestos pendientes.':'No hay presupuestos en este estado.';
+  return '<div class="row" style="justify-content:space-between"><div><h2>Presupuestos</h2><p class="sub">Cada presupuesto tiene su número y su estado. Márcalos como aceptados o rechazados para vaciar la bandeja de pendientes. Se guardan en este navegador.</p></div><button class="btn" data-a="csv">Descargar CSV</button></div>'+
+   '<div class="kpis"><div class="kpi"><span>Presupuestos hechos</span><b>'+n+'</b></div><div class="kpi"><span>Pendientes</span><b>'+cnt.pend+'</b></div><div class="kpi"><span>Aceptados</span><b>'+cnt.acep+'</b></div><div class="kpi"><span>Rechazados</span><b>'+cnt.rech+'</b></div></div>'+
+   '<div class="kpis" style="margin-top:12px"><div class="kpi"><span>Tasa de aceptación</span><b>'+(tasa===null?"—":nf(tasa,0)+" %")+'</b></div><div class="kpi"><span>Aceptación en importe</span><b>'+(tasaImp===null?"—":nf(tasaImp,0)+" %")+'</b></div><div class="kpi"><span>Importe aceptado (BI)</span><b>'+eur(imp.acep)+'</b></div><div class="kpi"><span>Importe pendiente (BI)</span><b>'+eur(imp.pend)+'</b></div></div>'+
+   '<p class="mute" style="font-size:12px;margin:8px 0 0">Tasa de aceptación = aceptados ÷ (aceptados + rechazados); los pendientes no cuentan hasta que se decidan.</p>'+
+   (base>0?'<div class="card" style="margin:16px 0 0"><div class="sec-h">Reparto medio de lo presupuestado</div><div class="row" style="gap:24px"><span>Mano de obra <b>'+nf(sMO/base*100,1)+' %</b> <span class="mute">(40)</span></span><span>Material pintura <b>'+nf(sMat/base*100,1)+' %</b> <span class="mute">(15)</span></span><span>Recambios <b>'+nf(sRec/base*100,1)+' %</b> <span class="mute">(45)</span></span><span>Horas medias <b>'+hh((sHC+sHP)/n)+'</b></span></div></div>':'')+
+   '<div class="hfs" role="group" aria-label="Filtrar por estado">'+chips+'</div>'+
+   '<div class="card">'+(L.length?'<div class="tblw"><table class="tbl"><thead><tr><th>Nº</th><th>Cliente</th><th class="r">Horas</th><th class="r">Total</th><th>Estado</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<p class="sub" style="text-align:center;margin:18px 0">'+empty+'</p>')+'</div>';
 }
 
 /* ───────── Ajustes ───────── */
@@ -525,7 +559,7 @@ function toggle(id){if(B.sel[id])delete B.sel[id];else B.sel[id]={ch:"",niv:"med
 document.addEventListener("click",function(ev){
   var t=ev.target,z=t.closest&&t.closest("[data-p]");
   if(z&&view==="pres"&&!z.closest("#doc")){toggle(z.dataset.p);rerender();return}
-  var el=t.closest&&t.closest("[data-a],[data-rm],[data-rr],[data-del]");if(!el)return;
+  var el=t.closest&&t.closest("[data-a],[data-rm],[data-rr],[data-del],[data-hf]");if(!el)return;
   if(el.dataset.rm){delete B.sel[el.dataset.rm];rerender();return}
   if(el.dataset.rr){B.recs.splice(+el.dataset.rr,1);rerender();return}
   if(el.dataset.del){C.saved=C.saved.filter(function(x){return x.id!==el.dataset.del});save();render();return}
@@ -535,13 +569,15 @@ document.addEventListener("click",function(ev){
   else if(a==="addrec"){B.recs.push({d:"",imp:""});rerender()}
   else if(a==="new"){B={sel:{},size:B.size,coefMan:"",dto:0,recs:[],cliente:"",marca:"",modelo:"",mat:"",tasador:B.tasador,obs:"",savedId:"",sent:""};rerender();toast("Presupuesto nuevo")}
   else if(a==="print"){window.print()}
-  else if(a==="save"){if(!saveCurrent())return;toast("Presupuesto guardado")}
+  else if(a==="save"){var sv=saveCurrent();if(!sv)return;refreshSum();toast("Presupuesto "+sv.num+" guardado")}
   else if(a==="toplan"){openPlan()}
+  else if(a==="rech"){var rr=saveCurrent(null,"rech");if(!rr)return;B={sel:{},size:B.size,coefMan:"",dto:0,recs:[],cliente:"",marca:"",modelo:"",mat:"",tasador:B.tasador,obs:"",savedId:"",sent:""};rerender();toast("Presupuesto "+rr.num+" marcado como rechazado")}
+  else if(el.dataset.hf){hf=el.dataset.hf;render()}
   else if(a==="planok"){sendPlan()}
   else if(a==="planx"||a==="ovclose"&&ev.target===el){closeOv()}
   else if(a==="csv"){
-    var L=["fecha;cliente;marca;modelo;matricula;tasador;horas_chapa;horas_pintura;mo_chapa;mo_pintura;material_pintura;recambios;base_imponible;total"];
-    C.saved.forEach(function(x){L.push([x.fecha,x.cliente,x.marca,x.modelo,x.matricula||"",x.tasador,x.hCh,x.hPint,x.moC,x.moP,x.mat,x.rec,x.bi,x.tot].map(function(v){return typeof v==="number"?String(Math.round(v*100)/100).replace(".",","):String(v==null?"":v).replace(/;/g,",")}).join(";"))});
+    var L=["numero;estado;fecha;cliente;marca;modelo;matricula;tasador;horas_chapa;horas_pintura;mo_chapa;mo_pintura;material_pintura;recambios;base_imponible;total"];
+    C.saved.forEach(function(x){L.push([x.num,(EST[x.estado||"pend"]||EST.pend)[0],x.fecha,x.cliente,x.marca,x.modelo,x.matricula||"",x.tasador,x.hCh,x.hPint,x.moC,x.moP,x.mat,x.rec,x.bi,x.tot].map(function(v){return typeof v==="number"?String(Math.round(v*100)/100).replace(".",","):String(v==null?"":v).replace(/;/g,",")}).join(";"))});
     var a2=document.createElement("a");a2.href=URL.createObjectURL(new Blob(["﻿"+L.join("\n")],{type:"text/csv"}));a2.download="presupuestos-metodoAGP.csv";document.body.appendChild(a2);a2.click();a2.remove()}
   else if(a==="reset"){if(!el.dataset.sure){el.dataset.sure="1";el.textContent="Pulsa otra vez para confirmar";return}C.cfg=JSON.parse(JSON.stringify(DEF));save();render();toast("Valores restaurados")}
 });
@@ -553,6 +589,8 @@ document.addEventListener("input",function(ev){
   if(e.dataset.ch!==undefined&&B.sel[e.dataset.ch]){B.sel[e.dataset.ch].ch=e.value;refreshSum()}
   else if(e.dataset.rd!==undefined){B.recs[+e.dataset.rd].d=e.value;refreshSum()}
   else if(e.dataset.ri!==undefined){B.recs[+e.dataset.ri].imp=e.value;refreshSum()}
+  else if(e.dataset.f==="mat"||e.id==="p-mat"){var ps=e.selectionStart;e.value=e.value.toUpperCase().replace(/[^A-Z0-9ÑÇ -]/g,"");try{e.setSelectionRange(ps,ps)}catch(x){}if(e.dataset.f==="mat"){B.mat=e.value;refreshSum()}}
+  else if(e.dataset.est){var sx=C.saved.filter(function(x){return x.id===e.dataset.est})[0];if(sx){sx.estado=e.value;save();rerender()}}
   else if(e.dataset.f){var k=e.dataset.f;B[k]=k==="size"?+e.value:e.value;if(k==="size"){rerender()}else refreshSum()}
   else if(e.dataset.c){var k2=e.dataset.c;C.cfg[k2]=(k2==="taller"||k2==="tasadores")?e.value:num(e.value);save()}
   else if(e.dataset.niv){B.sel[e.dataset.niv].niv=e.value;rerender()}
