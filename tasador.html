@@ -88,6 +88,11 @@ svg.car{width:100%;height:auto;display:block;margin:0 auto}
 .pc1 input{width:76px;padding:6px 8px;font-size:15px;text-align:right}
 .pc1 .x{border:0;background:var(--soft);width:28px;height:28px;border-radius:50%}
 .pc1 small{color:var(--mute);display:block;font-size:12px}
+.dplate{display:inline-flex;align-items:stretch;height:30px;border:2px solid #1f2124;border-radius:6px;overflow:hidden;background:#fff;vertical-align:middle;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.dplate .eu{width:26px;background:#0b3d91;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font:700 11px/1 var(--display)}
+.dplate .eu i{width:11px;height:11px;border-radius:50%;border:2px dotted #ffd200;display:block}
+.dplate .n{display:flex;align-items:center;padding:0 12px;font:700 20px/1 var(--display);letter-spacing:.1em;color:#111}
+.dpl{display:flex;align-items:center}
 .plate{display:flex;height:54px;max-width:280px;border:2.5px solid #1f2124;border-radius:9px;overflow:hidden;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18)}
 .plate .eu{flex:0 0 38px;background:#0b3d91;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
 .plate .eu i{width:17px;height:17px;border-radius:50%;border:3px dotted #ffd200;display:block}
@@ -197,7 +202,8 @@ svg.car{width:100%;height:auto;display:block;margin:0 auto}
   .top,.screen,.toast,.legal{display:none!important}
   #app>*:not(.doc){display:none!important}
   main{padding:0}.wrap{max-width:none;padding:0}
-  .doc{border:0;margin:0;padding:0;display:block!important;font-size:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  html,body{width:auto;min-width:0;margin:0}
+  .doc{border:0;margin:0;padding:12mm 13mm;box-sizing:border-box;width:100%;max-width:none;overflow:hidden;display:block!important;font-size:11px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .doc .tn{font-size:24px}.doc .ttl{margin:8px 0 6px;font-size:15px;padding:4px}.doc .meta,.doc .it,.doc .pz{font-size:11px}
   .doc .sect{margin:9px 0 4px;padding:3px;font-size:12px}
   .doc .two{grid-template-columns:minmax(0,1fr) minmax(0,1.5fr)!important;gap:12px}
@@ -206,7 +212,7 @@ svg.car{width:100%;height:auto;display:block;margin:0 auto}
   .doc .totals{margin-top:8px}.doc .totals .g{font-size:16px}
   .doc .sig{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:18px;margin-top:38px}
   .doc .accp{font-size:11px}
-  @page{size:A4;margin:10mm}
+  @page{size:A4;margin:0}
 }
 </style>
 </head>
@@ -424,7 +430,7 @@ function docHTML(r){
   return '<div class="doc" id="doc">'+
    '<div class="hd"><div><div class="tn">'+esc(cfg.taller)+'</div><div class="mute2">Presupuesto de reparación'+(ref?' · Nº '+ref:'')+'</div></div><div style="text-align:right"><b>Fecha</b> '+today()+'<br><span class="mute2">Validez: 15 días</span></div></div>'+
    '<div class="ttl">Presupuesto de reparación</div>'+
-   '<div class="meta"><div><b>Cliente:</b> '+esc(B.cliente||"—")+'</div><div><b>Matrícula:</b> <span style="display:inline-block;border:1.5px solid #1f2124;border-radius:4px;padding:0 8px 0 0;overflow:hidden;font:700 15px var(--display);letter-spacing:.1em"><span style="display:inline-block;background:#0b3d91;color:#fff;font-size:10px;padding:1px 5px;margin-right:6px">E</span>'+esc(B.mat||"—")+'</span></div><div><b>Marca:</b> '+esc(B.marca||"—")+'</div><div><b>Modelo:</b> '+esc(B.modelo||"—")+'</div>'+(B.tasador?'<div><b>Tasador:</b> '+esc(B.tasador)+'</div>':'')+'</div>'+
+   '<div class="meta"><div><b>Cliente:</b> '+esc(B.cliente||"—")+'</div>'+(B.mat?'<div class="dpl"><span class="dplate"><span class="eu"><i></i>E</span><span class="n">'+esc(B.mat)+'</span></span></div>':'<div></div>')+'<div><b>Marca:</b> '+esc(B.marca||"—")+'</div><div><b>Modelo:</b> '+esc(B.modelo||"—")+'</div>'+(B.tasador?'<div><b>Tasador:</b> '+esc(B.tasador)+'</div>':'')+'</div>'+
    '<div class="two"><div class="l">'+
      '<div class="sect">Daños y piezas'+(cfg.baremo==="ces"?' · valoración por nivel de daños':cfg.baremo==="cz"?' · valoración por decímetros cuadrados':'')+'</div>'+
      (r.ids.length?'<div class="pz ph"><span>Pieza</span><span>Chapa</span><span>Pintura</span></div>'+rows+'<div class="pz pt"><span>Total horas</span><span>'+hh(r.hCh)+'</span><span>'+hh(r.hPint)+'</span></div>':'<p class="mute2">Sin piezas marcadas.</p>')+
