@@ -88,10 +88,10 @@ svg.car{width:100%;height:auto;display:block;margin:0 auto}
 .pc1 input{width:76px;padding:6px 8px;font-size:15px;text-align:right}
 .pc1 .x{border:0;background:var(--soft);width:28px;height:28px;border-radius:50%}
 .pc1 small{color:var(--mute);display:block;font-size:12px}
-.dplate{display:inline-flex;align-items:stretch;height:30px;border:2px solid #1f2124;border-radius:6px;overflow:hidden;background:#fff;vertical-align:middle;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.dplate .eu{width:26px;background:#0b3d91;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font:700 11px/1 var(--display)}
-.dplate .eu i{width:11px;height:11px;border-radius:50%;border:2px dotted #ffd200;display:block}
-.dplate .n{display:flex;align-items:center;padding:0 12px;font:700 20px/1 var(--display);letter-spacing:.1em;color:#111}
+.dplate{display:inline-flex;align-items:stretch;height:19px;margin-left:8px;border:1.5px solid #1f2124;border-radius:4px;overflow:hidden;background:#fff;vertical-align:middle;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.dplate .eu{width:15px;background:#0b3d91;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;font:700 7px/1 var(--display)}
+.dplate .eu i{width:7px;height:7px;border-radius:50%;border:1.5px dotted #ffd200;display:block}
+.dplate .n{display:flex;align-items:center;padding:0 6px;font:700 13px/1 var(--display);letter-spacing:.08em;color:#111}
 .dpl{display:flex;align-items:center}
 .plate{display:flex;height:54px;max-width:280px;border:2.5px solid #1f2124;border-radius:9px;overflow:hidden;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18)}
 .plate .eu{flex:0 0 38px;background:#0b3d91;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
@@ -430,7 +430,7 @@ function docHTML(r){
   return '<div class="doc" id="doc">'+
    '<div class="hd"><div><div class="tn">'+esc(cfg.taller)+'</div><div class="mute2">Presupuesto de reparación'+(ref?' · Nº '+ref:'')+'</div></div><div style="text-align:right"><b>Fecha</b> '+today()+'<br><span class="mute2">Validez: 15 días</span></div></div>'+
    '<div class="ttl">Presupuesto de reparación</div>'+
-   '<div class="meta"><div><b>Cliente:</b> '+esc(B.cliente||"—")+'</div>'+(B.mat?'<div class="dpl"><span class="dplate"><span class="eu"><i></i>E</span><span class="n">'+esc(B.mat)+'</span></span></div>':'<div></div>')+'<div><b>Marca:</b> '+esc(B.marca||"—")+'</div><div><b>Modelo:</b> '+esc(B.modelo||"—")+'</div>'+(B.tasador?'<div><b>Tasador:</b> '+esc(B.tasador)+'</div>':'')+'</div>'+
+   '<div class="meta"><div><b>Cliente:</b> '+esc(B.cliente||"—")+(B.mat?' <span class="dplate"><span class="eu"><i></i>E</span><span class="n">'+esc(B.mat)+'</span></span>':'')+'</div><div><b>Marca:</b> '+esc(B.marca||"—")+'</div><div><b>Modelo:</b> '+esc(B.modelo||"—")+'</div>'+(B.tasador?'<div><b>Tasador:</b> '+esc(B.tasador)+'</div>':'')+'</div>'+
    '<div class="two"><div class="l">'+
      '<div class="sect">Daños y piezas'+(cfg.baremo==="ces"?' · valoración por nivel de daños':cfg.baremo==="cz"?' · valoración por decímetros cuadrados':'')+'</div>'+
      (r.ids.length?'<div class="pz ph"><span>Pieza</span><span>Chapa</span><span>Pintura</span></div>'+rows+'<div class="pz pt"><span>Total horas</span><span>'+hh(r.hCh)+'</span><span>'+hh(r.hPint)+'</span></div>':'<p class="mute2">Sin piezas marcadas.</p>')+
