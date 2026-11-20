@@ -654,7 +654,25 @@ table.heat{min-width:640px}
     dragId=null;render();
   });
 
+  // Entradas llevadas desde el tasador rápido (misma web, mismo navegador)
+  (function(){
+    var QK='agp-entrada-planificador',q=[];
+    try{q=JSON.parse(localStorage.getItem(QK))||[]}catch(e){}
+    if(!q.length)return;
+    var n=0;
+    q.forEach(function(x){
+      if(st.cards.some(function(c){return c.src===x.uid}))return;
+      var max=0;st.cards.forEach(function(c){var k=parseInt(c.id,10);if(k>max)max=k});
+      st.cards.push({id:(max+1)+'-2026',pr:x.pr||'NORMAL',pl:(x.pl||'SIN MATRÍCULA').toUpperCase(),car:x.car||'Vehículo',col:'',ins:x.ins||'Particular',
+        c:num(x.c),m:num(x.m),p:num(x.p),eur:num(x.eur),st:x.st||'rec',tc:'white',rec:1,as:1,ge:1,sal:x.sal||iso(7),ct:'0/0',cm:0,ic:['car'],ent:iso(0),mv:iso(0),prov:'',src:x.uid,origen:'Tasador rápido',cliente:x.cliente||'',obs:x.obs||''});
+      n++;
+    });
+    try{localStorage.removeItem(QK)}catch(e){}
+    if(n){save();window.__agpEntradas=n}
+  })();
+
   render();
+  if(window.__agpEntradas){toast(window.__agpEntradas===1?'Reparación añadida desde el tasador':window.__agpEntradas+' reparaciones añadidas desde el tasador')}
 })();
 </script>
 

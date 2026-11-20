@@ -111,6 +111,12 @@ svg.car{width:100%;height:auto;display:block;margin:0 auto}
 .tbl td.r,.tbl th.r{text-align:right}
 .tblw{overflow-x:auto}
 .tbl input{width:84px;padding:6px 8px;font-size:15px;text-align:right}
+.ov{position:fixed;inset:0;background:rgba(15,16,18,.55);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+@media (min-width:640px){.ov{align-items:center;padding:20px}}
+.modal{background:var(--panel);width:100%;max-width:520px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+@media (min-width:640px){.modal{border-radius:22px}}
+.modal h3{margin:0 0 4px;font:700 26px/1.1 var(--display);text-transform:uppercase}
+.modal .x{float:right;border:0;background:var(--soft);width:34px;height:34px;border-radius:50%;font-size:18px;line-height:1}
 .toast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);background:var(--ink);color:var(--bg);padding:13px 20px;border-radius:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.3)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .hide{display:none!important}
@@ -201,7 +207,7 @@ function load(){var o=null;try{o=JSON.parse(localStorage.getItem(KEY))}catch(e){
 function save(){try{localStorage.setItem(KEY,JSON.stringify(C))}catch(e){}}
 
 /* ───────── Estado del presupuesto en curso ───────── */
-var B={sel:{},size:1,coefMan:"",dto:0,recs:[],cliente:"",marca:"",modelo:"",mat:"",tasador:"",obs:""};
+var B={sel:{},size:1,coefMan:"",dto:0,recs:[],cliente:"",marca:"",modelo:"",mat:"",tasador:"",obs:"",savedId:"",sent:""};
 var view="pres";
 
 /* ───────── Utilidades ───────── */
@@ -311,7 +317,7 @@ function sumHTML(r){
    '<div class="lines"><div class="ln"><span>Mano de obra chapa · '+hh(r.hCh)+'</span><b>'+eur(r.moC)+'</b></div><div class="ln"><span>Mano de obra pintura · '+hh(r.hPint)+'</span><b>'+eur(r.moP)+'</b></div><div class="ln"><span>Material de pintura</span><b>'+eur(r.mat)+'</b></div><div class="ln"><span>Recambios</span><b>'+eur(r.rec)+'</b></div>'+
    (r.dto?'<div class="ln"><span>Descuento '+nf(r.dtoP,1)+' %</span><b>−'+eur(r.dto)+'</b></div>':'')+
    '<div class="ln"><span>Base imponible</span><b>'+eur(r.bi)+'</b></div><div class="ln"><span>IVA '+nf(cfg.iva,0)+' %</span><b>'+eur(r.iva)+'</b></div></div>'+
-   '<div class="row" style="margin-top:14px"><button class="btn acc" data-a="save">Guardar</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="print">Imprimir / PDF</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="new">Nuevo</button></div></div>'+
+   '<div class="row" style="margin-top:14px"><button class="btn acc" data-a="save">Guardar</button><button class="btn" style="background:#2f8f5b;border-color:#2f8f5b;color:#fff" data-a="toplan">Aceptado → Planificador</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="print">Imprimir / PDF</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="new">Nuevo</button></div></div>'+
    '<div class="card"><div class="sec-h">Lectura métodoAGP</div>'+(tot>0?'<div class="mx">'+
    bar("Mano de obra (chapa + pintura)",pMO,REF.mo)+bar("Material de pintura",pMat,REF.mat)+bar("Recambios",pRec,REF.rec)+'</div>'+
    (r.rec<=0?'<p class="note">Añade los recambios para ver el reparto real. Sin ellos el peso de la mano de obra sale inflado.</p>':'')+
@@ -342,6 +348,48 @@ function bindPres(){}
 function refreshSum(){var r=calc();$("#sum").innerHTML=sumHTML(r);var d=$("#doc");if(d)d.outerHTML=docHTML(r)}
 function rerender(){var y=window.scrollY;render();window.scrollTo(0,y)}
 
+/* ───────── Guardar y enviar al planificador ───────── */
+function saveCurrent(flag){
+  var r=calc();if(!r.ids.length&&!r.rec){toast("Marca algún daño antes de continuar");return null}
+  var rec={fecha:today(),cliente:B.cliente,marca:B.marca,modelo:B.modelo,matricula:B.mat,tasador:B.tasador,piezas:r.ids.map(function(i){return PID[i].n}),hCh:r.hCh,hPint:r.hPint,moC:r.moC,moP:r.moP,mat:r.mat,rec:r.rec,bi:r.bi,tot:r.tot};
+  var ex=B.savedId&&C.saved.filter(function(x){return x.id===B.savedId})[0];
+  if(ex){for(var k in rec)ex[k]=rec[k];rec=ex}else{rec.id=Math.random().toString(36).slice(2,9);C.saved.push(rec);B.savedId=rec.id}
+  if(flag)rec.plan=flag;save();return rec;
+}
+function closeOv(){var o=$("#ov");if(o)o.remove()}
+function ovOpen(html){closeOv();var d=document.createElement("div");d.id="ov";d.className="ov";d.dataset.a="ovclose";d.innerHTML='<div class="modal" role="dialog" aria-modal="true">'+html+'</div>';document.body.appendChild(d)}
+var QKEY="agp-entrada-planificador";
+function addDays(n){var d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+function openPlan(){
+  var r=calc();if(!r.ids.length&&!r.rec){toast("Marca algún daño antes de continuar");return}
+  if(B.sent){ovOpen('<button class="x" data-a="planx" aria-label="Cerrar">×</button><h3>Ya está en el planificador</h3><p class="sub">Este presupuesto ya se envió. Ábrelo para verlo en la columna que elegiste.</p><div class="row" style="margin-top:16px"><a class="btn pri" href="planificador-demo.html">Abrir el planificador</a><button class="btn" data-a="planx">Cerrar</button></div>');return}
+  var dias=Math.max(2,Math.ceil((r.hCh+r.hPint)/8)+3);
+  ovOpen('<button class="x" data-a="planx" aria-label="Cerrar">×</button><h3>Llevar al planificador</h3><p class="sub">La reparación aceptada entrará como una tarjeta nueva con sus horas de chapa y pintura.</p>'+
+   '<div class="cols2" style="margin-top:14px">'+
+   '<div class="field"><label for="p-mat">Matrícula</label><input type="text" id="p-mat" maxlength="10" value="'+esc(B.mat)+'" placeholder="0000ABC"></div>'+
+   '<div class="field"><label for="p-car">Vehículo</label><input type="text" id="p-car" value="'+esc((B.marca+" "+B.modelo).trim())+'" placeholder="Marca y modelo"></div>'+
+   '<div class="field"><label for="p-ins">Seguro / tipo de cliente</label><input type="text" id="p-ins" value="Particular"></div>'+
+   '<div class="field"><label for="p-sal">Fecha de salida prevista</label><input type="date" id="p-sal" value="'+addDays(dias)+'"></div>'+
+   '<div class="field"><label for="p-pr">Prioridad</label><select id="p-pr"><option>NORMAL</option><option>MEDIO</option><option>FUERTE</option><option>RÁPIDO</option></select></div>'+
+   '<div class="field"><label for="p-st">Entra en la columna</label><select id="p-st"><option value="rec">Recepcionado</option><option value="val">Valoración</option><option value="apr">Pendiente de aprobación</option><option value="pie"'+(r.rec>0?' selected':'')+'>Pendiente de piezas</option><option value="esp">En espera chapa</option></select></div></div>'+
+   '<p class="note">Viajan al planificador: '+hh(r.hCh)+' de chapa, '+hh(r.hPint)+' de pintura y un importe de '+eur(r.bi)+' (base imponible).</p><div class="err" id="perr" style="color:var(--red);min-height:18px"></div>'+
+   '<div class="row" style="margin-top:6px"><button class="btn acc" data-a="planok">Enviar al planificador</button><button class="btn" data-a="planx">Cancelar</button></div>');
+}
+function sendPlan(){
+  var mat=$("#p-mat").value.trim(),car=$("#p-car").value.trim(),sal=$("#p-sal").value;
+  if(!car){$("#perr").textContent="Indica el vehículo.";return}
+  if(!sal){$("#perr").textContent="Indica la fecha de salida prevista.";return}
+  var r=calc(),rec=saveCurrent("Planificador");if(!rec)return;
+  var q=[];try{q=JSON.parse(localStorage.getItem(QKEY))||[]}catch(e){}
+  var uid=rec.id,st=$("#p-st").value;
+  q.push({uid:uid,pl:mat,car:car,ins:$("#p-ins").value.trim()||"Particular",sal:sal,pr:$("#p-pr").value,st:st,c:r.hCh,p:r.hPint,m:0,eur:r.bi,cliente:B.cliente,obs:B.obs,piezas:r.ids.map(function(i){return PID[i].n}),tas:B.tasador});
+  try{localStorage.setItem(QKEY,JSON.stringify(q))}catch(e){ $("#perr").textContent="No se pudo guardar el envío en este navegador.";return}
+  B.sent=uid;
+  var names={rec:"Recepcionado",val:"Valoración",apr:"Pendiente de aprobación",pie:"Pendiente de piezas",esp:"En espera chapa"};
+  ovOpen('<h3>Enviado al planificador</h3><p class="sub">La reparación aparecerá en la columna <b>'+names[st]+'</b> con '+hh(r.hCh)+' de chapa y '+hh(r.hPint)+' de pintura. El presupuesto queda guardado como aceptado.</p><div class="row" style="margin-top:16px"><a class="btn pri" href="planificador-demo.html">Abrir el planificador</a><button class="btn" data-a="planx">Seguir aquí</button></div>');
+  rerender();
+}
+
 /* ───────── Presupuestos guardados ───────── */
 function vHist(){
   var L=C.saved.slice().reverse();
@@ -349,7 +397,7 @@ function vHist(){
   var n=L.length,sT=0,sBI=0,sHC=0,sHP=0,sMO=0,sMat=0,sRec=0;
   L.forEach(function(x){sT+=x.tot;sBI+=x.bi;sHC+=x.hCh;sHP+=x.hPint;sMO+=x.moC+x.moP;sMat+=x.mat;sRec+=x.rec});
   var base=sMO+sMat+sRec;
-  var rows=L.map(function(x){return '<tr><td>'+esc(x.fecha)+'</td><td><b>'+esc(x.cliente||"—")+'</b><div class="mute" style="font-size:12px">'+esc([x.marca,x.modelo,x.matricula].filter(Boolean).join(" · "))+'</div></td><td class="r num">'+hh(x.hCh)+'</td><td class="r num">'+hh(x.hPint)+'</td><td class="r num">'+eur(x.bi)+'</td><td class="r num"><b>'+eur(x.tot)+'</b></td><td class="r"><button class="btn sm danger" data-del="'+x.id+'">Borrar</button></td></tr>'}).join("");
+  var rows=L.map(function(x){return '<tr><td>'+esc(x.fecha)+'</td><td><b>'+esc(x.cliente||"—")+'</b><div class="mute" style="font-size:12px">'+esc([x.marca,x.modelo,x.matricula].filter(Boolean).join(" · "))+'</div></td><td class="r num">'+hh(x.hCh)+'</td><td class="r num">'+hh(x.hPint)+'</td><td class="r num">'+eur(x.bi)+'</td><td class="r num"><b>'+eur(x.tot)+'</b>'+(x.plan?'<div><span class="tag ok">En planificador</span></div>':'')+'</td><td class="r"><button class="btn sm danger" data-del="'+x.id+'">Borrar</button></td></tr>'}).join("");
   return '<div class="row" style="justify-content:space-between"><div><h2>Presupuestos guardados</h2><p class="sub">Se guardan en este navegador. Descárgalos para analizarlos con el método.</p></div><button class="btn" data-a="csv">Descargar CSV</button></div>'+
    '<div class="kpis"><div class="kpi"><span>Presupuestos</span><b>'+n+'</b></div><div class="kpi"><span>Base media</span><b>'+eur(sBI/n)+'</b></div><div class="kpi"><span>Horas medias</span><b>'+hh((sHC+sHP)/n)+'</b></div><div class="kpi"><span>Chapa / pintura</span><b>'+hh(sHC/n)+' / '+hh(sHP/n)+'</b></div></div>'+
    (base>0?'<div class="card" style="margin-bottom:20px"><div class="sec-h">Reparto medio de lo presupuestado</div><div class="row" style="gap:24px"><span>Mano de obra <b>'+nf(sMO/base*100,1)+' %</b> <span class="mute">(40)</span></span><span>Material pintura <b>'+nf(sMat/base*100,1)+' %</b> <span class="mute">(15)</span></span><span>Recambios <b>'+nf(sRec/base*100,1)+' %</b> <span class="mute">(45)</span></span></div></div>':'')+
@@ -385,11 +433,12 @@ document.addEventListener("click",function(ev){
   if(a==="all"){PIECES.forEach(function(p){if(p.g==="b"&&!B.sel[p.id])B.sel[p.id]={ch:""}});rerender()}
   else if(a==="clear"){B.sel={};rerender()}
   else if(a==="addrec"){B.recs.push({d:"",imp:""});rerender()}
-  else if(a==="new"){B={sel:{},size:B.size,coefMan:"",dto:0,recs:[],cliente:"",marca:"",modelo:"",mat:"",tasador:B.tasador,obs:""};rerender();toast("Presupuesto nuevo")}
+  else if(a==="new"){B={sel:{},size:B.size,coefMan:"",dto:0,recs:[],cliente:"",marca:"",modelo:"",mat:"",tasador:B.tasador,obs:"",savedId:"",sent:""};rerender();toast("Presupuesto nuevo")}
   else if(a==="print"){window.print()}
-  else if(a==="save"){var r=calc();if(!r.ids.length&&!r.rec){toast("Marca algún daño antes de guardar");return}
-    C.saved.push({id:Math.random().toString(36).slice(2,9),fecha:today(),cliente:B.cliente,marca:B.marca,modelo:B.modelo,tasador:B.tasador,matricula:B.mat,piezas:r.ids.map(function(i){return PID[i].n}),hCh:r.hCh,hPint:r.hPint,moC:r.moC,moP:r.moP,mat:r.mat,rec:r.rec,bi:r.bi,tot:r.tot});
-    save();toast("Presupuesto guardado")}
+  else if(a==="save"){if(!saveCurrent())return;toast("Presupuesto guardado")}
+  else if(a==="toplan"){openPlan()}
+  else if(a==="planok"){sendPlan()}
+  else if(a==="planx"||a==="ovclose"&&ev.target===el){closeOv()}
   else if(a==="csv"){
     var L=["fecha;cliente;marca;modelo;matricula;tasador;horas_chapa;horas_pintura;mo_chapa;mo_pintura;material_pintura;recambios;base_imponible;total"];
     C.saved.forEach(function(x){L.push([x.fecha,x.cliente,x.marca,x.modelo,x.matricula||"",x.tasador,x.hCh,x.hPint,x.moC,x.moP,x.mat,x.rec,x.bi,x.tot].map(function(v){return typeof v==="number"?String(Math.round(v*100)/100).replace(".",","):String(v==null?"":v).replace(/;/g,",")}).join(";"))});
