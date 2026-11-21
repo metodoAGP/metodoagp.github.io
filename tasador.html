@@ -162,7 +162,7 @@ svg.car{width:100%;height:auto;display:block;margin:0 auto}
 .doc .hd{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
 .doc .tn{font:800 30px/1 var(--display);text-transform:uppercase;color:#c8321d}
 .doc .ttl{background:#e6e6e6;text-align:center;font:700 18px var(--display);letter-spacing:.08em;padding:7px;margin:12px 0 10px;text-transform:uppercase}
-.doc .meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 20px;font-size:13.5px}
+.doc .meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 22px;font-size:13.5px;padding:2px 0 4px}
 .doc .sect{background:#f1f1f1;text-align:center;font:700 14px var(--display);letter-spacing:.1em;padding:5px;margin:14px 0 6px;text-transform:uppercase}
 .doc .it{display:grid;grid-template-columns:minmax(0,1fr) 70px 70px 90px;gap:8px;padding:5px 2px;font-size:13.5px;border-bottom:1px solid #eee}
 .doc .it b{text-align:right;font-variant-numeric:tabular-nums}
@@ -195,7 +195,7 @@ svg.car{width:100%;height:auto;display:block;margin:0 auto}
   main{padding-block:16px 50px}.brand h1{font-size:23px}.brand .back{padding:7px 10px;font-size:13px}.logo img{width:40px;height:40px}
   .tab{padding:10px 10px;font-size:15px}h2{font-size:23px}.tot .t{font-size:46px}
   .sl{grid-template-columns:minmax(0,1fr) auto auto}.sl .hp{display:none}
-  .doc{padding:16px}.doc .two{grid-template-columns:1fr}.doc .sig{grid-template-columns:1fr;gap:34px}.doc .meta{grid-template-columns:1fr}.doc .it{grid-template-columns:minmax(0,1fr) 60px 80px}.doc .it span:nth-child(2){display:none}
+  .doc{padding:16px}.doc .two{grid-template-columns:1fr}.doc .sig{grid-template-columns:1fr;gap:34px}.doc .it{grid-template-columns:minmax(0,1fr) 60px 80px}.doc .it span:nth-child(2){display:none}
 }
 @media print{
   body{background:#fff}
@@ -251,8 +251,8 @@ PIECES.forEach(function(p){DEF.horas[p.id]=p.h});
 /* Baremos: valores de partida EDITABLES en Ajustes (no son las tablas oficiales; cada taller carga las suyas) */
 var NIV=[["sup","Daño superficial"],["lev","Daño leve"],["med","Daño medio"],["fue","Daño fuerte"],["nue","Pieza nueva"]];
 var NIVF=[0.4,0.7,1,1.3,0.9];
-DEF.baremo="rapido";DEF.ces={};DEF.cz={};
-PIECES.forEach(function(p){DEF.ces[p.id]=NIVF.map(function(f){return Math.round(p.h*f*20)/20});DEF.cz[p.id]=[0.04,0.05]});
+DEF.baremo="rapido";DEF.ces={};DEF.czA=0.04;DEF.czL=0.05;
+PIECES.forEach(function(p){DEF.ces[p.id]=NIVF.map(function(f){return Math.round(p.h*f*20)/20})});
 /* Referencias del método */
 var REF={mo:40,mat:15,rec:45,recH:50,matH:28,hRep:10,hCh:5.5,hPi:4.5,litros:[["Color base agua",0.06,70],["Barniz",0.12,19],["Fondo",0.04,17]]};
 var CRIT=[["suelta","Pieza suelta"],["dos","2 piezas colindantes"],["tres","3 o más piezas"],["completo","Vehículo completo"]];
@@ -266,7 +266,7 @@ function load(){var o=null;try{o=JSON.parse(localStorage.getItem(KEY))}catch(e){
     if(o.cfg.horas)Object.keys(c.horas).forEach(function(k){if(o.cfg.horas[k]!==undefined)c.horas[k]=o.cfg.horas[k]});
     if(o.cfg.baremo)c.baremo=o.cfg.baremo;
     if(o.cfg.ces)Object.keys(c.ces).forEach(function(k){if(o.cfg.ces[k]&&o.cfg.ces[k].length===5)c.ces[k]=o.cfg.ces[k]});
-    if(o.cfg.cz)Object.keys(c.cz).forEach(function(k){if(o.cfg.cz[k]&&o.cfg.cz[k].length===2)c.cz[k]=o.cfg.cz[k]})}
+    if(o.cfg.czA!==undefined)c.czA=o.cfg.czA;if(o.cfg.czL!==undefined)c.czL=o.cfg.czL}
   var sv=o.saved||[],seq=o.seq||{},yr0=String(new Date().getFullYear());
   sv.forEach(function(x){if(!x.estado)x.estado="pend";
     if(!x.num){var m=String(x.fecha||"").match(/(\d{4})/),y=m?m[1]:yr0;seq[y]=(seq[y]||0)+1;x.num=y+"-"+("00"+seq[y]).slice(-3)}});
@@ -297,7 +297,7 @@ function nivIdx(k){for(var i=0;i<NIV.length;i++)if(NIV[i][0]===k)return i;return
 function pieceH(i,coef){
   var cfg=C.cfg,s=B.sel[i]||{};
   if(cfg.baremo==="ces")return num(cfg.ces[i][nivIdx(s.niv||"med")]);
-  if(cfg.baremo==="cz")return num(s.dm)*num(cfg.cz[i][s.tipo==="lin"?1:0]);
+  if(cfg.baremo==="cz")return num(s.dm)*num(s.tipo==="lin"?cfg.czL:cfg.czA);
   return cfg.horas[i]*coef;
 }
 function pieceTag(i){
@@ -428,9 +428,9 @@ function docHTML(r){
     return '<div class="pz"><span>'+esc(p.n)+(pieceTag(i)?' <em class="mute2" style="font-style:normal">· '+esc(pieceTag(i))+'</em>':'')+'</span><span>'+(hc>0?hh(hc):"—")+'</span><span>'+hh(hp)+'</span></div>'}).join("");
   var txt=r.nb>=13?"Pintado de vehículo completo":"";
   return '<div class="doc" id="doc">'+
-   '<div class="hd"><div><div class="tn">'+esc(cfg.taller)+'</div><div class="mute2">Presupuesto de reparación'+(ref?' · Nº '+ref:'')+'</div></div><div style="text-align:right"><b>Fecha</b> '+today()+'<br><span class="mute2">Validez: 15 días</span></div></div>'+
+   '<div class="hd"><div><div class="tn">'+esc(cfg.taller)+'</div></div><div style="text-align:right"><b>Fecha</b> '+today()+'<br><span class="mute2">Validez: 15 días</span>'+(B.tasador?'<br><span class="mute2">Tasador: '+esc(B.tasador)+'</span>':'')+'</div></div>'+
    '<div class="ttl">Presupuesto de reparación</div>'+
-   '<div class="meta"><div><b>Cliente:</b> '+esc(B.cliente||"—")+(B.mat?' <span class="dplate"><span class="eu"><i></i>E</span><span class="n">'+esc(B.mat)+'</span></span>':'')+'</div><div><b>Marca:</b> '+esc(B.marca||"—")+'</div><div><b>Modelo:</b> '+esc(B.modelo||"—")+'</div>'+(B.tasador?'<div><b>Tasador:</b> '+esc(B.tasador)+'</div>':'')+'</div>'+
+   '<div class="meta"><div><b>Presupuesto nº</b> '+ref+'</div><div><b>Cliente:</b> '+esc(B.cliente||"—")+'</div><div><b>Marca:</b> '+esc(B.marca||"—")+'</div><div><b>Modelo:</b> '+esc(B.modelo||"—")+'</div>'+(B.mat?'<div><span class="dplate" style="margin-left:0"><span class="eu"><i></i>E</span><span class="n">'+esc(B.mat)+'</span></span></div>':'')+'</div>'+
    '<div class="two"><div class="l">'+
      '<div class="sect">Daños y piezas'+(cfg.baremo==="ces"?' · valoración por nivel de daños':cfg.baremo==="cz"?' · valoración por decímetros cuadrados':'')+'</div>'+
      (r.ids.length?'<div class="pz ph"><span>Pieza</span><span>Chapa</span><span>Pintura</span></div>'+rows+'<div class="pz pt"><span>Total horas</span><span>'+hh(r.hCh)+'</span><span>'+hh(r.hPint)+'</span></div>':'<p class="mute2">Sin piezas marcadas.</p>')+
@@ -545,7 +545,6 @@ function vCfg(){
   var c=C.cfg;
   var hr=PIECES.map(function(p){return '<tr><td>'+esc(p.n)+'</td><td class="r"><input type="number" step="0.1" min="0" data-ch2="'+p.id+'" value="'+c.horas[p.id]+'" aria-label="Horas de pintura de '+esc(p.n)+'"></td></tr>'}).join("");
   var ces=PIECES.map(function(p){return '<tr><td>'+esc(p.n)+'</td>'+c.ces[p.id].map(function(v,j){return '<td class="r"><input type="number" step="0.05" min="0" data-ces="'+p.id+'|'+j+'" value="'+v+'" aria-label="'+esc(p.n)+' '+NIV[j][1]+'"></td>'}).join("")+'</tr>'}).join("");
-  var cz=PIECES.map(function(p){return '<tr><td>'+esc(p.n)+'</td>'+c.cz[p.id].map(function(v,j){return '<td class="r"><input type="number" step="0.005" min="0" data-cz="'+p.id+'|'+j+'" value="'+v+'" aria-label="'+esc(p.n)+(j?' h por dm lineal':' h por dm²')+'"></td>'}).join("")+'</tr>'}).join("");
   var cr=CRIT.map(function(k){return '<tr><td>'+k[1]+'</td>'+[0,1,2].map(function(i){return '<td class="r"><input type="number" step="0.05" min="0.3" max="1" data-cf="'+k[0]+'|'+i+'" value="'+c.coef[k[0]][i]+'" aria-label="'+k[1]+' '+SIZES[i]+'"></td>'}).join("")+'</tr>'}).join("");
   return '<div class="row" style="justify-content:space-between"><div><h2>Ajustes del taller</h2><p class="sub">Todo lo que parametriza el presupuesto. Se guarda en este navegador.</p></div><button class="btn danger" data-a="reset">Restaurar valores</button></div>'+
    '<div class="grid" style="margin-top:16px"><div style="display:grid;gap:20px"><div class="card"><div class="sec-h">Taller y precios</div><div class="cols2">'+
@@ -553,9 +552,9 @@ function vCfg(){
    cf("Precio hora (€)","precioHora",c.precioHora)+cf("Material de pintura (€ por hora de pintura)","matH",c.matH)+cf("IVA (%)","iva",c.iva)+
    '<div class="field" style="grid-column:1/-1"><label for="c-tas">Tasadores (separados por comas)</label><input type="text" id="c-tas" data-c="tasadores" value="'+esc(c.tasadores)+'" placeholder="Nombre 1, Nombre 2"></div></div>'+
    '<p class="note">El método recomienda facturar unos '+REF.matH+' € de material de pintura por hora de pintura y unos '+REF.recH+' € de recambios por hora de chapa.</p></div>'+
-   '<div class="card"><div class="sec-h">Coeficiente por varias piezas</div><p class="sub" style="margin-bottom:8px">Se multiplica por las horas de pintura según cuántas piezas se pintan a la vez y el tamaño del vehículo.</p><div class="tblw"><table class="tbl"><thead><tr><th>Criterio</th><th class="r">Pequeño</th><th class="r">Mediano</th><th class="r">Grande</th></tr></thead><tbody>'+cr+'</tbody></table></div></div></div>'+
+   '<div class="card"><div class="sec-h">Coeficiente por varias piezas</div><p class="sub" style="margin-bottom:8px">Se multiplica por las horas de pintura según cuántas piezas se pintan a la vez y el tamaño del vehículo.</p><div class="tblw"><table class="tbl"><thead><tr><th>Criterio</th><th class="r">Pequeño</th><th class="r">Mediano</th><th class="r">Grande</th></tr></thead><tbody>'+cr+'</tbody></table></div></div>'+
+   '<div class="card"><div class="sec-h">Valoración por decímetros cuadrados · horas por decímetro</div><p class="sub" style="margin-bottom:8px">Sirve para cualquier pieza: las horas salen de los decímetros que indiques en cada una.</p><div class="tblw"><table class="tbl"><thead><tr><th>Tipo de daño</th><th class="r">Horas</th></tr></thead><tbody><tr><td>Daño superficial · 1 dm²</td><td class="r"><input type="number" step="0.005" min="0" data-cza="1" value="'+c.czA+'" aria-label="Horas por decímetro cuadrado superficial"></td></tr><tr><td>Daño lineal · 1 dm lineal</td><td class="r"><input type="number" step="0.005" min="0" data-czl="1" value="'+c.czL+'" aria-label="Horas por decímetro lineal"></td></tr></tbody></table></div></div></div>'+
    '<div class="card"><div class="sec-h">Valoración por nivel de daños · horas de pintura por nivel de daño</div><div class="tblw"><table class="tbl"><thead><tr><th>Pieza</th>'+NIV.map(function(n){return '<th class="r">'+n[1].replace("Daño ","")+'</th>'}).join("")+'</tr></thead><tbody>'+ces+'</tbody></table></div><p class="note">Valores de partida orientativos, calculados a partir de las horas por pieza. Ajústalos a los tiempos de tu taller o de tu sistema de valoración.</p></div>'+
-   '<div class="card"><div class="sec-h">Valoración por decímetros cuadrados · horas por decímetro</div><div class="tblw"><table class="tbl"><thead><tr><th>Pieza</th><th class="r">h por dm²</th><th class="r">h por dm lineal</th></tr></thead><tbody>'+cz+'</tbody></table></div><p class="note">Valores de partida orientativos. Ajústalos a los tiempos de tu taller o de tu sistema de valoración.</p></div>'+
    '<div class="card"><div class="sec-h">Horas de pintura por pieza (estimación rápida)</div><div class="tblw"><table class="tbl"><thead><tr><th>Pieza</th><th class="r">Horas</th></tr></thead><tbody>'+hr+'</tbody></table></div><p class="note">Valores de partida; ajústalos a los tiempos de tu taller o a los de tu sistema de peritación.</p></div></div>';
 }
 function cf(l,k,v){return '<div class="field"><label for="c-'+k+'">'+l+'</label><input type="number" id="c-'+k+'" inputmode="decimal" step="0.1" min="0" data-c="'+k+'" value="'+v+'"></div>'}
@@ -611,7 +610,8 @@ document.addEventListener("input",function(ev){
   else if(e.dataset.dm!==undefined){B.sel[e.dataset.dm].dm=e.value;var pcx=document.querySelector('.pc[data-id="'+e.dataset.dm+'"]'),sm=pcx&&pcx.querySelector("small");if(sm)sm.textContent="Pintura "+hh(pieceH(e.dataset.dm,1))+" · "+pieceTag(e.dataset.dm);document.querySelectorAll('[data-dm="'+e.dataset.dm+'"]').forEach(function(o){if(o!==e)o.value=e.value});refreshSum()}
   else if(e.dataset.bar){C.cfg.baremo=e.value;save();rerender()}
   else if(e.dataset.ces){var q=e.dataset.ces.split("|");C.cfg.ces[q[0]][+q[1]]=num(e.value);save()}
-  else if(e.dataset.cz){var q2=e.dataset.cz.split("|");C.cfg.cz[q2[0]][+q2[1]]=num(e.value);save()}
+  else if(e.dataset.cza){C.cfg.czA=num(e.value);save()}
+  else if(e.dataset.czl){C.cfg.czL=num(e.value);save()}
   else if(e.dataset.ch2){C.cfg.horas[e.dataset.ch2]=num(e.value);save()}
   else if(e.dataset.cf){var p=e.dataset.cf.split("|");C.cfg.coef[p[0]][+p[1]]=Math.min(1,Math.max(0.3,num(e.value)||1));save()}
 });
