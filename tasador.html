@@ -593,6 +593,8 @@ async function sendMsg(kind){
   var rec=saveCurrent();if(!rec)return;refreshSum();
   var txt=msgPres(rec,r),canFiles=false;
   try{canFiles=!!(navigator.canShare&&navigator.canShare({files:[new File(["x"],"a.pdf",{type:"application/pdf"})]}))}catch(e){}
+  var movil=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Mac/.test(navigator.platform));
+  if(!movil)canFiles=false; // en ordenador la hoja de compartir no suele incluir WhatsApp
   var url=kind==="wa"?"https://wa.me/"+wa+"?text="+encodeURIComponent(txt):"mailto:"+em+"?subject="+encodeURIComponent("Presupuesto "+rec.num+" · "+C.cfg.taller)+"&body="+encodeURIComponent(txt+"\n\nAdjunto el PDF del presupuesto.");
   if(!canFiles){ // abrimos el chat o el correo de inmediato y descargamos el PDF para adjuntarlo
     if(kind==="wa")window.open(url,"_blank");else location.href=url;
