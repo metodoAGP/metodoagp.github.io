@@ -366,19 +366,78 @@ table.heat{min-width:640px}
       j.e=now;add.push({id:Math.random().toString(36).slice(2,9),emp:j.emp,card:j.card,pl:j.pl,car:j.car,st:newSt,sec:j.sec,s:now,e:null});ch=true}});
     if(ch){F.jobs=F.jobs.concat(add);try{localStorage.setItem(FK,JSON.stringify(F))}catch(e){}WK=working()}
   }
+  /* ── Tiempo de ciclo: cada fase por la que pasa el coche, con operario (productivo) y sin operario (espera) ── */
+  function histOf(c){ // historial de fases; si el coche no lo tiene, se parte de su último cambio de columna
+    if(c.hist&&c.hist.length)return {h:c.hist,est:false};
+    return {h:[{st:c.st,t:new Date((c.mv||iso(0))+'T00:00:00').getTime()}],est:true};
+  }
+  function moveTo(c,ns){
+    if(!ns||c.st===ns)return;
+    var h=histOf(c).h.slice();h.push({st:ns,t:Date.now()});
+    c.hist=h;c.st=ns;c.mv=iso(0);splitJobs(c.id,ns);
+  }
+  function workMs(a,b){ // tiempo laborable entre a y b: sin fines de semana, a razón de hpd horas por jornada
+    if(!(b>a))return 0;var nd=st.days||5,hpd=st.hpd||8,tot=0,d=new Date(a);d.setHours(0,0,0,0);
+    while(d.getTime()<b){
+      var s0=d.getTime(),e0=new Date(s0);e0.setDate(e0.getDate()+1);e0=e0.getTime();var wd=d.getDay();
+      var lab=nd>=7||(nd===6?wd!==0:(wd>=1&&wd<=5));
+      if(lab){var ov=Math.min(b,e0)-Math.max(a,s0);if(ov>0)tot+=ov/(e0-s0)*hpd*3600000}
+      d.setDate(d.getDate()+1);
+    }
+    return tot;
+  }
+  function unionMs(iv){iv.sort(function(x,y){return x[0]-y[0]});var t=0,cs=null,ce=null;
+    iv.forEach(function(p){if(cs===null){cs=p[0];ce=p[1]}else if(p[0]<=ce){if(p[1]>ce)ce=p[1]}else{t+=ce-cs;cs=p[0];ce=p[1]}});
+    if(cs!==null)t+=ce-cs;return t}
+  function cycleOf(c){
+    var H=histOf(c),h=H.h,now=Date.now(),F=fich(),J=[],T=new Date().toDateString();
+    if(F&&F.jobs){var nm={};F.emps.forEach(function(e){nm[e.id]=e.name});
+      F.jobs.forEach(function(j){if(j.card!==c.id)return;if(!j.e&&new Date(j.s).toDateString()!==T)return;J.push({s:j.s,e:j.e||now,emp:nm[j.emp]||'(operario borrado)'})})}
+    var rows=[];
+    for(var i=0;i<h.length;i++){
+      var k=h[i].st;if(k==='ent'||k==='arc')break;
+      var a=h[i].t,b=i+1<h.length?h[i+1].t:now;if(b<a)b=a;
+      var iv=[],em={};
+      J.forEach(function(j){var s1=Math.max(j.s,a),e1=Math.min(j.e,b);if(e1>s1){iv.push([s1,e1]);em[j.emp]=1}});
+      var op=unionMs(iv),el=Math.max(workMs(a,b),op);
+      rows.push({st:k,a:a,b:b,open:i+1>=h.length,el:el,op:op,wait:Math.max(0,el-op),emps:Object.keys(em)});
+    }
+    return {rows:rows,est:H.est};
+  }
+  function pc(x,y){return y>0?Math.round(x/y*100)+' %':'—'}
+  function cycleCard(c){
+    var C=cycleOf(c);if(!C.rows.length)return '';
+    var T={el:0,op:0,wait:0},hpd=st.hpd||8;
+    var rows=C.rows.map(function(r){T.el+=r.el;T.op+=r.op;T.wait+=r.wait;
+      return '<tr><td>'+esc(colName(r.st))+(r.open?' <span class="tag">en curso</span>':'')+'</td><td>'+(r.emps.length?esc(r.emps.join(', ')):'<span class="cap">sin operario</span>')+'</td><td class="n">'+th(r.el)+'</td><td class="n">'+(r.op?th(r.op):'—')+'</td><td class="n">'+(r.wait?th(r.wait):'—')+'</td><td class="n">'+pc(r.op,r.el)+'</td></tr>'}).join('');
+    return '<div class="sec-h2">Tiempo de ciclo por fase</div><div class="tw"><table class="t" style="min-width:0"><tr><th>Fase</th><th>Operarios</th><th class="n">En fase</th><th class="n">Con operario</th><th class="n">Espera</th><th class="n">% prod.</th></tr>'+rows+
+      '<tr><td colspan="2"><b>Total ciclo</b></td><td class="n"><b>'+th(T.el)+'</b></td><td class="n"><b>'+th(T.op)+'</b></td><td class="n"><b>'+th(T.wait)+'</b></td><td class="n"><b>'+pc(T.op,T.el)+'</b></td></tr></table></div>'+
+      '<p class="cap" style="margin:6px 0">≈ '+(Math.round(T.el/(hpd*3600000)*10)/10).toLocaleString('es-ES')+' jornadas laborables de ciclo. «Con operario» es tiempo productivo (Comienzo/Acabo en el reloj de fichajes); «Espera» es el tiempo laborable en que nadie trabajó en el coche. Se cuentan solo días laborables ('+hpd+' h por jornada, según Ajustes).'+(C.est?' Este coche no tenía historial de fases: se cuenta desde su último cambio de columna.':'')+'</p>';
+  }
   function histCard(id){
-    var J=jobsHist().filter(function(j){return j.card===id});if(!J.length)return '';
-    var g={},tot=0;J.forEach(function(j){var k=j.st+'|'+j.emp;g[k]=g[k]||{st:j.st,emp:j.emp,ms:0};g[k].ms+=j.ms;tot+=j.ms});
-    var rows=Object.keys(g).map(function(k){return g[k]}).sort(function(a,b){return colIx(a.st)-colIx(b.st)}).map(function(x){return '<tr><td>'+esc(colName(x.st))+'</td><td>'+esc(x.emp)+'</td><td class="n">'+th(x.ms)+'</td></tr>'}).join('');
-    var cd=st.cards.filter(function(x){return x.id===id})[0],wc=0,wp=0;J.forEach(function(j){if(j.st==='pin')wp+=j.ms;else wc+=j.ms});
+    var cd=st.cards.filter(function(x){return x.id===id})[0],out=cd?cycleCard(cd):'';
+    var J=jobsHist().filter(function(j){return j.card===id});if(!J.length)return out;
+    var wc=0,wp=0;J.forEach(function(j){if(j.st==='pin')wp+=j.ms;else wc+=j.ms});
     function efl(f,ms){return ms?' · eficiencia '+Math.round(f/(ms/3600000)*100)+' %':''}
     var cmp=cd?'<p class="cap" style="margin:6px 0">Facturado frente a trabajado: '+(wc?'chapa '+fh(cd.c||0)+' / '+th(wc)+efl(cd.c||0,wc):'')+(wc&&wp?' · ':'')+(wp?'pintura '+fh(cd.p||0)+' / '+th(wp)+efl(cd.p||0,wp):'')+'</p>':'';
-    return '<div class="sec-h2">Tiempo trabajado por fase</div><div class="tw"><table class="t" style="min-width:0"><tr><th>Fase</th><th>Operario</th><th class="n">Tiempo</th></tr>'+rows+'<tr><td colspan="2"><b>Total</b></td><td class="n"><b>'+th(tot)+'</b></td></tr></table></div>'+cmp;
+    return out+cmp;
+  }
+  function cycleAgg(){ // media por fase de todos los coches (incluye las fases en curso)
+    var A={},cars=0,TT={el:0,op:0,wait:0};
+    st.cards.forEach(function(c){var C=cycleOf(c);if(!C.rows.length)return;cars++;
+      C.rows.forEach(function(r){var x=A[r.st]=A[r.st]||{n:0,el:0,op:0,wait:0};x.n++;x.el+=r.el;x.op+=r.op;x.wait+=r.wait;TT.el+=r.el;TT.op+=r.op;TT.wait+=r.wait})});
+    if(!cars)return '';
+    var maxW=0,maxK=null;Object.keys(A).forEach(function(k){if(A[k].wait>maxW){maxW=A[k].wait;maxK=k}});
+    var hpd=st.hpd||8,ks=COLS.map(function(k){return k[0]}).filter(function(k){return A[k]}).concat(Object.keys(A).filter(function(k){return colIx(k)===99}));
+    var rows=ks.map(function(k){var x=A[k];return '<tr><td>'+esc(colName(k))+(k===maxK&&maxW>0?'<span class="tag">Mayor espera</span>':'')+'</td><td class="n">'+x.n+'</td><td class="n">'+th(x.el/x.n)+'</td><td class="n">'+(x.op?th(x.op/x.n):'—')+'</td><td class="n">'+(x.wait?th(x.wait/x.n):'—')+'</td><td class="n">'+pc(x.op,x.el)+'</td><td class="n">'+pc(x.wait,TT.wait)+'</td></tr>'}).join('');
+    return '<section class="pb"><h2>Tiempo de ciclo por fase</h2><p class="cap">Cuánto tiempo laborable pasan los coches en cada fase y qué parte es productiva (con operario) y qué parte es espera (sin operario). Sirve para localizar dónde se pierde el tiempo de ciclo. Incluye las fases en curso, así que las cifras se afinan a medida que los coches avanzan de fase.</p>'+
+      '<div class="tw"><table class="t"><tr><th>Fase</th><th class="n">Coches</th><th class="n">Media en fase</th><th class="n">Con operario</th><th class="n">Espera</th><th class="n">% productivo</th><th class="n">% de la espera total</th></tr>'+rows+'</table></div>'+
+      '<p class="cap" style="margin:8px 0 0"><b>'+cars+' coches</b> · ciclo medio hasta hoy: <b>'+th(TT.el/cars)+'</b> laborables (≈ '+(Math.round(TT.el/cars/(hpd*3600000)*10)/10).toLocaleString('es-ES')+' jornadas) · '+pc(TT.op,TT.el)+' con operario · '+pc(TT.wait,TT.el)+' de espera.</p></section>';
   }
   function colIx(k){for(var i=0;i<COLS.length;i++){if(COLS[i][0]===k)return i}return 99}
   function renderTiempos(){
-    var J=jobsHist(),m=$('#main');
-    if(!J.length){m.innerHTML='<div class="wrap plan"><section class="pb"><h2>Tiempos por fase</h2><p class="cap">Todavía no hay tiempo imputado. Cuando los operarios fichen «Comienzo» y «Acabo» en un coche desde el reloj de fichajes, aquí verás cuánto tiempo se trabaja en cada fase y quién lo hace.</p></section></div>';return}
+    var J=jobsHist(),m=$('#main'),CYC=cycleAgg();
+    if(!J.length){m.innerHTML='<div class="wrap plan">'+CYC+'<section class="pb"><h2>Tiempos por fase</h2><p class="cap">Todavía no hay tiempo imputado. Cuando los operarios fichen «Comienzo» y «Acabo» en un coche desde el reloj de fichajes, aquí verás cuánto tiempo se trabaja en cada fase y quién lo hace.</p></section></div>';return}
     var P={},O={},C={};
     J.forEach(function(j){
       var p=P[j.st]=P[j.st]||{ms:0,cars:{},emps:{}};p.ms+=j.ms;p.cars[j.card]=1;p.emps[j.emp]=1;
@@ -416,7 +475,7 @@ table.heat{min-width:640px}
       return '<tr><td><b>'+esc(c.pl)+'</b> <span class="h-z">'+esc(id)+'</span></td><td class="n"><b>'+th(c.tot)+'</b></td><td class="n">'+fa+'</td><td class="n">'+(c.fac?ef(fT,c.tot/3600000):'—')+'</td><td style="white-space:normal;min-width:260px">'+det+'</td></tr>'}).join('');
     var fTot=TOT.c.f+TOT.p.f,wTot=TOT.c.w+TOT.p.w;
     var rowF=[['Chapa',TOT.c],['Pintura',TOT.p],['Total',{f:fTot,w:wTot}]].map(function(r){return '<tr><td>'+(r[0]==='Total'?'<b>Total</b>':r[0])+'</td><td class="n">'+fhh(r[1].f)+'</td><td class="n">'+fhh(r[1].w)+'</td><td class="n">'+(r[1].w?(r[1].f-r[1].w>=0?'+':'')+fhh(r[1].f-r[1].w):'—')+'</td><td class="n"><b>'+ef(r[1].f,r[1].w)+'</b></td></tr>'}).join('');
-    m.innerHTML='<div class="wrap plan">'+
+    m.innerHTML='<div class="wrap plan">'+CYC+
       '<section class="pb"><h2>Tiempo facturado frente a trabajado</h2><p class="cap">Eficiencia = tiempo facturado ÷ tiempo invertido. El tiempo facturado son las horas de chapa (C) y de pintura (P) de cada reparación; el trabajado, lo que los operarios han imputado. Por encima de 100 % se factura más de lo que se trabaja; por debajo de 80 % se marca en rojo.</p><div class="tw"><table class="t"><tr><th>Sección</th><th class="n">Facturado</th><th class="n">Trabajado</th><th class="n">Diferencia</th><th class="n">Eficiencia</th></tr>'+rowF+'</table></div></section>'+
       '<section class="pb"><h2>Tiempo trabajado por fase</h2><p class="cap">Horas que los operarios han imputado a los coches en cada fase. Los coches que llevan días en una fase de producción con menos de 1 h trabajada al día se marcan como posible cuello de botella: están ahí, pero nadie les está dedicando tiempo.</p><div class="tw"><table class="t"><tr><th>Fase</th><th class="n">Tiempo trabajado</th><th class="n">Coches</th><th class="n">Media por coche</th><th class="n">Operarios</th><th class="n">Coches ahora</th><th class="n">Días medios ahora</th><th class="n">Trabajo por día</th></tr>'+rowsP+'</table></div></section>'+
       '<section class="pb"><h2>Por operario</h2><p class="cap">Tiempo imputado por cada operario en cada fase.</p><div class="tw"><table class="t"><tr><th>Operario</th>'+used.map(function(k){return '<th class="n">'+esc(k[1])+'</th>'}).join('')+'<th class="n">Total</th><th class="n">Facturado</th><th class="n">Eficiencia</th></tr>'+rowsO+'</table></div></section>'+
@@ -745,7 +804,7 @@ table.heat{min-width:640px}
     if(t.id==='bSet'){setDlg();return}
     if(t.id==='bImp'){toast('Importar desde Excel está disponible en la versión completa.');return}
     if(t.id==='clr'){f={q:'',as:'',ins:'',pri:'',due:'',tc:''};$('#q').value='';render();return}
-    if(t.id==='mvOk'){var c=st.cards.filter(function(x){return x.id===t.dataset.id})[0];if(c){c.st=$('#mv').value;c.mv=iso(0);splitJobs(c.id,c.st);save();closeDlg();render();toast('Vehículo movido')}return}
+    if(t.id==='mvOk'){var c=st.cards.filter(function(x){return x.id===t.dataset.id})[0];if(c){moveTo(c,$('#mv').value);save();closeDlg();render();toast('Vehículo movido')}return}
     if(t.id==='del'){t.textContent='Confirmar eliminar';t.id='del2';return}
     if(t.id==='del2'){var id=$('#mvOk').dataset.id;st.cards=st.cards.filter(function(x){return x.id!==id});save();closeDlg();render();toast('Vehículo eliminado');return}
     if(t.id==='clrAll'){if(!t.dataset.sure){t.dataset.sure='1';t.textContent='¿Seguro? Se borran de la nube. Pulsa otra vez';return}st.cards=[];delete st.seed;save();closeDlg();render();toast('Planificador vaciado');return}
@@ -787,7 +846,7 @@ table.heat{min-width:640px}
   document.addEventListener('drop',function(e){
     var col=e.target.closest&&e.target.closest('.col');if(!col||!dragId)return;e.preventDefault();
     var c=st.cards.filter(function(x){return x.id===dragId})[0];
-    if(c&&c.st!==col.dataset.col){c.st=col.dataset.col;c.mv=iso(0);splitJobs(c.id,c.st);save()}
+    if(c&&c.st!==col.dataset.col){moveTo(c,col.dataset.col);save()}
     dragId=null;render();
   });
 
