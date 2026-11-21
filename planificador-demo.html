@@ -262,6 +262,7 @@ table.heat{min-width:640px}
   var st={cards:seed(),ops:{c:5,m:1,p:4},days:5,hpd:8};
   try{var raw=localStorage.getItem(KEY);if(raw){var o=JSON.parse(raw);if(o&&o.cards&&o.ops){st=o}}}catch(e){}
   function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
+  save(); // deja los coches disponibles para el reloj de fichajes
 
   function due(sal){
     var d=Math.round((new Date(sal+'T00:00:00')-today)/864e5);

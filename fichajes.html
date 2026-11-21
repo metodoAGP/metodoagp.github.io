@@ -216,11 +216,47 @@ input[type=text],input[type=password],input[type=number],input[type=date],input[
 /* ───────── Datos (guardados en este navegador) ───────── */
 var KEY="agp-fichajes-v1", S, mem=null;
 function uid(){return Math.random().toString(36).slice(2,9)}
-function blank(){return {v:1,emps:[],marks:[],inc:[],ui:{scope:"directa",per:"mes"}}}
-function load(){try{var r=localStorage.getItem(KEY);if(r){var o=JSON.parse(r);if(o&&o.emps)return o}}catch(e){if(mem)return mem}return blank()}
+function blank(){return {v:1,emps:[],marks:[],inc:[],jobs:[],ui:{scope:"directa",per:"mes"}}}
+function load(){try{var r=localStorage.getItem(KEY);if(r){var o=JSON.parse(r);if(o&&o.emps){o.jobs=o.jobs||[];return o}}}catch(e){if(mem)return mem}return blank()}
 function save(){mem=S;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}IDX=null}
 S=load();
 var SEC={chapa:"Chapa",pintura:"Pintura",indirecto:"Indirecto"};
+
+/* ───────── Coches del planificador e imputación de tiempo ───────── */
+var PK="agp-planificador-demo-v1";
+var STN={rec:"Recepcionado",val:"Valoración",apr:"Pend. aprobación",pie:"Pend. piezas",esp:"En espera chapa",pch:"Preparación chapa",cha:"Chapa",pin:"Pintura",mon:"Montaje"};
+function planCars(sec){ /* chapistas: todas las fases salvo pintura (incluye montaje); pintores: pintura */
+  var cards=[];try{var o=JSON.parse(localStorage.getItem(PK));if(o&&o.cards)cards=o.cards}catch(x){}
+  return cards.filter(function(c){return STN[c.st]&&(sec==="pintura"?c.st==="pin":c.st!=="pin")});
+}
+function planCard(id){var r=null;try{var o=JSON.parse(localStorage.getItem(PK));if(o&&o.cards)o.cards.forEach(function(c){if(c.id===id)r=c})}catch(x){}return r}
+function openJob(empId){for(var i=S.jobs.length-1;i>=0;i--){var j=S.jobs[i];if(j.emp===empId&&!j.e&&ds(new Date(j.s))===today())return j}return null}
+function jobMs(j){return (j.e||Date.now())-j.s}
+function jobsOn(empId,date){return S.jobs.filter(function(j){return j.emp===empId&&ds(new Date(j.s))===date&&(j.e||date===today())})}
+function investedOn(empId,date){var t=0;jobsOn(empId,date).forEach(function(j){t+=jobMs(j)});return t/3600000}
+function closeJob(empId,ts){var j=openJob(empId);if(j){j.e=ts||Date.now();return j}return null}
+function jobPanel(e){
+  if(e.sec!=="chapa"&&e.sec!=="pintura")return '';
+  var cars=planCars(e.sec),cur=openJob(e.id),h='<div class="sec-h" style="margin-top:18px">Coches de '+(e.sec==="pintura"?"pintura":"chapa")+' en el planificador</div>';
+  if(cur)h+='<div class="warn" style="background:var(--green-s,#e3f3e6);border-color:var(--green,#2f8f4e)">Trabajando en <b>'+esc(cur.pl)+' · '+esc(cur.car)+'</b> desde '+hm(cur.s)+' · <b class="num">'+fdur(jobMs(cur))+'</b><div style="margin-top:8px"><button class="btn pri" data-a="job" data-id="'+e.id+'" data-card="'+esc(cur.card)+'" data-t="end">Acabo</button></div></div>';
+  if(!cars.length)return h+'<p class="mute">No hay coches en tu fase. Abre el <a href="planificador-demo.html">Planificador</a> en este mismo navegador para que aparezcan aquí.</p>';
+  h+='<div style="display:grid;gap:6px;max-height:260px;overflow:auto">'+cars.map(function(c){
+    var on=cur&&cur.card===c.id;
+    return '<div class="row" style="flex-wrap:nowrap;gap:10px;justify-content:space-between;border:1px solid var(--line);border-radius:10px;padding:8px 10px"><div style="min-width:0"><b>'+esc(c.pl||"")+'</b> <span class="mute">'+esc(c.car||"")+'</span><div class="mute" style="font-size:12px">'+esc(c.id)+' · '+(STN[c.st]||c.st)+'</div></div>'+
+      (on?'<span class="pill in">En curso</span>':'<button class="btn sm" data-a="job" data-id="'+e.id+'" data-card="'+esc(c.id)+'" data-t="start">Comienzo</button>')+'</div>'}).join("")+'</div>';
+  return h;
+}
+function jobAct(id,card,t){
+  var e=S.emps.filter(function(x){return x.id===id})[0],p=$("#pin");if(!e)return;
+  if(!stateOf(e).pr.inside){$("#merr").textContent="Ficha primero tu entrada.";return}
+  if(e.pin&&(!p||p.value!==e.pin)){$("#merr").textContent="Escribe tu PIN para imputar tiempo.";if(p)p.focus();return}
+  var now=Date.now();
+  if(t==="end"){var j=closeJob(id,now);save();closeModal();render();toast("Acabo · "+(j?j.pl+" · "+fdur(j.e-j.s):""));return}
+  var c=planCard(card);if(!c){$("#merr").textContent="Ese coche ya no está en el planificador.";return}
+  var prev=closeJob(id,now);
+  S.jobs.push({id:uid(),emp:id,card:c.id,pl:c.pl||"",car:c.car||"",st:c.st,sec:e.sec,s:now,e:null});
+  save();closeModal();render();toast("Comienzo · "+(c.pl||c.id)+(prev?" (cerrado "+prev.pl+")":""));
+}
 var DOW=["lun","mar","mié","jue","vie","sáb","dom"];
 var MES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 
@@ -323,7 +359,7 @@ function vFichar(){
     else pill='<span class="pill none">Sin fichar</span>';
     var pc=s.pl?Math.min(100,s.pr.h/s.pl*100):0;
     return '<button class="person" data-a="mark" data-id="'+e.id+'"><div class="row" style="flex-wrap:nowrap;gap:12px"><div class="av '+e.sec+'">'+esc(initials(e.name))+'</div><div style="min-width:0"><div class="nm">'+esc(e.name)+'</div><div class="sc">'+SEC[e.sec]+'</div></div></div>'+pill+
-      '<div class="hrs"><b class="num" data-live="'+e.id+'">'+fdur(s.pr.h*3600000)+'</b> hoy'+(s.pl?' de '+fh(s.pl):'')+'</div><div class="mini"><i style="width:'+pc+'%"></i></div></button>';
+      (openJob(e.id)?'<div class="sc" style="margin-top:6px;color:var(--green,#2f8f4e)">▶ '+esc(openJob(e.id).pl)+'</div>':'')+'<div class="hrs"><b class="num" data-live="'+e.id+'">'+fdur(s.pr.h*3600000)+'</b> hoy'+(s.pl?' de '+fh(s.pl):'')+'</div><div class="mini"><i style="width:'+pc+'%"></i></div></button>';
   }).join("");
   return '<div class="fich"><div><div class="card clock"><div class="t num" id="clk">00:00<i>:00</i></div><div class="d" id="dte"></div><div class="counts" id="cnt"></div></div>'+
     '<div class="card feed"><h3>Últimos fichajes</h3><ul id="feed"></ul></div></div>'+
@@ -352,7 +388,7 @@ function openMark(id){
   modal('<button class="x" data-a="close" aria-label="Cerrar">×</button><div class="row" style="flex-wrap:nowrap;gap:14px"><div class="av '+e.sec+'" style="width:60px;height:60px;font-size:26px">'+esc(initials(e.name))+'</div><div style="min-width:0"><h3>'+esc(e.name)+'</h3><div class="mute">'+SEC[e.sec]+(isIn?' · dentro desde '+hm(s.pr.openTs):'')+'</div></div></div>'+
     (s.off?'<div class="warn">Hoy figura como: <b>'+s.off+'</b>. Puedes fichar igualmente si has venido.</div>':'')+
     (e.pin?'<div class="field"><label for="pin">Tu PIN</label><input id="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="••••"></div>':'')+
-    '<div class="err" id="merr"></div><button class="bigbtn '+act+'" data-a="doMark" data-id="'+id+'" data-t="'+act+'">'+(isIn?"Fichar salida":"Fichar entrada")+'</button>');
+    (isIn?jobPanel(e):'')+'<div class="err" id="merr"></div><button class="bigbtn '+act+'" data-a="doMark" data-id="'+id+'" data-t="'+act+'">'+(isIn?"Fichar salida":"Fichar entrada")+'</button>');
   var p=$("#pin");if(p){p.focus();p.onkeydown=function(ev){if(ev.key==="Enter")doMark(id,act)}}
 }
 function doMark(id,t){
@@ -360,7 +396,7 @@ function doMark(id,t){
   if(e.pin&&(!p||p.value!==e.pin)){$("#merr").textContent="PIN incorrecto.";if(p){p.value="";p.focus()}return}
   var T=today(),ms=index().m[id+"|"+T]||[],lastm=ms[ms.length-1];
   if(lastm&&Date.now()-lastm.ts<15000){$("#merr").textContent="Ya has fichado hace unos segundos.";return}
-  S.marks.push({id:uid(),emp:id,ts:Date.now(),t:t});save();closeModal();
+  S.marks.push({id:uid(),emp:id,ts:Date.now(),t:t});if(t==="out")closeJob(id,Date.now());save();closeModal();
   toast(e.name+" · "+(t==="in"?"entrada":"salida")+" a las "+hm(Date.now())+(navigator.vibrate?"":""));
   if(navigator.vibrate)try{navigator.vibrate(60)}catch(x){}
   render();
@@ -435,6 +471,29 @@ function range(per){
   if(per==="anio")return [y+"-01-01",T,"Año "+y+" hasta hoy"];
   var f=S.emps.map(function(e){return e.from}).sort()[0]||T;return [f,T,"Desde el inicio del control"];
 }
+
+function vProd(a,b){
+  var end=b<today()?b:today(),R={},C={};
+  S.emps.forEach(function(e){
+    if(!inScope(e)||(e.sec!=="chapa"&&e.sec!=="pintura"))return;
+    var r=R[e.id]={e:e,pres:0,inv:0};
+    for(var d=a;d<=end;d=addD(d,1)){r.pres+=presence(e,d).h;r.inv+=investedOn(e.id,d)}
+  });
+  S.jobs.forEach(function(j){var d=ds(new Date(j.s));if(d<a||d>end||!(j.e||d===today()))return;
+    var k=j.card+"|"+j.sec,c=C[k]=C[k]||{pl:j.pl,car:j.car,card:j.card,sec:j.sec,inv:0};c.inv+=jobMs(j)/3600000});
+  var rows=Object.keys(R).map(function(k){return R[k]}).filter(function(x){return x.pres>0||x.inv>0}).map(function(x){
+    return '<tr><td><b>'+esc(x.e.name)+'</b><div class="mute" style="font-size:12px">'+SEC[x.e.sec]+'</div></td><td class="r num">'+fh(x.pres)+'</td><td class="r num">'+fh(x.inv)+'</td><td class="r num"><b>'+(x.pres?pct(x.inv/x.pres*100):"—")+'</b></td></tr>'}).join("");
+  var tp=0,ti=0;Object.keys(R).forEach(function(k){tp+=R[k].pres;ti+=R[k].inv});
+  var cr=Object.keys(C).map(function(k){return C[k]}).sort(function(x,y){return y.inv-x.inv}).map(function(c){
+    var pc=planCard(c.card),bud=pc?(c.sec==="pintura"?pc.p:pc.c):null,ef=bud&&c.inv>0?bud/c.inv*100:null;
+    return '<tr><td><b>'+esc(c.pl)+'</b><div class="mute" style="font-size:12px">'+esc(c.car)+'</div></td><td>'+SEC[c.sec]+'</td><td class="r num">'+fh(c.inv)+'</td><td class="r num">'+(bud!=null?fh(bud):"—")+'</td><td class="r num"><b>'+(ef!=null?pct(ef):"—")+'</b></td></tr>'}).join("");
+  return '<div class="calhead" style="margin-top:28px"><div><h2>Productividad y eficiencia</h2><p class="sub">Con el tiempo que los operarios imputan a cada coche (Comienzo / Acabo).</p></div></div>'+
+   '<div class="kpis"><div class="kpi hl"><span>Productividad</span><b>'+(tp?pct(ti/tp*100):"—")+'</b><small>tiempo invertido ÷ presencia</small></div><div class="kpi"><span>Tiempo invertido</span><b>'+fh(ti)+'</b><small>en coches</small></div><div class="kpi"><span>Presencia</span><b>'+fh(tp)+'</b><small>chapa y pintura</small></div></div>'+
+   (ti>0?'<div class="grid2 abs" style="margin-top:0"><div class="card"><div class="sec-h">Por operario</div><div class="tblw"><table class="tbl"><thead><tr><th>Persona</th><th class="r">Presente</th><th class="r">Invertido</th><th class="r">Productividad</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+
+   '<div class="card"><div class="sec-h">Por coche</div><div class="tblw"><table class="tbl"><thead><tr><th>Coche</th><th>Sección</th><th class="r">Invertido</th><th class="r">H. presup.</th><th class="r">Eficiencia</th></tr></thead><tbody>'+cr+'</tbody></table></div></div></div>':
+   '<div class="card empty"><h3>Aún no hay tiempo imputado</h3><p class="mute">Cuando los operarios fichen la entrada y pulsen «Comienzo» en un coche, aquí aparecerán la productividad y la eficiencia.</p></div>')+
+   '<p class="note">Productividad = tiempo invertido ÷ presencia fichada. Eficiencia = tiempo facturado ÷ tiempo invertido; hasta disponer de las horas facturadas reales, se usan como referencia las horas del presupuesto del coche en el planificador (chapa o pintura, según la sección).</p>';
+}
 function vAbs(){
   var per=S.ui.per||"mes",r=range(per),R=agg(r[0],r[1],true),yest=addD(today(),-1),abPct=R.comp?R.aus/R.comp*100:0;
   var rows=Object.keys(R.by).map(function(k){return R.by[k]}).filter(function(x){return x.comp>0}).sort(function(a,b){return (b.aus/b.comp)-(a.aus/a.comp)}).map(function(x){
@@ -451,7 +510,7 @@ function vAbs(){
    (R.comp?'<div class="grid2 abs" style="margin-top:0"><div class="card"><div class="sec-h">Por persona</div><div class="tblw"><table class="tbl"><thead><tr><th>Persona</th><th class="r">Comprado</th><th class="r">Presente</th><th class="r">Ausencia</th><th class="r">Absentismo</th><th>Causa</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>'+
    '<div style="display:grid;gap:20px;align-content:start"><div class="card"><div class="sec-h">Por qué se ausentan</div>'+cs+'</div><div class="card"><div class="sec-h">Por sección</div><div class="tblw"><table class="tbl"><thead><tr><th>Sección</th><th class="r">Comprado</th><th class="r">Ausencia</th><th class="r">%</th></tr></thead><tbody>'+secs+'</tbody></table></div></div></div></div>':
    '<div class="card empty"><h3>Sin datos todavía</h3><p class="mute">El absentismo se calcula con los días ya cerrados (hasta ayer). Vuelve mañana o cambia el periodo.</p></div>')+
-   '<p class="note">Criterio métodoAGP: tiempo comprado = jornada de convenio + horas extra; las vacaciones y festivos no se compran. Ausencia = tiempo comprado − presencia fichada (bajas, permisos, retrasos y faltas). Se calcula hasta ayer; el día en curso no entra hasta cerrarse.</p>';
+   vProd(r[0],r[1])+'<p class="note">Criterio métodoAGP: tiempo comprado = jornada de convenio + horas extra; las vacaciones y festivos no se compran. Ausencia = tiempo comprado − presencia fichada (bajas, permisos, retrasos y faltas). Se calcula hasta ayer; el día en curso no entra hasta cerrarse.</p>';
 }
 
 /* ───────── EQUIPO ───────── */
@@ -522,6 +581,7 @@ document.addEventListener("click",function(ev){
   if(a==="close")closeModal();
   else if(a==="mark")openMark(id);
   else if(a==="doMark")doMark(id,el.dataset.t);
+  else if(a==="job")jobAct(id,el.dataset.card,el.dataset.t);
   else if(a==="scope"){S.ui.scope=el.dataset.v;save();render()}
   else if(a==="per"){S.ui.per=el.dataset.v;save();render()}
   else if(a==="prev"){calM.m--;if(calM.m<0){calM.m=11;calM.y--}render()}
@@ -556,7 +616,7 @@ document.addEventListener("click",function(ev){
   else if(a==="baja"){var e2=S.emps.filter(function(q){return q.id===id})[0];e2.to=addD(today(),-1);save();closeModal();render();toast(e2.name+" ya no cuenta como tiempo comprado desde hoy")}
   else if(a==="react"){var e3=S.emps.filter(function(q){return q.id===id})[0];delete e3.to;save();closeModal();render()}
   else if(a==="delemp"){if(!el.dataset.sure){el.dataset.sure="1";el.textContent="Pulsa otra vez para confirmar (borra también sus fichajes)";return}
-    S.emps=S.emps.filter(function(q){return q.id!==id});S.marks=S.marks.filter(function(k){return k.emp!==id});S.inc=S.inc.filter(function(k){return k.emp!==id});save();closeModal();render()}
+    S.emps=S.emps.filter(function(q){return q.id!==id});S.marks=S.marks.filter(function(k){return k.emp!==id});S.inc=S.inc.filter(function(k){return k.emp!==id});S.jobs=S.jobs.filter(function(k){return k.emp!==id});save();closeModal();render()}
   else if(a==="demo"){if(S.emps.length&&!confirmDemo()){return}demo();toast("Datos de ejemplo cargados");render()}
   else if(a==="wipe"){if(!el.dataset.sure){el.dataset.sure="1";el.textContent="¿Seguro? Pulsa otra vez";return}S=blank();save();render();toast("Datos borrados")}
   else if(a==="exp"){dl("fichajes-metodoAGP.json",JSON.stringify(S),"application/json")}
