@@ -107,6 +107,7 @@ svg.car{width:100%;height:auto;display:block;margin:0 auto}
 .hfs button{border:1.5px solid var(--line);background:var(--panel);color:inherit;border-radius:999px;padding:7px 14px;font:600 13px Inter,sans-serif;cursor:pointer}
 .hfs button[aria-pressed="true"]{background:var(--ink,#1f2124);color:#fff;border-color:transparent}
 .est{width:auto;padding:5px 8px;font-size:13px}
+input.est[type=datetime-local]{min-width:200px}
 .mapctl{overflow:visible}
 .mc{display:flex;flex-direction:column;gap:3px;width:100%;pointer-events:auto}
 .mc select,.mc input{width:100%;font-size:12px;padding:2px 5px;border-radius:6px;border:1.5px solid #fff;background:#fff;color:#1f2124;height:23px;text-align:left;box-shadow:0 1px 4px rgba(0,0,0,.25)}
@@ -251,7 +252,8 @@ PIECES.forEach(function(p){DEF.horas[p.id]=p.h});
 /* Baremos: valores de partida EDITABLES en Ajustes (no son las tablas oficiales; cada taller carga las suyas) */
 var NIV=[["sup","Daño superficial"],["lev","Daño leve"],["med","Daño medio"],["fue","Daño fuerte"],["nue","Pieza nueva"]];
 var NIVF=[0.4,0.7,1,1.3,0.9];
-DEF.baremo="rapido";DEF.ces={};DEF.czA=0.04;DEF.czL=0.05;
+var NCAL=["SOLIDO MONOCAPA","SOLIDO BICAPA","METALIZADO BICAPA","PERLADO BICAPA","PERLADO TRICAPA","COLOR ESPECIAL"];
+DEF.cal=[45,45,45,45,45,45];DEF.baremo="rapido";DEF.ces={};DEF.czA=0.04;DEF.czL=0.05;
 PIECES.forEach(function(p){DEF.ces[p.id]=NIVF.map(function(f){return Math.round(p.h*f*20)/20})});
 /* Referencias del método */
 var REF={mo:40,mat:15,rec:45,recH:50,matH:28,hRep:10,hCh:5.5,hPi:4.5,litros:[["Color base agua",0.06,70],["Barniz",0.12,19],["Fondo",0.04,17]]};
@@ -266,7 +268,7 @@ function load(){var o=null;try{o=JSON.parse(localStorage.getItem(KEY))}catch(e){
     if(o.cfg.horas)Object.keys(c.horas).forEach(function(k){if(o.cfg.horas[k]!==undefined)c.horas[k]=o.cfg.horas[k]});
     if(o.cfg.baremo)c.baremo=o.cfg.baremo;
     if(o.cfg.ces)Object.keys(c.ces).forEach(function(k){if(o.cfg.ces[k]&&o.cfg.ces[k].length===5)c.ces[k]=o.cfg.ces[k]});
-    if(o.cfg.czA!==undefined)c.czA=o.cfg.czA;if(o.cfg.czL!==undefined)c.czL=o.cfg.czL}
+    if(o.cfg.czA!==undefined)c.czA=o.cfg.czA;if(o.cfg.czL!==undefined)c.czL=o.cfg.czL;c.cal=(o.cfg.cal&&o.cfg.cal.length===6)?o.cfg.cal:[0,1,2,3,4,5].map(function(){return c.precioHora})}
   var sv=o.saved||[],seq=o.seq||{},yr0=String(new Date().getFullYear());
   sv.forEach(function(x){if(!x.estado)x.estado="pend";
     if(!x.num){var m=String(x.fecha||"").match(/(\d{4})/),y=m?m[1]:yr0;seq[y]=(seq[y]||0)+1;x.num=y+"-"+("00"+seq[y]).slice(-3)}});
@@ -279,7 +281,7 @@ var hf="pend";
 function save(){try{localStorage.setItem(KEY,JSON.stringify(C))}catch(e){}}
 
 /* ───────── Estado del presupuesto en curso ───────── */
-var B={sel:{},size:1,coefMan:"",dto:0,recs:[],cliente:"",marca:"",modelo:"",mat:"",tasador:"",obs:"",savedId:"",sent:""};
+var B={sel:{},size:1,coefMan:"",dto:0,recs:[],cliente:"",marca:"",modelo:"",mat:"",tasador:"",obs:"",savedId:"",sent:"",tel:"",email:"",cal:0};
 var view="pres";
 
 /* ───────── Utilidades ───────── */
@@ -314,7 +316,7 @@ function calc(){
   if(cfg.baremo!=="rapido"){auto=1;coef=1}
   var hPint=0,hCh=0;
   ids.forEach(function(i){hPint+=pieceH(i,coef);hCh+=num(B.sel[i].ch)});
-  var moP=hPint*cfg.precioHora,mat=hPint*cfg.matH,moC=hCh*cfg.precioHora,rec=0;
+  var moP=hPint*num(cfg.cal[B.cal||0]||cfg.precioHora),mat=hPint*cfg.matH,moC=hCh*cfg.precioHora,rec=0;
   B.recs.forEach(function(r){rec+=num(r.imp)});
   var bruto=moC+moP+mat+rec,dtoP=Math.min(100,num(B.dto)),dto=bruto*dtoP/100,bi=bruto-dto,iva=bi*cfg.iva/100;
   return {ids:ids,nb:nb,crit:crit,auto:auto,coef:coef,hPint:hPint,hCh:hCh,moP:moP,mat:mat,moC:moC,rec:rec,bruto:bruto,dtoP:dtoP,dto:dto,bi:bi,iva:iva,tot:bi+iva};
@@ -378,14 +380,14 @@ function vPres(){
     return '<div class="pc" data-id="'+i+'"><div class="pc1"><div>'+esc(p.n)+'<small>Pintura '+hh(pieceH(i,r.coef))+(pieceTag(i)?' · '+esc(pieceTag(i)):'')+'</small></div><label class="mute" style="font-size:12px">Chapa h</label><input type="number" inputmode="decimal" min="0" step="0.25" data-ch="'+i+'" value="'+esc(s.ch||"")+'" placeholder="0" aria-label="Horas de chapa de '+esc(p.n)+'"><button class="x" data-rm="'+i+'" aria-label="Quitar">×</button></div>'+(ctl?'<div class="pc2'+(p.g==="b"?' mapped':'')+'">'+ctl+'</div>':'')+'</div>'}).join("")||'<p class="mute" style="margin:0">Toca las piezas dañadas en el esquema. Cada una suma sus horas de pintura.</p>';
   var recs=B.recs.map(function(x,i){return '<div class="sl" style="grid-template-columns:minmax(0,1fr) 110px auto"><input type="text" style="width:100%;text-align:left" data-rd="'+i+'" value="'+esc(x.d)+'" placeholder="Pieza o recambio" aria-label="Descripción del recambio"><input type="number" inputmode="decimal" min="0" step="0.01" style="width:110px" data-ri="'+i+'" value="'+esc(x.imp||"")+'" placeholder="€" aria-label="Importe"><button class="x" data-rr="'+i+'" aria-label="Quitar">×</button></div>'}).join("");
   var critLabel=CRIT.filter(function(c){return c[0]===r.crit})[0][1];
-  return '<div class="card" style="margin-bottom:20px"><div class="row" style="justify-content:space-between"><div><h2>1 · Marca los daños</h2><p class="sub">Toca cada pieza afectada en el plano y elige el sistema de valoración. Las horas salen de tus parámetros.</p></div><div class="row" style="gap:8px;align-items:flex-end"><div class="field" style="min-width:210px"><label for="f-bar">Sistema de valoración</label><select id="f-bar" data-bar="1"><option value="rapido"'+(mode==="rapido"?' selected':'')+'>Estimación rápida (coeficiente)</option><option value="ces"'+(mode==="ces"?' selected':'')+'>Valoración por nivel de daños</option><option value="cz"'+(mode==="cz"?' selected':'')+'>Valoración por decímetros cuadrados</option></select></div><button class="btn" data-a="all">Vehículo completo</button><button class="btn" data-a="clear">Borrar marcas</button></div></div>'+
+  return '<div class="card" style="margin-bottom:20px"><div class="row" style="justify-content:space-between"><div><h2>1 · Marca los daños</h2><p class="sub">Toca cada pieza afectada en el plano y elige el sistema de valoración. Las horas salen de tus parámetros.</p></div><div class="row" style="gap:8px;align-items:flex-end"><div class="field" style="min-width:150px"><label for="f-cal">Calidad de pintura</label><select id="f-cal" data-calq="1">'+NCAL.map(function(n,i){return '<option value="'+i+'"'+((B.cal||0)===i?' selected':'')+'>'+n+'</option>'}).join("")+'</select></div><div class="field" style="min-width:210px"><label for="f-bar">Sistema de valoración</label><select id="f-bar" data-bar="1"><option value="rapido"'+(mode==="rapido"?' selected':'')+'>baremoAGP</option><option value="ces"'+(mode==="ces"?' selected':'')+'>Valoración por nivel de daños</option><option value="cz"'+(mode==="cz"?' selected':'')+'>Valoración por decímetros cuadrados</option></select></div><button class="btn" data-a="all">Vehículo completo</button><button class="btn" data-a="clear">Borrar marcas</button></div></div>'+
    '<div class="carscroll" style="margin-top:8px">'+carSVG(B.sel,true)+'</div>'+
    '<div class="row" style="margin-top:6px;gap:10px"><span class="sec-h" style="margin:0">Accesorios</span><div class="chips">'+chips+'</div></div></div>'+
    '<div class="grid"><div style="display:grid;gap:20px">'+
    '<div class="card"><h2>2 · Chapa y recambios</h2><p class="sub">Indica las horas de chapa de cada pieza y añade los recambios.</p><div class="sel" style="margin-top:10px">'+list+'</div>'+
    '<div class="sec-h" style="margin-top:16px">Recambios (sin IVA)</div>'+recs+'<button class="btn sm" data-a="addrec" style="margin-top:8px">+ Añadir recambio</button></div>'+
    '<div class="card"><h2>3 · Datos</h2><div class="cols2" style="margin-top:10px">'+
-   fld("Cliente","cliente",B.cliente)+fld("Marca","marca",B.marca)+fld("Modelo","modelo",B.modelo)+plateFld(B.mat)+
+   fld("Cliente","cliente",B.cliente)+fldT("Teléfono (WhatsApp)","tel",B.tel,"tel","600 123 456")+fldT("Email","email",B.email,"email","cliente@correo.com")+fld("Marca","marca",B.marca)+fld("Modelo","modelo",B.modelo)+plateFld(B.mat)+
    '<div class="field"><label for="f-tasador">Tasador</label><input type="text" id="f-tasador" list="tl" data-f="tasador" value="'+esc(B.tasador)+'"><datalist id="tl">'+cfg.tasadores.split(",").map(function(t){t=t.trim();return t?'<option value="'+esc(t)+'">':''}).join("")+'</datalist></div>'+
    (mode!=="rapido"?'<div class="field" style="grid-column:1/-1"><p class="note" style="margin:0">Con la valoración '+(mode==="ces"?"por nivel de daños":"por decímetros cuadrados")+' las horas de pintura salen del daño de cada pieza; el coeficiente por varias piezas no se aplica.</p></div>':
    '<div class="field"><label for="f-size">Tamaño del vehículo</label><select id="f-size" data-f="size">'+SIZES.map(function(s,i){return '<option value="'+i+'"'+(B.size===i?' selected':'')+'>'+s+'</option>'}).join("")+'</select></div>'+
@@ -395,6 +397,7 @@ function vPres(){
    '<div class="sum screen" id="sum">'+sumHTML(r)+'</div></div>'+docHTML(r);
 }
 function plateFld(v){return '<div class="field"><label for="f-mat">Matrícula</label><div class="plate"><span class="eu"><i></i><b>E</b></span><input type="text" id="f-mat" data-f="mat" maxlength="10" autocomplete="off" autocapitalize="characters" spellcheck="false" value="'+esc(v)+'" placeholder="0000 ABC" aria-label="Matrícula"></div></div>'}
+function fldT(l,k,v,ty,ph){return '<div class="field"><label for="f-'+k+'">'+l+'</label><input type="'+ty+'" id="f-'+k+'" data-f="'+k+'" value="'+esc(v)+'" placeholder="'+ph+'" autocomplete="off"></div>'}
 function fld(l,k,v){return '<div class="field"><label for="f-'+k+'">'+l+'</label><input type="text" id="f-'+k+'" data-f="'+k+'" value="'+esc(v)+'"></div>'}
 
 function sumHTML(r){
@@ -411,7 +414,7 @@ function sumHTML(r){
    '<div class="lines"><div class="ln"><span>Mano de obra chapa · '+hh(r.hCh)+'</span><b>'+eur(r.moC)+'</b></div><div class="ln"><span>Mano de obra pintura · '+hh(r.hPint)+'</span><b>'+eur(r.moP)+'</b></div><div class="ln"><span>Material de pintura</span><b>'+eur(r.mat)+'</b></div><div class="ln"><span>Recambios</span><b>'+eur(r.rec)+'</b></div>'+
    (r.dto?'<div class="ln"><span>Descuento '+nf(r.dtoP,1)+' %</span><b>−'+eur(r.dto)+'</b></div>':'')+
    '<div class="ln"><span>Base imponible</span><b>'+eur(r.bi)+'</b></div><div class="ln"><span>IVA '+nf(cfg.iva,0)+' %</span><b>'+eur(r.iva)+'</b></div></div>'+
-   '<div class="row" style="margin-top:14px"><button class="btn acc" data-a="save">Guardar</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="rech">Rechazado</button><button class="btn" style="background:#2f8f5b;border-color:#2f8f5b;color:#fff" data-a="toplan">Aceptado → Planificador</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="print">Imprimir / PDF</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="new">Nuevo</button></div></div>'+
+   '<div class="row" style="margin-top:14px"><button class="btn acc" data-a="save">Guardar</button><button class="btn" data-a="wa">Enviar por WhatsApp</button><button class="btn" data-a="mail">Enviar por email</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="rech">Rechazado</button><button class="btn" style="background:#2f8f5b;border-color:#2f8f5b;color:#fff" data-a="toplan">Aceptado → Planificador</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="print">Imprimir / PDF</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="new">Nuevo</button></div></div>'+
    '<div class="card"><div class="sec-h">Lectura métodoAGP</div>'+(tot>0?'<div class="mx">'+
    bar("Mano de obra (chapa + pintura)",pMO,REF.mo)+bar("Material de pintura",pMat,REF.mat)+bar("Recambios",pRec,REF.rec)+'</div>'+
    (r.rec<=0?'<p class="note">Añade los recambios para ver el reparto real. Sin ellos el peso de la mano de obra sale inflado.</p>':'')+
@@ -438,7 +441,7 @@ function docHTML(r){
    '</div><div class="r"><div style="text-align:center">'+carSVG(B.sel,false)+'</div></div></div>'+
    '<div class="sect">Importes</div>'+
    (r.hCh>0?'<div class="it"><span>Mano de obra de chapa</span><span>'+nCh+' pzas</span><span>'+hh(r.hCh)+'</span><b>'+eur(r.moC)+'</b></div>':'')+
-   '<div class="it"><span>Mano de obra de pintura</span><span>'+r.ids.length+' pzas</span><span>'+hh(r.hPint)+'</span><b>'+eur(r.moP)+'</b></div>'+
+   '<div class="it"><span>Mano de obra de pintura · '+esc(NCAL[B.cal||0])+'</span><span>'+r.ids.length+' pzas</span><span>'+hh(r.hPint)+'</span><b>'+eur(r.moP)+'</b></div>'+
    '<div class="it"><span>Material de pintura</span><span></span><span></span><b>'+eur(r.mat)+'</b></div>'+
    (recs.length?'<div class="it"><span>Recambios</span><span>'+recs.length+' uds</span><span></span><b>'+eur(r.rec)+'</b></div>':'')+
    recs.map(function(x){return '<div class="it sub"><span>· '+esc(x.d||"Recambio")+'</span><span></span><span></span><b>'+eur(num(x.imp))+'</b></div>'}).join("")+
@@ -478,7 +481,7 @@ function rerender(){var y=window.scrollY;render();window.scrollTo(0,y)}
 /* ───────── Guardar y enviar al planificador ───────── */
 function saveCurrent(flag,estado){
   var r=calc();if(!r.ids.length&&!r.rec){toast("Marca algún daño antes de continuar");return null}
-  var rec={fecha:today(),cliente:B.cliente,marca:B.marca,modelo:B.modelo,matricula:B.mat,tasador:B.tasador,piezas:r.ids.map(function(i){return PID[i].n}),hCh:r.hCh,hPint:r.hPint,moC:r.moC,moP:r.moP,mat:r.mat,rec:r.rec,bi:r.bi,tot:r.tot};
+  var rec={fecha:today(),cliente:B.cliente,marca:B.marca,modelo:B.modelo,matricula:B.mat,tasador:B.tasador,tel:B.tel,email:B.email,cal:B.cal||0,piezas:r.ids.map(function(i){return PID[i].n}),hCh:r.hCh,hPint:r.hPint,moC:r.moC,moP:r.moP,mat:r.mat,rec:r.rec,bi:r.bi,tot:r.tot};
   var ex=B.savedId&&C.saved.filter(function(x){return x.id===B.savedId})[0];
   if(ex){for(var k in rec)ex[k]=rec[k];rec=ex}else{rec.id=Math.random().toString(36).slice(2,9);rec.num=assignNum();rec.estado="pend";C.saved.push(rec);B.savedId=rec.id}
   if(estado)rec.estado=estado;if(flag)rec.plan=flag;save();return rec;
@@ -487,6 +490,25 @@ function closeOv(){var o=$("#ov");if(o)o.remove()}
 function ovOpen(html){closeOv();var d=document.createElement("div");d.id="ov";d.className="ov";d.dataset.a="ovclose";d.innerHTML='<div class="modal" role="dialog" aria-modal="true">'+html+'</div>';document.body.appendChild(d)}
 var QKEY="agp-entrada-planificador";
 function addDays(n){var d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+function msgPres(rec,r){
+  var veh=(B.marca+" "+B.modelo).trim();
+  return "Hola"+(B.cliente?" "+B.cliente:"")+", le enviamos el presupuesto nº "+rec.num+" de "+C.cfg.taller+(veh?" para su "+veh:"")+(B.mat?" ("+B.mat+")":"")+". Importe total: "+eur(r.tot)+" (IVA incluido). Validez: 15 días. Quedamos a su disposición."}
+function sendMsg(kind){
+  var r=calc();if(!r.ids.length&&!r.rec){toast("Marca algún daño antes de enviar");return}
+  if(kind==="wa"){
+    var d=(B.tel||"").replace(/\D/g,"");if(d.indexOf("00")===0)d=d.slice(2);if(d.length===9)d="34"+d;
+    if(d.length<9){toast("Escribe el teléfono del cliente");var f=$("#f-tel");if(f)f.focus();return}
+    var rec=saveCurrent();if(!rec)return;refreshSum();
+    window.open("https://wa.me/"+d+"?text="+encodeURIComponent(msgPres(rec,r)),"_blank");
+    toast("WhatsApp abierto. Adjunta el PDF del presupuesto "+rec.num+" en el chat");
+  }else{
+    var em=(B.email||"").trim();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){toast("Escribe un email válido del cliente");var g=$("#f-email");if(g)g.focus();return}
+    var rc=saveCurrent();if(!rc)return;refreshSum();
+    location.href="mailto:"+em+"?subject="+encodeURIComponent("Presupuesto "+rc.num+" · "+C.cfg.taller)+"&body="+encodeURIComponent(msgPres(rc,r)+"\n\nAdjunto el PDF del presupuesto.");
+    toast("Correo preparado. Adjunta el PDF del presupuesto "+rc.num);
+  }
+}
 function openPlan(){
   var r=calc();if(!r.ids.length&&!r.rec){toast("Marca algún daño antes de continuar");return}
   if(B.sent){ovOpen('<button class="x" data-a="planx" aria-label="Cerrar">×</button><h3>Ya está en el planificador</h3><p class="sub">Este presupuesto ya se envió. Ábrelo para verlo en la columna que elegiste.</p><div class="row" style="margin-top:16px"><a class="btn pri" href="planificador-demo.html">Abrir el planificador</a><button class="btn" data-a="planx">Cerrar</button></div>');return}
@@ -496,20 +518,30 @@ function openPlan(){
    '<div class="field"><label for="p-mat">Matrícula</label><div class="plate"><span class="eu"><i></i><b>E</b></span><input type="text" id="p-mat" maxlength="10" autocapitalize="characters" value="'+esc(B.mat)+'" placeholder="0000 ABC"></div></div>'+
    '<div class="field"><label for="p-car">Vehículo</label><input type="text" id="p-car" value="'+esc((B.marca+" "+B.modelo).trim())+'" placeholder="Marca y modelo"></div>'+
    '<div class="field"><label for="p-ins">Seguro / tipo de cliente</label><input type="text" id="p-ins" value="Particular"></div>'+
+   '<div class="field"><label for="p-cita">Cita de recepción (opcional)</label><input type="datetime-local" id="p-cita"></div>'+
    '<div class="field"><label for="p-sal">Fecha de salida prevista</label><input type="date" id="p-sal" value="'+addDays(dias)+'"></div>'+
    '<div class="field"><label for="p-pr">Prioridad</label><select id="p-pr"><option>NORMAL</option><option>MEDIO</option><option>FUERTE</option><option>RÁPIDO</option></select></div>'+
    '<div class="field"><label for="p-st">Entra en la columna</label><select id="p-st"><option value="rec">Recepcionado</option><option value="val">Valoración</option><option value="apr">Pendiente de aprobación</option><option value="pie"'+(r.rec>0?' selected':'')+'>Pendiente de piezas</option><option value="esp">En espera chapa</option></select></div></div>'+
    '<p class="note">Viajan al planificador: '+hh(r.hCh)+' de chapa, '+hh(r.hPint)+' de pintura y un importe de '+eur(r.bi)+' (base imponible).</p><div class="err" id="perr" style="color:var(--red);min-height:18px"></div>'+
    '<div class="row" style="margin-top:6px"><button class="btn acc" data-a="planok">Enviar al planificador</button><button class="btn" data-a="planx">Cancelar</button></div>');
 }
+function pushQ(e){var q=[];try{q=JSON.parse(localStorage.getItem(QKEY))||[]}catch(x){}q.push(e);try{localStorage.setItem(QKEY,JSON.stringify(q));return true}catch(x){return false}}
+function fmtCita(v){if(!v)return"";var p=v.split("T"),d=p[0].split("-");return d[2]+"/"+d[1]+"/"+d[0]+(p[1]?" "+p[1]:"")}
+function citaDe(rec,v){
+  rec.cita=v;
+  if(v){var h=(rec.hCh||0)+(rec.hPint||0),sal=new Date(v.slice(0,10)+"T00:00:00");sal.setDate(sal.getDate()+Math.max(2,Math.ceil(h/8)+3));
+    var s=sal.getFullYear()+"-"+("0"+(sal.getMonth()+1)).slice(-2)+"-"+("0"+sal.getDate()).slice(-2);
+    pushQ({uid:rec.id,pl:rec.matricula||"",car:((rec.marca||"")+" "+(rec.modelo||"")).trim()||"Vehículo",ins:"Particular",sal:s,pr:"NORMAL",st:"rec",c:rec.hCh,p:rec.hPint,m:0,eur:rec.bi,cliente:rec.cliente,tel:rec.tel||"",email:rec.email||"",cita:v,tas:rec.tasador});
+    rec.plan="Planificador"}
+  save()}
 function sendPlan(){
   var mat=$("#p-mat").value.trim().toUpperCase(),car=$("#p-car").value.trim(),sal=$("#p-sal").value;
   if(!car){$("#perr").textContent="Indica el vehículo.";return}
   if(!sal){$("#perr").textContent="Indica la fecha de salida prevista.";return}
   var r=calc(),rec=saveCurrent("Planificador","acep");if(!rec)return;
   var q=[];try{q=JSON.parse(localStorage.getItem(QKEY))||[]}catch(e){}
-  var uid=rec.id,st=$("#p-st").value;
-  q.push({uid:uid,pl:mat,car:car,ins:$("#p-ins").value.trim()||"Particular",sal:sal,pr:$("#p-pr").value,st:st,c:r.hCh,p:r.hPint,m:0,eur:r.bi,cliente:B.cliente,obs:B.obs,piezas:r.ids.map(function(i){return PID[i].n}),tas:B.tasador});
+  var uid=rec.id,st=$("#p-st").value,cita=$("#p-cita").value;rec.cita=cita;
+  q.push({uid:uid,pl:mat,car:car,ins:$("#p-ins").value.trim()||"Particular",sal:sal,pr:$("#p-pr").value,st:st,c:r.hCh,p:r.hPint,m:0,eur:r.bi,cliente:B.cliente,obs:B.obs,piezas:r.ids.map(function(i){return PID[i].n}),tas:B.tasador,tel:B.tel,email:B.email,cita:cita});save();
   try{localStorage.setItem(QKEY,JSON.stringify(q))}catch(e){ $("#perr").textContent="No se pudo guardar el envío en este navegador.";return}
   B.sent=uid;
   var names={rec:"Recepcionado",val:"Valoración",apr:"Pendiente de aprobación",pie:"Pendiente de piezas",esp:"En espera chapa"};
@@ -529,7 +561,7 @@ function vHist(){
   var base=sMO+sMat+sRec;
   var L=hf==="all"?A:A.filter(function(x){return (x.estado||"pend")===hf});
   var chips=[["pend","Pendientes ("+cnt.pend+")"],["acep","Aceptados ("+cnt.acep+")"],["rech","Rechazados ("+cnt.rech+")"],["all","Todos ("+n+")"]].map(function(c){return '<button data-hf="'+c[0]+'" aria-pressed="'+(hf===c[0])+'">'+c[1]+'</button>'}).join("");
-  var rows=L.map(function(x){var e=x.estado||"pend";return '<tr><td><b>'+esc(x.num)+'</b><div class="mute" style="font-size:12px">'+esc(x.fecha)+'</div></td><td><b>'+esc(x.cliente||"—")+'</b><div class="mute" style="font-size:12px">'+esc([x.marca,x.modelo,x.matricula].filter(Boolean).join(" · "))+'</div></td><td class="r num">'+hh(x.hCh+x.hPint)+'</td><td class="r num"><b>'+eur(x.tot)+'</b>'+(x.plan?'<div><span class="tag ok">En planificador</span></div>':'')+'</td><td><select class="est" data-est="'+x.id+'" aria-label="Estado del presupuesto '+esc(x.num)+'">'+["pend","acep","rech"].map(function(k){return '<option value="'+k+'"'+(e===k?' selected':'')+'>'+EST[k][0]+'</option>'}).join("")+'</select></td><td class="r"><button class="btn sm danger" data-del="'+x.id+'">Borrar</button></td></tr>'}).join("");
+  var rows=L.map(function(x){var e=x.estado||"pend";return '<tr><td><b>'+esc(x.num)+'</b><div class="mute" style="font-size:12px">'+esc(x.fecha)+'</div></td><td><b>'+esc(x.cliente||"—")+'</b><div class="mute" style="font-size:12px">'+esc([x.marca,x.modelo,x.matricula,x.tel].filter(Boolean).join(" · "))+'</div></td><td class="r num">'+hh(x.hCh+x.hPint)+'</td><td class="r num"><b>'+eur(x.tot)+'</b>'+(x.plan?'<div><span class="tag ok">En planificador</span></div>':'')+'</td><td><select class="est" data-est="'+x.id+'" aria-label="Estado del presupuesto '+esc(x.num)+'">'+["pend","acep","rech"].map(function(k){return '<option value="'+k+'"'+(e===k?' selected':'')+'>'+EST[k][0]+'</option>'}).join("")+'</select></td><td>'+(e==="acep"?'<input type="datetime-local" class="est" data-cita="'+x.id+'" value="'+esc(x.cita||"")+'" aria-label="Cita de recepción '+esc(x.num)+'">'+(x.cita&&x.plan?'<div class="mute" style="font-size:11px;margin-top:3px">En planificador</div>':''):'<span class="mute">—</span>')+'</td><td class="r"><button class="btn sm danger" data-del="'+x.id+'">Borrar</button></td></tr>'}).join("");
   var empty=hf==="pend"?'Bandeja limpia: no tienes presupuestos pendientes.':'No hay presupuestos en este estado.';
   return '<div class="row" style="justify-content:space-between"><div><h2>Presupuestos</h2><p class="sub">Cada presupuesto tiene su número y su estado. Márcalos como aceptados o rechazados para vaciar la bandeja de pendientes. Se guardan en este navegador.</p></div><button class="btn" data-a="csv">Descargar CSV</button></div>'+
    '<div class="kpis"><div class="kpi"><span>Presupuestos hechos</span><b>'+n+'</b></div><div class="kpi"><span>Pendientes</span><b>'+cnt.pend+'</b></div><div class="kpi"><span>Aceptados</span><b>'+cnt.acep+'</b></div><div class="kpi"><span>Rechazados</span><b>'+cnt.rech+'</b></div></div>'+
@@ -537,7 +569,7 @@ function vHist(){
    '<p class="mute" style="font-size:12px;margin:8px 0 0">Tasa de aceptación = aceptados ÷ (aceptados + rechazados); los pendientes no cuentan hasta que se decidan.</p>'+
    (base>0?'<div class="card" style="margin:16px 0 0"><div class="sec-h">Reparto medio de lo presupuestado</div><div class="row" style="gap:24px"><span>Mano de obra <b>'+nf(sMO/base*100,1)+' %</b> <span class="mute">(40)</span></span><span>Material pintura <b>'+nf(sMat/base*100,1)+' %</b> <span class="mute">(15)</span></span><span>Recambios <b>'+nf(sRec/base*100,1)+' %</b> <span class="mute">(45)</span></span><span>Horas medias <b>'+hh((sHC+sHP)/n)+'</b></span></div></div>':'')+
    '<div class="hfs" role="group" aria-label="Filtrar por estado">'+chips+'</div>'+
-   '<div class="card">'+(L.length?'<div class="tblw"><table class="tbl"><thead><tr><th>Nº</th><th>Cliente</th><th class="r">Horas</th><th class="r">Total</th><th>Estado</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<p class="sub" style="text-align:center;margin:18px 0">'+empty+'</p>')+'</div>';
+   '<div class="card">'+(L.length?'<div class="tblw"><table class="tbl"><thead><tr><th>Nº</th><th>Cliente</th><th class="r">Horas</th><th class="r">Total</th><th>Estado</th><th>Cita de recepción</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<p class="sub" style="text-align:center;margin:18px 0">'+empty+'</p>')+'</div>';
 }
 
 /* ───────── Ajustes ───────── */
@@ -549,13 +581,14 @@ function vCfg(){
   return '<div class="row" style="justify-content:space-between"><div><h2>Ajustes del taller</h2><p class="sub">Todo lo que parametriza el presupuesto. Se guarda en este navegador.</p></div><button class="btn danger" data-a="reset">Restaurar valores</button></div>'+
    '<div class="grid" style="margin-top:16px"><div style="display:grid;gap:20px"><div class="card"><div class="sec-h">Taller y precios</div><div class="cols2">'+
    '<div class="field" style="grid-column:1/-1"><label for="c-taller">Nombre del taller (cabecera del presupuesto)</label><input type="text" id="c-taller" data-c="taller" value="'+esc(c.taller)+'"></div>'+
-   cf("Precio hora (€)","precioHora",c.precioHora)+cf("Material de pintura (€ por hora de pintura)","matH",c.matH)+cf("IVA (%)","iva",c.iva)+
+   cf("Precio hora de chapa (€)","precioHora",c.precioHora)+cf("Material de pintura (€ por hora de pintura)","matH",c.matH)+cf("IVA (%)","iva",c.iva)+
    '<div class="field" style="grid-column:1/-1"><label for="c-tas">Tasadores (separados por comas)</label><input type="text" id="c-tas" data-c="tasadores" value="'+esc(c.tasadores)+'" placeholder="Nombre 1, Nombre 2"></div></div>'+
    '<p class="note">El método recomienda facturar unos '+REF.matH+' € de material de pintura por hora de pintura y unos '+REF.recH+' € de recambios por hora de chapa.</p></div>'+
+   '<div class="card"><div class="sec-h">Precio de venta hora de pintura por calidad</div><p class="sub" style="margin-bottom:8px">Precio de la hora de mano de obra de pintura según la calidad elegida en el presupuesto (sin IVA).</p><div class="tblw"><table class="tbl"><thead><tr><th>Calidad</th><th class="r">€ / hora</th></tr></thead><tbody>'+NCAL.map(function(n,i){return '<tr><td>'+n+'</td><td class="r"><input type="number" step="0.5" min="0" data-calp="'+i+'" value="'+c.cal[i]+'" aria-label="Precio hora de pintura '+n+'"></td></tr>'}).join("")+'</tbody></table></div></div>'+
    '<div class="card"><div class="sec-h">Coeficiente por varias piezas</div><p class="sub" style="margin-bottom:8px">Se multiplica por las horas de pintura según cuántas piezas se pintan a la vez y el tamaño del vehículo.</p><div class="tblw"><table class="tbl"><thead><tr><th>Criterio</th><th class="r">Pequeño</th><th class="r">Mediano</th><th class="r">Grande</th></tr></thead><tbody>'+cr+'</tbody></table></div></div>'+
    '<div class="card"><div class="sec-h">Valoración por decímetros cuadrados · horas por decímetro</div><p class="sub" style="margin-bottom:8px">Sirve para cualquier pieza: las horas salen de los decímetros que indiques en cada una.</p><div class="tblw"><table class="tbl"><thead><tr><th>Tipo de daño</th><th class="r">Horas</th></tr></thead><tbody><tr><td>Daño superficial · 1 dm²</td><td class="r"><input type="number" step="0.005" min="0" data-cza="1" value="'+c.czA+'" aria-label="Horas por decímetro cuadrado superficial"></td></tr><tr><td>Daño lineal · 1 dm lineal</td><td class="r"><input type="number" step="0.005" min="0" data-czl="1" value="'+c.czL+'" aria-label="Horas por decímetro lineal"></td></tr></tbody></table></div></div></div>'+
    '<div class="card"><div class="sec-h">Valoración por nivel de daños · horas de pintura por nivel de daño</div><div class="tblw"><table class="tbl"><thead><tr><th>Pieza</th>'+NIV.map(function(n){return '<th class="r">'+n[1].replace("Daño ","")+'</th>'}).join("")+'</tr></thead><tbody>'+ces+'</tbody></table></div><p class="note">Valores de partida orientativos, calculados a partir de las horas por pieza. Ajústalos a los tiempos de tu taller o de tu sistema de valoración.</p></div>'+
-   '<div class="card"><div class="sec-h">Horas de pintura por pieza (estimación rápida)</div><div class="tblw"><table class="tbl"><thead><tr><th>Pieza</th><th class="r">Horas</th></tr></thead><tbody>'+hr+'</tbody></table></div><p class="note">Valores de partida; ajústalos a los tiempos de tu taller o a los de tu sistema de peritación.</p></div></div>';
+   '<div class="card"><div class="sec-h">Horas de pintura por pieza (baremoAGP)</div><div class="tblw"><table class="tbl"><thead><tr><th>Pieza</th><th class="r">Horas</th></tr></thead><tbody>'+hr+'</tbody></table></div><p class="note">Valores de partida; ajústalos a los tiempos de tu taller o a los de tu sistema de peritación.</p></div></div>';
 }
 function cf(l,k,v){return '<div class="field"><label for="c-'+k+'">'+l+'</label><input type="number" id="c-'+k+'" inputmode="decimal" step="0.1" min="0" data-c="'+k+'" value="'+v+'"></div>'}
 
@@ -579,11 +612,12 @@ document.addEventListener("click",function(ev){
   if(a==="all"){PIECES.forEach(function(p){if(p.g==="b"&&!B.sel[p.id])B.sel[p.id]={ch:"",niv:"med",tipo:"sup",dm:""}});rerender()}
   else if(a==="clear"){B.sel={};rerender()}
   else if(a==="addrec"){B.recs.push({d:"",imp:""});rerender()}
-  else if(a==="new"){B={sel:{},size:B.size,coefMan:"",dto:0,recs:[],cliente:"",marca:"",modelo:"",mat:"",tasador:B.tasador,obs:"",savedId:"",sent:""};rerender();toast("Presupuesto nuevo")}
+  else if(a==="new"){B={sel:{},size:B.size,coefMan:"",dto:0,recs:[],cliente:"",marca:"",modelo:"",mat:"",tasador:B.tasador,obs:"",savedId:"",sent:"",tel:"",email:"",cal:B.cal||0};rerender();toast("Presupuesto nuevo")}
   else if(a==="print"){if(r0().ids.length||r0().rec){var pv=saveCurrent();if(pv)refreshSum()}window.print()}
   else if(a==="save"){var sv=saveCurrent();if(!sv)return;refreshSum();toast("Presupuesto "+sv.num+" guardado")}
+  else if(a==="wa"||a==="mail"){sendMsg(a)}
   else if(a==="toplan"){openPlan()}
-  else if(a==="rech"){var rr=saveCurrent(null,"rech");if(!rr)return;B={sel:{},size:B.size,coefMan:"",dto:0,recs:[],cliente:"",marca:"",modelo:"",mat:"",tasador:B.tasador,obs:"",savedId:"",sent:""};rerender();toast("Presupuesto "+rr.num+" marcado como rechazado")}
+  else if(a==="rech"){var rr=saveCurrent(null,"rech");if(!rr)return;B={sel:{},size:B.size,coefMan:"",dto:0,recs:[],cliente:"",marca:"",modelo:"",mat:"",tasador:B.tasador,obs:"",savedId:"",sent:"",tel:"",email:"",cal:B.cal||0};rerender();toast("Presupuesto "+rr.num+" marcado como rechazado")}
   else if(el.dataset.hf){hf=el.dataset.hf;render()}
   else if(a==="planok"){sendPlan()}
   else if(a==="planx"||a==="ovclose"&&ev.target===el){closeOv()}
@@ -608,6 +642,8 @@ document.addEventListener("input",function(ev){
   else if(e.dataset.niv){B.sel[e.dataset.niv].niv=e.value;rerender()}
   else if(e.dataset.tipo){B.sel[e.dataset.tipo].tipo=e.value;rerender()}
   else if(e.dataset.dm!==undefined){B.sel[e.dataset.dm].dm=e.value;var pcx=document.querySelector('.pc[data-id="'+e.dataset.dm+'"]'),sm=pcx&&pcx.querySelector("small");if(sm)sm.textContent="Pintura "+hh(pieceH(e.dataset.dm,1))+" · "+pieceTag(e.dataset.dm);document.querySelectorAll('[data-dm="'+e.dataset.dm+'"]').forEach(function(o){if(o!==e)o.value=e.value});refreshSum()}
+  else if(e.dataset.calq){B.cal=+e.value;rerender()}
+  else if(e.dataset.calp){C.cfg.cal[+e.dataset.calp]=num(e.value);save()}
   else if(e.dataset.bar){C.cfg.baremo=e.value;save();rerender()}
   else if(e.dataset.ces){var q=e.dataset.ces.split("|");C.cfg.ces[q[0]][+q[1]]=num(e.value);save()}
   else if(e.dataset.cza){C.cfg.czA=num(e.value);save()}
@@ -615,7 +651,9 @@ document.addEventListener("input",function(ev){
   else if(e.dataset.ch2){C.cfg.horas[e.dataset.ch2]=num(e.value);save()}
   else if(e.dataset.cf){var p=e.dataset.cf.split("|");C.cfg.coef[p[0]][+p[1]]=Math.min(1,Math.max(0.3,num(e.value)||1));save()}
 });
-document.addEventListener("change",function(ev){if(ev.target.dataset&&ev.target.dataset.f==="coefMan")rerender()});
+document.addEventListener("change",function(ev){var e=ev.target;if(!e.dataset)return;
+  if(e.dataset.f==="coefMan")rerender();
+  else if(e.dataset.cita){var rc=C.saved.filter(function(x){return x.id===e.dataset.cita})[0];if(rc){citaDe(rc,e.value);rerender();toast(e.value?"Cita "+fmtCita(e.value)+" guardada y enviada al planificador":"Cita eliminada")}}});
 render();
 </script>
 </body>

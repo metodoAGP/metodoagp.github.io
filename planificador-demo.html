@@ -312,7 +312,7 @@ table.heat{min-width:640px}
       '<div class="ins">Seguro: '+esc(c.ins)+'</div>'+
       '<div class="ics">'+icons(c.ic)+'</div>'+
       '<div class="hrs">'+hrs.join(' · ')+' <b>'+fe(c.eur)+'</b></div>'+
-      '<div class="foot"><span class="who">Recepción '+c.rec+' · Asesor '+c.as+' · Gestor '+c.ge+'</span><span class="due '+d.c+'">'+d.t+'</span><span class="sal">Sal. '+ddmm(c.sal)+'</span></div>'+
+      '<div class="foot"><span class="who">Recepción '+c.rec+' · Asesor '+c.as+' · Gestor '+c.ge+'</span><span class="due '+d.c+'">'+d.t+'</span><span class="sal">Sal. '+ddmm(c.sal)+'</span>'+(c.cita?'<span class="sal" title="Cita de recepción">Cita '+ddmm(c.cita.slice(0,10))+' '+esc(c.cita.slice(11,16))+'</span>':'')+'</div>'+
     '</article>';
   }
 
@@ -377,7 +377,7 @@ table.heat{min-width:640px}
     openDlg('<h3>OR '+esc(c.id)+'</h3>'+
       '<dl class="kv"><dt>Matrícula</dt><dd>'+esc(c.pl)+'</dd><dt>Vehículo</dt><dd>'+esc(c.car)+' · '+esc(c.col)+'</dd><dt>Seguro</dt><dd>'+esc(c.ins)+'</dd>'+
       '<dt>Horas</dt><dd>C '+fh(c.c)+' · M '+fh(c.m)+' · P '+fh(c.p)+'</dd><dt>Importe</dt><dd>'+fe(c.eur)+'</dd>'+
-      '<dt>Salida</dt><dd>'+ddmm(c.sal)+' · '+d.t+'</dd><dt>Prioridad</dt><dd>'+esc(c.pr)+'</dd><dt>En esta fase</dt><dd>'+dIn(c)+(dIn(c)===1?' día':' días')+'</dd></dl>'+
+      (c.cita?'<dt>Cita de recepción</dt><dd>'+ddmm(c.cita.slice(0,10))+' · '+esc(c.cita.slice(11,16))+'</dd>':'')+(c.cliente?'<dt>Cliente</dt><dd>'+esc(c.cliente)+(c.tel?' · '+esc(c.tel):'')+'</dd>':'')+'<dt>Salida</dt><dd>'+ddmm(c.sal)+' · '+d.t+'</dd><dt>Prioridad</dt><dd>'+esc(c.pr)+'</dd><dt>En esta fase</dt><dd>'+dIn(c)+(dIn(c)===1?' día':' días')+'</dd></dl>'+
       '<label class="f">Mover a<select id="mv">'+COLS.map(function(k){return '<option value="'+k[0]+'"'+(k[0]===c.st?' selected':'')+'>'+k[1]+'</option>'}).join('')+'</select></label>'+
       '<div class="row"><button class="btn danger" type="button" id="del">Eliminar</button><button class="btn" type="button" data-close>Cerrar</button><button class="btn primary" type="button" id="mvOk" data-id="'+esc(c.id)+'">Mover</button></div>');
   }
@@ -661,10 +661,12 @@ table.heat{min-width:640px}
     if(!q.length)return;
     var n=0;
     q.forEach(function(x){
-      if(st.cards.some(function(c){return c.src===x.uid}))return;
+      var ex=st.cards.filter(function(c){return c.src===x.uid})[0];
+      if(ex){if(x.cita){ex.cita=x.cita;ex.ent=x.cita.slice(0,10);if(x.tel)ex.tel=x.tel;if(x.email)ex.email=x.email;n++}return}
       var max=0;st.cards.forEach(function(c){var k=parseInt(c.id,10);if(k>max)max=k});
       st.cards.push({id:(max+1)+'-2026',pr:x.pr||'NORMAL',pl:(x.pl||'SIN MATRÍCULA').toUpperCase(),car:x.car||'Vehículo',col:'',ins:x.ins||'Particular',
-        c:num(x.c),m:num(x.m),p:num(x.p),eur:num(x.eur),st:x.st||'rec',tc:'white',rec:1,as:1,ge:1,sal:x.sal||iso(7),ct:'0/0',cm:0,ic:['car'],ent:iso(0),mv:iso(0),prov:'',src:x.uid,origen:'Tasador rápido',cliente:x.cliente||'',obs:x.obs||''});
+        c:num(x.c),m:num(x.m),p:num(x.p),eur:num(x.eur),st:x.st||'rec',tc:'white',rec:1,as:1,ge:1,sal:x.sal||iso(7),ct:'0/0',cm:0,ic:['car'],ent:iso(0),mv:iso(0),prov:'',src:x.uid,origen:'Tasador rápido',cliente:x.cliente||'',obs:x.obs||'',tel:x.tel||'',email:x.email||'',cita:x.cita||''});
+      if(x.cita)st.cards[st.cards.length-1].ent=x.cita.slice(0,10);
       n++;
     });
     try{localStorage.removeItem(QK)}catch(e){}
