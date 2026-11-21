@@ -220,6 +220,7 @@ function blank(){return {v:1,emps:[],marks:[],inc:[],jobs:[],ui:{scope:"directa"
 function load(){try{var r=localStorage.getItem(KEY);if(r){var o=JSON.parse(r);if(o&&o.emps){o.jobs=o.jobs||[];return o}}}catch(e){if(mem)return mem}return blank()}
 function save(){mem=S;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}IDX=null}
 S=load();
+window.addEventListener('storage',function(e){if(e.key===KEY){S=load();IDX=null;if(typeof render==='function'&&!document.querySelector('#modal>*'))render()}});
 var SEC={chapa:"Chapa",pintura:"Pintura",indirecto:"Indirecto"};
 
 /* ───────── Coches del planificador e imputación de tiempo ───────── */
