@@ -205,12 +205,13 @@ input[type=text],input[type=password],input[type=number],input[type=date],input[
     <button class="tab" role="tab" data-v="team" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-4 3.2-6 6.5-6s5.9 2 6.5 6M16 5a3.5 3.5 0 010 7M18 14c2.2.5 3.5 2.4 3.9 5"/></svg>Equipo</button>
   </nav>
 </div></header>
-<div class="legal" role="note"><div class="wrap"><b>Herramienta de gestión, no registro de jornada oficial.</b> Estos fichajes se guardan en este navegador y pueden modificarse, por lo que no sustituyen al registro horario legal (art. 34.9 del Estatuto de los Trabajadores). Úsala para medir tiempo comprado y absentismo.</div></div>
+<div class="legal" role="note"><div class="wrap"><b>Herramienta de gestión, no registro de jornada oficial.</b> Estos fichajes se guardan en la nube de tu taller y pueden modificarse, por lo que no sustituyen al registro horario legal (art. 34.9 del Estatuto de los Trabajadores). Úsala para medir tiempo comprado y absentismo.</div></div>
 
 <main class="wrap" id="app"></main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div id="modal"></div>
 
+<script src="nube.js"></script>
 <script>
 "use strict";
 /* ───────── Datos (guardados en este navegador) ───────── */
@@ -218,7 +219,8 @@ var KEY="agp-fichajes-v1", S, mem=null;
 function uid(){return Math.random().toString(36).slice(2,9)}
 function blank(){return {v:1,emps:[],marks:[],inc:[],jobs:[],ui:{scope:"directa",per:"mes"}}}
 function load(){try{var r=localStorage.getItem(KEY);if(r){var o=JSON.parse(r);if(o&&o.emps){o.jobs=o.jobs||[];return o}}}catch(e){if(mem)return mem}return blank()}
-function save(){mem=S;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}IDX=null}
+function tokGen(){if(window.NUBE&&NUBE.tok)return NUBE.tok();var a='abcdefghjkmnpqrstuvwxyz23456789',s='';for(var i=0;i<20;i++)s+=a[Math.floor(Math.random()*a.length)];return s}
+function save(){S.emps.forEach(function(e){if(!e.tok)e.tok=tokGen()});mem=S;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}IDX=null;if(window.NUBE&&NUBE.touch)NUBE.touch()}
 S=load();
 window.addEventListener('storage',function(e){if(e.key===KEY){S=load();IDX=null;if(typeof render==='function'&&!document.querySelector('#modal>*'))render()}});
 var SEC={chapa:"Chapa",pintura:"Pintura",indirecto:"Indirecto"};
@@ -530,6 +532,7 @@ function empForm(id){
    '<div class="field"><label for="es">Sección</label><select id="es">'+Object.keys(SEC).map(function(k){return '<option value="'+k+'"'+(e.sec===k?' selected':'')+'>'+SEC[k]+(k==="indirecto"?" (recepción, taller, administración…)":"")+'</option>'}).join("")+'</select></div>'+
    '<div class="row" style="flex-wrap:nowrap;gap:12px"><div class="field" style="flex:1"><label for="eh">Horas por día</label><input type="number" id="eh" min="1" max="12" step="0.25" value="'+e.h+'"></div><div class="field" style="flex:1"><label for="ep">PIN (opcional)</label><input type="password" id="ep" inputmode="numeric" maxlength="6" value="'+esc(e.pin||"")+'" placeholder="4 cifras"></div></div>'+
    '<div class="field"><label>Días de trabajo</label><div class="seg" id="edays" style="width:fit-content">'+[1,2,3,4,5,6,0].map(function(d){return '<button type="button" data-wd="'+d+'" aria-pressed="'+(e.days.indexOf(d)>=0)+'">'+DOW[(d+6)%7]+'</button>'}).join("")+'</div></div>'+
+   (id?'<div class="field"><label>Acceso del operario en su móvil</label><div class="mute" style="font-size:13px;margin-bottom:8px">Enlace personal: cada operario solo ve lo suyo. Envíaselo por WhatsApp y que lo abra en su móvil. Código: <b class="num">'+esc(e.tok||'')+'</b></div><button type="button" class="btn" data-a="copylink" data-id="'+id+'">Copiar enlace personal</button></div>':'')+
    '<div class="err" id="eerr"></div><button class="bigbtn in" style="font-size:22px;padding:16px;margin-top:6px" data-a="saveemp" data-id="'+(id||"")+'">Guardar</button>'+
    (id?'<div class="row" style="margin-top:12px;justify-content:space-between"><button class="btn danger" data-a="delemp" data-id="'+id+'">Eliminar</button>'+(S.emps.filter(function(x){return x.id===id})[0].to?'<button class="btn" data-a="react" data-id="'+id+'">Reactivar</button>':'<button class="btn" data-a="baja" data-id="'+id+'">Dar de baja definitiva</button>')+'</div>':''));
   document.querySelectorAll("#edays button").forEach(function(b){b.onclick=function(){b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")!=="true")}});
@@ -602,6 +605,10 @@ document.addEventListener("click",function(ev){
   else if(a==="addmark"){var tm=$("#mh").value;if(!tm)return;var p=tm.split(":"),dd=pd(d);dd.setHours(+p[0],+p[1],0,0);
     S.marks.push({id:uid(),emp:id,ts:dd.getTime(),t:$("#mt").value,manual:true});save();render();empDayModal(id,d)}
   else if(a==="delmark"){S.marks=S.marks.filter(function(x){return x.id!==el.dataset.i});save();render();empDayModal(id,d)}
+  else if(a==="copylink"){var ee=S.emps.filter(function(q){return q.id===id})[0];if(!ee)return;save();
+    var url=location.href.replace(/[^\/]*([?#].*)?$/,"")+"operario.html?c="+ee.tok;
+    var ok=function(){toast("Enlace copiado: pégalo en WhatsApp")};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(ok,function(){window.prompt("Copia este enlace:",url)});else window.prompt("Copia este enlace:",url)}
   else if(a==="addemp")empForm("");
   else if(a==="editemp")empForm(id);
   else if(a==="saveemp"){
@@ -630,6 +637,13 @@ document.addEventListener("change",function(ev){
 });
 function dl(name,txt,type){var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:type}));a.download=name;document.body.appendChild(a);a.click();a.remove()}
 render();
+if(window.NUBE){ /* base de datos compartida del taller */
+  NUBE.bind('fich',{get:function(){return S},
+    put:function(o){S=o;mem=S;IDX=null;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(!document.querySelector('#modal>*'))render()},
+    persist:function(){mem=S;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},
+    refresh:function(){}});
+  NUBE.start();
+}
 </script>
 </body>
 </html>
