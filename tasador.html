@@ -51,12 +51,15 @@ h2{margin:0;font:700 26px/1.1 var(--display);letter-spacing:.02em;text-transform
 .btn.acc{background:var(--acc);color:#fff;border-color:var(--acc)}
 .btn.sm{padding:5px 10px;font-size:13px;border-radius:8px}
 .btn.danger{color:var(--red)}
+.btn.az{color:#1f5f8b;font-weight:700}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn.az{color:#8cc4f0}}
+:root[data-theme="dark"] .btn.az{color:#8cc4f0}
 .seg{display:inline-flex;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px;flex-wrap:wrap}
 .seg button{border:0;background:none;padding:6px 12px;border-radius:8px;font-weight:600;font-size:14px;color:var(--mute)}
 .seg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .field{display:grid;gap:5px;min-width:0}
 .field label{font-size:13px;font-weight:600;color:var(--mute)}
-input[type=text],input[type=number],select,textarea{width:100%;border:1.5px solid var(--line);background:var(--panel);border-radius:10px;padding:9px 11px;font-size:16px;min-width:0}
+input[type=text],input[type=number],input[type=tel],input[type=email],input[type=date],input[type=datetime-local],select,textarea{width:100%;border:1.5px solid var(--line);background:var(--panel);border-radius:10px;padding:9px 11px;font-size:16px;min-width:0}
 textarea{resize:vertical;min-height:70px}
 
 .grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:start}
@@ -106,8 +109,10 @@ svg.car{width:100%;height:auto;display:block;margin:0 auto}
 .hfs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
 .hfs button{border:1.5px solid var(--line);background:var(--panel);color:inherit;border-radius:999px;padding:7px 14px;font:600 13px Inter,sans-serif;cursor:pointer}
 .hfs button[aria-pressed="true"]{background:var(--ink,#1f2124);color:#fff;border-color:transparent}
-.est{width:auto;padding:5px 8px;font-size:13px}
-input.est[type=datetime-local]{min-width:200px}
+.est{width:auto;padding:5px 10px;font-size:13px;height:38px}
+input.est[type=datetime-local]{min-width:190px;text-align:center;font-family:inherit;color:inherit;border-radius:10px}
+input.est[type=datetime-local]::-webkit-datetime-edit{padding:0}
+input.est[type=datetime-local]::-webkit-date-and-time-value{text-align:center}
 .mapctl{overflow:visible}
 .mc{display:flex;flex-direction:column;gap:3px;width:100%;pointer-events:auto}
 .mc select,.mc input{width:100%;font-size:12px;padding:2px 5px;border-radius:6px;border:1.5px solid #fff;background:#fff;color:#1f2124;height:23px;text-align:left;box-shadow:0 1px 4px rgba(0,0,0,.25)}
@@ -414,7 +419,7 @@ function sumHTML(r){
    '<div class="lines"><div class="ln"><span>Mano de obra chapa · '+hh(r.hCh)+'</span><b>'+eur(r.moC)+'</b></div><div class="ln"><span>Mano de obra pintura · '+hh(r.hPint)+'</span><b>'+eur(r.moP)+'</b></div><div class="ln"><span>Material de pintura</span><b>'+eur(r.mat)+'</b></div><div class="ln"><span>Recambios</span><b>'+eur(r.rec)+'</b></div>'+
    (r.dto?'<div class="ln"><span>Descuento '+nf(r.dtoP,1)+' %</span><b>−'+eur(r.dto)+'</b></div>':'')+
    '<div class="ln"><span>Base imponible</span><b>'+eur(r.bi)+'</b></div><div class="ln"><span>IVA '+nf(cfg.iva,0)+' %</span><b>'+eur(r.iva)+'</b></div></div>'+
-   '<div class="row" style="margin-top:14px"><button class="btn acc" data-a="save">Guardar</button><button class="btn" data-a="wa">Enviar por WhatsApp</button><button class="btn" data-a="mail">Enviar por email</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="rech">Rechazado</button><button class="btn" style="background:#2f8f5b;border-color:#2f8f5b;color:#fff" data-a="toplan">Aceptado → Planificador</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="print">Imprimir / PDF</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="new">Nuevo</button></div></div>'+
+   '<div class="row" style="margin-top:14px"><button class="btn acc" data-a="save">Guardar</button><button class="btn az" data-a="wa">Enviar por WhatsApp</button><button class="btn az" data-a="mail">Enviar por email</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="rech">Rechazado</button><button class="btn" style="background:#2f8f5b;border-color:#2f8f5b;color:#fff" data-a="toplan">Aceptado → Planificador</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="print">Imprimir / PDF</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="new">Nuevo</button></div></div>'+
    '<div class="card"><div class="sec-h">Lectura métodoAGP</div>'+(tot>0?'<div class="mx">'+
    bar("Mano de obra (chapa + pintura)",pMO,REF.mo)+bar("Material de pintura",pMat,REF.mat)+bar("Recambios",pRec,REF.rec)+'</div>'+
    (r.rec<=0?'<p class="note">Añade los recambios para ver el reparto real. Sin ellos el peso de la mano de obra sale inflado.</p>':'')+
@@ -441,8 +446,8 @@ function docHTML(r){
    '</div><div class="r"><div style="text-align:center">'+carSVG(B.sel,false)+'</div></div></div>'+
    '<div class="sect">Importes</div>'+
    (r.hCh>0?'<div class="it"><span>Mano de obra de chapa</span><span>'+nCh+' pzas</span><span>'+hh(r.hCh)+'</span><b>'+eur(r.moC)+'</b></div>':'')+
-   '<div class="it"><span>Mano de obra de pintura · '+esc(NCAL[B.cal||0])+'</span><span>'+r.ids.length+' pzas</span><span>'+hh(r.hPint)+'</span><b>'+eur(r.moP)+'</b></div>'+
-   '<div class="it"><span>Material de pintura</span><span></span><span></span><b>'+eur(r.mat)+'</b></div>'+
+   '<div class="it"><span>Mano de obra de pintura</span><span>'+r.ids.length+' pzas</span><span>'+hh(r.hPint)+'</span><b>'+eur(r.moP)+'</b></div>'+
+   '<div class="it"><span>Material de pintura · '+esc(NCAL[B.cal||0])+'</span><span></span><span></span><b>'+eur(r.mat)+'</b></div>'+
    (recs.length?'<div class="it"><span>Recambios</span><span>'+recs.length+' uds</span><span></span><b>'+eur(r.rec)+'</b></div>':'')+
    recs.map(function(x){return '<div class="it sub"><span>· '+esc(x.d||"Recambio")+'</span><span></span><span></span><b>'+eur(num(x.imp))+'</b></div>'}).join("")+
    '<div class="totals">'+(r.dto?'<div><span>Descuento '+nf(r.dtoP,1)+' %</span><span>−'+eur(r.dto)+'</span></div>':'')+'<div><span>Importe BI</span><span>'+eur(r.bi)+'</span></div><div><span>IVA '+nf(cfg.iva,0)+' %</span><span>'+eur(r.iva)+'</span></div><div class="g"><span>Total reparación</span><span>'+eur(r.tot)+'</span></div></div>'+
@@ -490,24 +495,111 @@ function closeOv(){var o=$("#ov");if(o)o.remove()}
 function ovOpen(html){closeOv();var d=document.createElement("div");d.id="ov";d.className="ov";d.dataset.a="ovclose";d.innerHTML='<div class="modal" role="dialog" aria-modal="true">'+html+'</div>';document.body.appendChild(d)}
 var QKEY="agp-entrada-planificador";
 function addDays(n){var d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+/* ───────── PDF del presupuesto (sin librerías) ───────── */
+var _mc=document.createElement("canvas").getContext("2d");
+function tw(s,sz,b){_mc.font=(b?"bold ":"")+sz+"px Helvetica, Arial, sans-serif";return _mc.measureText(s).width}
+function enc(s){return String(s).replace(/[   ]/g," ").replace(/[−]/g,"-").replace(/[–]/g,"\u0096").replace(/[—]/g,"\u0097").replace(/[’]/g,"\u0092").replace(/€/g,"\u0080").replace(/[^\u0000-ÿ]/g,"?")}
+function pesc(s){return enc(s).replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)")}
+function wrap(s,sz,w){var out=[],ln="";String(s).split(" ").forEach(function(p){var tt=ln?ln+" "+p:p;if(tw(tt,sz)>w&&ln){out.push(ln);ln=p}else ln=tt});if(ln)out.push(ln);return out}
+function planJpeg(){return new Promise(function(res){
+  var svg=document.querySelector("#doc svg.car");if(!svg){res(null);return}
+  try{var vb=svg.viewBox.baseVal,cl=svg.cloneNode(true),o=svg.querySelectorAll("*"),c=cl.querySelectorAll("*");
+    var props=["fill","stroke","stroke-width","fill-opacity","stroke-opacity","opacity","font-family","font-size","font-weight","letter-spacing","text-anchor","stroke-linejoin","stroke-linecap","paint-order","stroke-dasharray"];
+    for(var i=0;i<o.length;i++){var cs=getComputedStyle(o[i]),st="";props.forEach(function(p){st+=p+":"+cs.getPropertyValue(p)+";"});c[i].setAttribute("style",st)}
+    cl.setAttribute("xmlns","http://www.w3.org/2000/svg");cl.setAttribute("width",vb.width);cl.setAttribute("height",vb.height);cl.removeAttribute("class");cl.removeAttribute("style");
+    var url=URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(cl)],{type:"image/svg+xml;charset=utf-8"})),im=new Image();
+    im.onload=function(){var cv=document.createElement("canvas");cv.width=vb.width*2;cv.height=vb.height*2;var x=cv.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,cv.width,cv.height);x.drawImage(im,0,0,cv.width,cv.height);
+      var b64=cv.toDataURL("image/jpeg",0.92).split(",")[1],bin=atob(b64),u=new Uint8Array(bin.length);for(var k=0;k<bin.length;k++)u[k]=bin.charCodeAt(k);URL.revokeObjectURL(url);res({bytes:u,w:cv.width,h:cv.height})};
+    im.onerror=function(){URL.revokeObjectURL(url);res(null)};im.src=url}catch(e){res(null)}})}
+async function buildPdf(){
+  var r=calc(),cfg=C.cfg,jp=await planJpeg(),W=595.28,H=841.89,M=40,CW=W-2*M,ops=[];
+  var INK=[31,33,36],MUT=[110,112,117],RED=[200,60,35],BAND=[230,230,230],LN=[215,215,215];
+  function col(c){return c.map(function(v){return (v/255).toFixed(3)}).join(" ")}
+  function T(x,y,s,sz,o){o=o||{};var w=tw(s,sz,o.b);if(o.al==="r")x-=w;else if(o.al==="c")x-=w/2;ops.push("BT /F"+(o.b?2:1)+" "+sz+" Tf "+col(o.c||INK)+" rg "+x.toFixed(2)+" "+(H-y).toFixed(2)+" Td ("+pesc(s)+") Tj ET");return w}
+  function R(x,y,w,h,c){ops.push(col(c)+" rg "+x.toFixed(2)+" "+(H-y-h).toFixed(2)+" "+w.toFixed(2)+" "+h.toFixed(2)+" re f")}
+  function L(x1,x2,y,wd,c){ops.push(col(c||INK)+" RG "+(wd||0.7)+" w "+x1.toFixed(2)+" "+(H-y).toFixed(2)+" m "+x2.toFixed(2)+" "+(H-y).toFixed(2)+" l S")}
+  function RS(x,y,w,h,wd,c){ops.push(col(c||INK)+" RG "+wd+" w "+x.toFixed(2)+" "+(H-y-h).toFixed(2)+" "+w.toFixed(2)+" "+h.toFixed(2)+" re S")}
+  var cur=B.savedId&&C.saved.filter(function(x){return x.id===B.savedId})[0],nro=cur?cur.num:nextNum(),y=M+12;
+  // cabecera
+  T(M,y+8,cfg.taller,22,{b:1,c:RED});
+  T(W-M,y-2,"Fecha "+today(),9.5,{al:"r"});T(W-M,y+10,"Validez: 15 días",8.5,{al:"r",c:MUT});if(B.tasador)T(W-M,y+22,"Tasador: "+B.tasador,8.5,{al:"r",c:MUT});
+  y+=34;R(M,y,CW,22,BAND);T(W/2,y+15,"PRESUPUESTO DE REPARACIÓN",11,{b:1,al:"c"});y+=22;
+  // fila de datos
+  y+=16;var x=M;
+  [["Presupuesto nº",nro],["Cliente:",B.cliente||"—"],["Marca:",B.marca||"—"],["Modelo:",B.modelo||"—"]].forEach(function(p){var w1=T(x,y,p[0],9.5,{b:1});x+=w1+4;var w2=T(x,y,p[1],9.5);x+=w2+16});
+  if(B.mat){var pw=tw(B.mat,10.5,1)+26;RS(x,y-11,pw,16,1.2);R(x,y-11,13,16,[11,61,145]);T(x+6.5,y,"E",7,{b:1,al:"c",c:[255,255,255]});T(x+13+(pw-13)/2,y+0.5,B.mat,10.5,{b:1,al:"c"})}
+  y+=14;
+  // piezas (izq) + plano (dcha)
+  var LW=215,top=y;R(M,y,LW,18,BAND);var tit="DAÑOS Y PIEZAS"+(cfg.baremo==="ces"?" · NIVEL DE DAÑOS":cfg.baremo==="cz"?" · DECÍMETROS CUADRADOS":"");T(M+LW/2,y+12.5,tit,8,{b:1,al:"c"});y+=18;
+  y+=12;T(M+2,y,"PIEZA",7.5,{b:1,c:MUT});T(M+LW-62,y,"CHAPA",7.5,{b:1,c:MUT,al:"r"});T(M+LW-2,y,"PINTURA",7.5,{b:1,c:MUT,al:"r"});y+=4;L(M,M+LW,y,0.6,LN);
+  r.ids.forEach(function(i){var p=PID[i],hp=pieceH(i,r.coef),hc=num(B.sel[i].ch),tg=pieceTag(i),nm=p.n+(tg?" · "+tg:""),ls=wrap(nm,8.5,LW-95);
+    y+=11;ls.forEach(function(l,k){T(M+2,y+k*10,l,8.5)});T(M+LW-62,y,hc>0?hh(hc):"—",8.5,{al:"r"});T(M+LW-2,y,hh(hp),8.5,{al:"r"});y+=(ls.length-1)*10+4;L(M,M+LW,y,0.4,LN)});
+  y+=3;L(M,M+LW,y,1.1);y+=12;T(M+2,y,"Total horas",8.5,{b:1});T(M+LW-62,y,hh(r.hCh),8.5,{b:1,al:"r"});T(M+LW-2,y,hh(r.hPint),8.5,{b:1,al:"r"});var leftEnd=y;
+  var ph=0;
+  if(jp){var iw=CW-LW-18,ih=iw*jp.h/jp.w;if(ih>190){ih=190;iw=ih*jp.w/jp.h}ph=ih;ops.push("q "+iw.toFixed(2)+" 0 0 "+ih.toFixed(2)+" "+(M+LW+18).toFixed(2)+" "+(H-top-ih).toFixed(2)+" cm /Im1 Do Q")}
+  y=Math.max(leftEnd,top+ph)+16;
+  // importes
+  R(M,y,CW,18,BAND);T(W/2,y+12.5,"IMPORTES",8.5,{b:1,al:"c"});y+=18;
+  function line(a,n,h,e,sub){y+=14;T(M+(sub?10:2),y,a,sub?8.5:9.5,{c:sub?MUT:INK});if(n)T(W-M-150,y,n,9,{al:"r"});if(h)T(W-M-95,y,h,9,{al:"r"});T(W-M-2,y,e,sub?8.5:9.5,{b:!sub,al:"r",c:sub?MUT:INK});y+=4;L(M,M+CW,y,0.4,LN)}
+  var nCh=r.ids.filter(function(i){return num(B.sel[i].ch)>0}).length,recs=B.recs.filter(function(q){return num(q.imp)>0});
+  if(r.hCh>0)line("Mano de obra de chapa",nCh+" pzas",hh(r.hCh),eur(r.moC));
+  line("Mano de obra de pintura",r.ids.length+" pzas",hh(r.hPint),eur(r.moP));
+  line("Material de pintura · "+NCAL[B.cal||0],"","",eur(r.mat));
+  if(recs.length){line("Recambios",recs.length+" uds","",eur(r.rec));recs.forEach(function(q){line("· "+(q.d||"Recambio"),"","",eur(num(q.imp)),1)})}
+  // totales
+  y+=8;var tx=W-M-210;
+  if(r.dto){y+=14;T(tx,y,"Descuento "+nf(r.dtoP,1)+" %",10);T(W-M-2,y,"−"+eur(r.dto),10,{al:"r"})}
+  y+=15;T(tx,y,"Importe BI",10);T(W-M-2,y,eur(r.bi),10,{al:"r"});
+  y+=15;T(tx,y,"IVA "+nf(cfg.iva,0)+" %",10);T(W-M-2,y,eur(r.iva),10,{al:"r"});
+  y+=8;L(tx,W-M,y,1.3);y+=19;T(tx,y,"TOTAL REPARACIÓN",12.5,{b:1});T(W-M-2,y,eur(r.tot),12.5,{b:1,al:"r"});
+  // observaciones
+  y+=24;T(M,y,"Observaciones:",9.5,{b:1});y+=6;var oh=44;R(M,y,CW,oh,[242,242,242]);
+  if(B.obs){wrap(B.obs,9,CW-14).slice(0,3).forEach(function(l,k){T(M+7,y+14+k*11,l,9)})}
+  y+=oh+18;
+  // aceptación
+  R(M,y,CW,18,BAND);T(W/2,y+12.5,"ACEPTACIÓN DEL PRESUPUESTO",8.5,{b:1,al:"c"});y+=18;
+  var acc="El cliente acepta el presupuesto de "+eur(r.tot)+" (IVA incluido) y autoriza la reparación del vehículo"+(B.mat?" matrícula "+B.mat:"")+". El importe es orientativo y podrá ajustarse si, con el vehículo desmontado, aparecen daños ocultos; en ese caso se informará al cliente antes de continuar.";
+  wrap(acc,9.5,CW-4).forEach(function(l,k){T(M+2,y+14+k*12.5,l,9.5)});y+=14+3*12.5+30;
+  var sw=(CW-40)/3;[["Firma del cliente","Nombre y DNI/NIF:"],["Fecha de aceptación",""],["Sello y firma del taller",B.tasador?"Tasador: "+B.tasador:""]].forEach(function(s,k){var sx=M+k*(sw+20);L(sx,sx+sw,y,1.1);T(sx,y+13,s[0],9);if(s[1])T(sx,y+25,s[1],8,{c:MUT})});
+  y+=44;wrap("Los datos se tratan para gestionar la reparación y su facturación. Puede ejercer sus derechos de acceso, rectificación y supresión dirigiéndose al taller.",7.5,CW).forEach(function(l,k){T(M,y+k*9,l,7.5,{c:[130,130,130]})});
+  // ensamblado
+  var parts=[],len=0;function add(s){var u;if(typeof s==="string"){u=new Uint8Array(s.length);for(var q=0;q<s.length;q++)u[q]=s.charCodeAt(q)&255}else u=s;parts.push(u);len+=u.length}
+  var offs=[];function obj(n,body){offs[n]=len;add(n+" 0 obj\n");add(body);add("\nendobj\n")}
+  var cs=ops.join("\n");
+  add("%PDF-1.4\n");
+  obj(1,"<< /Type /Catalog /Pages 2 0 R >>");obj(2,"<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
+  obj(3,"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 "+W+" "+H+"] /Resources << /Font << /F1 5 0 R /F2 6 0 R >>"+(jp?" /XObject << /Im1 7 0 R >>":"")+" >> /Contents 4 0 R >>");
+  obj(4,"<< /Length "+cs.length+" >>\nstream\n"+cs+"\nendstream");
+  obj(5,"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");obj(6,"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+  var n=6;if(jp){n=7;offs[7]=len;add("7 0 obj\n<< /Type /XObject /Subtype /Image /Width "+jp.w+" /Height "+jp.h+" /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+jp.bytes.length+" >>\nstream\n");add(jp.bytes);add("\nendstream\nendobj\n")}
+  var xr=len;add("xref\n0 "+(n+1)+"\n0000000000 65535 f \n");for(var k=1;k<=n;k++)add(("0000000000"+offs[k]).slice(-10)+" 00000 n \n");
+  add("trailer\n<< /Size "+(n+1)+" /Root 1 0 R >>\nstartxref\n"+xr+"\n%%EOF");
+  var out=new Uint8Array(len),pos=0;parts.forEach(function(p){out.set(p,pos);pos+=p.length});return out}
+async function pdfFile(){var b=await buildPdf();return new File([b],pdfName()+".pdf",{type:"application/pdf"})}
+function descargar(f){var a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},3000)}
 function msgPres(rec,r){
   var veh=(B.marca+" "+B.modelo).trim();
   return "Hola"+(B.cliente?" "+B.cliente:"")+", le enviamos el presupuesto nº "+rec.num+" de "+C.cfg.taller+(veh?" para su "+veh:"")+(B.mat?" ("+B.mat+")":"")+". Importe total: "+eur(r.tot)+" (IVA incluido). Validez: 15 días. Quedamos a su disposición."}
-function sendMsg(kind){
+async function sendMsg(kind){
   var r=calc();if(!r.ids.length&&!r.rec){toast("Marca algún daño antes de enviar");return}
+  var wa="",em="";
   if(kind==="wa"){
     var d=(B.tel||"").replace(/\D/g,"");if(d.indexOf("00")===0)d=d.slice(2);if(d.length===9)d="34"+d;
-    if(d.length<9){toast("Escribe el teléfono del cliente");var f=$("#f-tel");if(f)f.focus();return}
-    var rec=saveCurrent();if(!rec)return;refreshSum();
-    window.open("https://wa.me/"+d+"?text="+encodeURIComponent(msgPres(rec,r)),"_blank");
-    toast("WhatsApp abierto. Adjunta el PDF del presupuesto "+rec.num+" en el chat");
+    if(d.length<9){toast("Escribe el teléfono del cliente");var f=$("#f-tel");if(f)f.focus();return}wa=d;
   }else{
-    var em=(B.email||"").trim();
+    em=(B.email||"").trim();
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){toast("Escribe un email válido del cliente");var g=$("#f-email");if(g)g.focus();return}
-    var rc=saveCurrent();if(!rc)return;refreshSum();
-    location.href="mailto:"+em+"?subject="+encodeURIComponent("Presupuesto "+rc.num+" · "+C.cfg.taller)+"&body="+encodeURIComponent(msgPres(rc,r)+"\n\nAdjunto el PDF del presupuesto.");
-    toast("Correo preparado. Adjunta el PDF del presupuesto "+rc.num);
   }
+  var rec=saveCurrent();if(!rec)return;refreshSum();
+  var txt=msgPres(rec,r),canFiles=false;
+  try{canFiles=!!(navigator.canShare&&navigator.canShare({files:[new File(["x"],"a.pdf",{type:"application/pdf"})]}))}catch(e){}
+  var url=kind==="wa"?"https://wa.me/"+wa+"?text="+encodeURIComponent(txt):"mailto:"+em+"?subject="+encodeURIComponent("Presupuesto "+rec.num+" · "+C.cfg.taller)+"&body="+encodeURIComponent(txt+"\n\nAdjunto el PDF del presupuesto.");
+  if(!canFiles){ // abrimos el chat o el correo de inmediato y descargamos el PDF para adjuntarlo
+    if(kind==="wa")window.open(url,"_blank");else location.href=url;
+    try{var f2=await pdfFile();descargar(f2);toast("PDF «"+f2.name+"» descargado. Adjúntalo en "+(kind==="wa"?"el chat de WhatsApp":"el correo"))}catch(e){toast("No se pudo generar el PDF")}
+    return}
+  try{var f3=await pdfFile();await navigator.share({files:[f3],text:txt,title:"Presupuesto "+rec.num});toast("Elige "+(kind==="wa"?"WhatsApp":"el correo")+" y el contacto para enviar el PDF")}
+  catch(e){if(e&&e.name==="AbortError")return;try{var f4=await pdfFile();if(kind==="wa")window.open(url,"_blank");else location.href=url;descargar(f4);toast("PDF descargado. Adjúntalo en "+(kind==="wa"?"el chat":"el correo"))}catch(x){toast("No se pudo enviar")}}
 }
 function openPlan(){
   var r=calc();if(!r.ids.length&&!r.rec){toast("Marca algún daño antes de continuar");return}
