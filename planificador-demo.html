@@ -107,6 +107,12 @@ button{cursor:pointer}
 .ics svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.75}
 .hrs{font:600 11.5px var(--body);font-variant-numeric:tabular-nums}
 .hrs b{font-weight:700;margin-left:2px}
+.wk{display:flex;align-items:center;gap:5px;align-self:flex-start;max-width:100%;background:#1f2a22;color:#fff;border-radius:999px;padding:2px 9px 2px 5px;font:700 10.5px var(--body)}
+.wk svg{width:14px;height:14px;flex:none;fill:none;stroke:#7ee2a0;stroke-width:2;stroke-linecap:round}
+.wk span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wk::after{content:'';width:7px;height:7px;border-radius:50%;background:#3ddc84;flex:none;box-shadow:0 0 0 0 rgba(61,220,132,.7);animation:wkp 1.8s infinite}
+@keyframes wkp{70%{box-shadow:0 0 0 6px rgba(61,220,132,0)}100%{box-shadow:0 0 0 0 rgba(61,220,132,0)}}
+@media (prefers-reduced-motion:reduce){.wk::after{animation:none}}
 .foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:2px 6px;font-size:10px;opacity:.95}
 .foot .who{flex:1 1 100%;opacity:.8}
 .due{font:700 10px var(--body);border-radius:3px;padding:2px 6px;color:#fff}
@@ -303,6 +309,23 @@ table.heat{min-width:640px}
 
   function icons(list){return list.map(function(k){return '<svg aria-hidden="true"><use href="#i-'+k+'"/></svg>'}).join('')}
 
+  // Operarios que han fichado «Comienzo» hoy en un coche (datos del reloj de fichajes)
+  function working(){
+    var m={};
+    try{
+      var F=JSON.parse(localStorage.getItem('agp-fichajes-v1')),names={},T=new Date().toDateString();
+      if(F&&F.emps&&F.jobs){F.emps.forEach(function(e){names[e.id]=e.name});
+        F.jobs.forEach(function(j){if(!j.e&&new Date(j.s).toDateString()===T&&names[j.emp]){(m[j.card]=m[j.card]||[]).push(names[j.emp])}})}
+    }catch(e){}
+    return m;
+  }
+  var WK=working();
+  function wkSig(m){return JSON.stringify(m)}
+  function wkHtml(c){
+    var w=WK[c.id];if(!w||!w.length)return '';
+    return '<div class="wk" title="Trabajando ahora en este coche"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 21c.6-4.4 3.4-6.6 7.5-6.6s6.9 2.2 7.5 6.6"/></svg><span>'+w.map(esc).join(', ')+'</span></div>';
+  }
+
   function cardHtml(c){
     var d=due(c.sal),hrs=[];
     if(c.c)hrs.push('C '+fh(c.c));if(c.m)hrs.push('M '+fh(c.m));if(c.p)hrs.push('P '+fh(c.p));
@@ -312,7 +335,7 @@ table.heat{min-width:640px}
       '<div class="car">'+esc(c.car)+' · '+esc(c.col)+'</div>'+
       '<div class="ins">Seguro: '+esc(c.ins)+'</div>'+
       '<div class="ics">'+icons(c.ic)+'</div>'+
-      '<div class="hrs">'+hrs.join(' · ')+' <b>'+fe(c.eur)+'</b></div>'+
+      '<div class="hrs">'+hrs.join(' · ')+' <b>'+fe(c.eur)+'</b></div>'+wkHtml(c)+
       '<div class="foot"><span class="who">Recepción '+c.rec+' · Asesor '+c.as+' · Gestor '+c.ge+'</span><span class="due '+d.c+'">'+d.t+'</span><span class="sal">Sal. '+ddmm(c.sal)+'</span>'+(c.cita?'<span class="sal" title="Cita de recepción">Cita '+ddmm(c.cita.slice(0,10))+' '+esc(c.cita.slice(11,16))+'</span>':'')+'</div>'+
     '</article>';
   }
@@ -377,7 +400,7 @@ table.heat{min-width:640px}
     var d=due(c.sal);
     openDlg('<h3>OR '+esc(c.id)+'</h3>'+
       '<dl class="kv"><dt>Matrícula</dt><dd>'+esc(c.pl)+'</dd><dt>Vehículo</dt><dd>'+esc(c.car)+' · '+esc(c.col)+'</dd><dt>Seguro</dt><dd>'+esc(c.ins)+'</dd>'+
-      '<dt>Horas</dt><dd>C '+fh(c.c)+' · M '+fh(c.m)+' · P '+fh(c.p)+'</dd><dt>Importe</dt><dd>'+fe(c.eur)+'</dd>'+
+      '<dt>Horas</dt><dd>C '+fh(c.c)+' · M '+fh(c.m)+' · P '+fh(c.p)+'</dd>'+(WK[c.id]?'<dt>Trabajando</dt><dd>'+WK[c.id].map(esc).join(', ')+'</dd>':'')+'<dt>Importe</dt><dd>'+fe(c.eur)+'</dd>'+
       (c.cita?'<dt>Cita de recepción</dt><dd>'+ddmm(c.cita.slice(0,10))+' · '+esc(c.cita.slice(11,16))+'</dd>':'')+(c.cliente?'<dt>Cliente</dt><dd>'+esc(c.cliente)+(c.tel?' · '+esc(c.tel):'')+'</dd>':'')+'<dt>Salida</dt><dd>'+ddmm(c.sal)+' · '+d.t+'</dd><dt>Prioridad</dt><dd>'+esc(c.pr)+'</dd><dt>En esta fase</dt><dd>'+dIn(c)+(dIn(c)===1?' día':' días')+'</dd></dl>'+
       '<label class="f">Mover a<select id="mv">'+COLS.map(function(k){return '<option value="'+k[0]+'"'+(k[0]===c.st?' selected':'')+'>'+k[1]+'</option>'}).join('')+'</select></label>'+
       '<div class="row"><button class="btn danger" type="button" id="del">Eliminar</button><button class="btn" type="button" data-close>Cerrar</button><button class="btn primary" type="button" id="mvOk" data-id="'+esc(c.id)+'">Mover</button></div>');
@@ -674,6 +697,10 @@ table.heat{min-width:640px}
     if(n){save();window.__agpEntradas=n}
   })();
 
+  function refreshWk(){var n=working();if(wkSig(n)!==wkSig(WK)){WK=n;if($('#ov').hidden)render()}}
+  window.addEventListener('storage',function(e){if(e.key==='agp-fichajes-v1')refreshWk()});
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)refreshWk()});
+  setInterval(refreshWk,15000);
   render();
   if(window.__agpEntradas){toast(window.__agpEntradas===1?'Reparación añadida desde el tasador':window.__agpEntradas+' reparaciones añadidas desde el tasador')}
 })();
