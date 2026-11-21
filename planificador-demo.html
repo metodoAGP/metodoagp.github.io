@@ -529,7 +529,7 @@ table.heat{min-width:640px}
   function setDlg(){
     openDlg('<h3>Ajustes</h3><label class="f">Horas por jornada<input id="s-h" type="number" min="1" max="12" step="0.5" value="'+st.hpd+'"></label>'+
       '<p class="note" style="padding-bottom:0">La capacidad de cada sección es operarios × horas por jornada × días laborables.</p>'+
-      '<div class="row"><button class="btn danger" type="button" id="rst">Restaurar datos de ejemplo</button><button class="btn" type="button" data-close>Cerrar</button><button class="btn primary" type="button" id="sOk">Guardar</button></div>');
+      '<div class="row"><button class="btn danger" type="button" id="clrAll">Vaciar todos los coches</button><button class="btn danger" type="button" id="rst">Restaurar datos de ejemplo</button><button class="btn" type="button" data-close>Cerrar</button><button class="btn primary" type="button" id="sOk">Guardar</button></div>');
   }
 
   /* ---------- Planificación ---------- */
@@ -748,6 +748,7 @@ table.heat{min-width:640px}
     if(t.id==='mvOk'){var c=st.cards.filter(function(x){return x.id===t.dataset.id})[0];if(c){c.st=$('#mv').value;c.mv=iso(0);splitJobs(c.id,c.st);save();closeDlg();render();toast('Vehículo movido')}return}
     if(t.id==='del'){t.textContent='Confirmar eliminar';t.id='del2';return}
     if(t.id==='del2'){var id=$('#mvOk').dataset.id;st.cards=st.cards.filter(function(x){return x.id!==id});save();closeDlg();render();toast('Vehículo eliminado');return}
+    if(t.id==='clrAll'){if(!t.dataset.sure){t.dataset.sure='1';t.textContent='¿Seguro? Se borran de la nube. Pulsa otra vez';return}st.cards=[];delete st.seed;save();closeDlg();render();toast('Planificador vaciado');return}
     if(t.id==='rst'){st={cards:seed(),ops:{c:5,m:1,p:4},days:5,hpd:8};save();closeDlg();render();toast('Datos de ejemplo restaurados');return}
     if(t.id==='sOk'){st.hpd=Math.max(1,num($('#s-h').value)||8);save();closeDlg();render();return}
     var card=t.closest('.card');if(card&&!card.classList.contains('drag')){cardDlg(card.dataset.id)}
