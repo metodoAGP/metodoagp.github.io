@@ -11,7 +11,7 @@
 var URL_="https://rauxafgiklkblnuddcwt.supabase.co",KEY_="sb_publishable_InvC_oz5ks0yjkVLsyRDDw_xd85hokP";
 var SDK="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
 var FK="agp-fichajes-v1",PK="agp-planificador-demo-v1",SNAP="agp-nube-snap-";
-var FASES=["rec","val","apr","pie","esp","pch","cha","pin","mon","ent","arc"];
+var FASES=["stk","rec","val","apr","pie","esp","pch","des","cha","pin","pp","ecb","cab","mon","ctl","lst","ent","arc"];
 var INCT=["vac","baja","perm","festivo","retraso","extra"];
 var N=window.NUBE={URL:URL_,fotos:{},st:{estado:"off",msg:"",taller:null,email:""}};
 

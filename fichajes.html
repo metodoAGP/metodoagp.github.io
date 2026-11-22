@@ -227,10 +227,11 @@ var SEC={chapa:"Chapa",pintura:"Pintura",indirecto:"Indirecto"};
 
 /* ───────── Coches del planificador e imputación de tiempo ───────── */
 var PK="agp-planificador-demo-v1";
-var STN={rec:"Recepcionado",val:"Valoración",apr:"Pend. aprobación",pie:"Pend. piezas",esp:"En espera chapa",pch:"Preparación chapa",cha:"Chapa",pin:"Pintura",mon:"Montaje"};
+var STN={rec:"Recepcionado",val:"Valoración",esp:"En espera chapa",des:"Desmontaje",cha:"Chapa",pp:"Preparación pintura",cab:"Cabina",mon:"Montaje",ctl:"Control y lavado",apr:"Valoración",pie:"En espera chapa",pch:"Desmontaje",pin:"Preparación pintura"};
+function isPin(k){return k==="pp"||k==="cab"||k==="pin"}
 function planCars(sec){ /* chapistas: todas las fases salvo pintura (incluye montaje); pintores: pintura */
   var cards=[];try{var o=JSON.parse(localStorage.getItem(PK));if(o&&o.cards)cards=o.cards}catch(x){}
-  return cards.filter(function(c){return STN[c.st]&&(sec==="pintura"?c.st==="pin":c.st!=="pin")});
+  return cards.filter(function(c){return STN[c.st]&&(sec==="pintura"?isPin(c.st):!isPin(c.st))});
 }
 function planCard(id){var r=null;try{var o=JSON.parse(localStorage.getItem(PK));if(o&&o.cards)o.cards.forEach(function(c){if(c.id===id)r=c})}catch(x){}return r}
 function openJob(empId){for(var i=S.jobs.length-1;i>=0;i--){var j=S.jobs[i];if(j.emp===empId&&!j.e&&ds(new Date(j.s))===today())return j}return null}

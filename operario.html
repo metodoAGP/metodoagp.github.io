@@ -103,7 +103,8 @@ a{color:var(--blue)}
 <script>
 (function(){
 "use strict";
-var STN={rec:"Recepcionado",val:"Valoración",apr:"Pend. aprobación",pie:"Pend. piezas",esp:"En espera chapa",pch:"Preparación chapa",cha:"Chapa",pin:"Pintura",mon:"Montaje"};
+var STN={rec:"Recepcionado",val:"Valoración",esp:"En espera chapa",des:"Desmontaje",cha:"Chapa",pp:"Preparación pintura",cab:"Cabina",mon:"Montaje",ctl:"Control y lavado",apr:"Valoración",pie:"En espera chapa",pch:"Desmontaje",pin:"Preparación pintura"};
+function isPin(k){return k==="pp"||k==="cab"||k==="pin"}
 var $=function(s){return document.querySelector(s)};
 function p2(n){return (n<10?"0":"")+n}
 function hm(ts){var d=new Date(ts);return p2(d.getHours())+":"+p2(d.getMinutes())}
@@ -130,7 +131,7 @@ function investedMs(){var t=0;jobs.forEach(function(j){t+=(j.e||Date.now())-j.s}
 function carOf(id){for(var i=0;i<cars.length;i++)if(cars[i].id===id)return cars[i];return null}
 function myCars(){
   if(!me)return [];
-  return cars.filter(function(c){return STN[c.fase]&&(me.seccion==="pintura"?c.fase==="pin":c.fase!=="pin")})
+  return cars.filter(function(c){return STN[c.fase]&&(me.seccion==="pintura"?isPin(c.fase):!isPin(c.fase))})
     .sort(function(a,b){return String(a.fecha_salida||"").localeCompare(String(b.fecha_salida||""))});
 }
 
@@ -260,7 +261,7 @@ function doJob(kind,card){
 document.addEventListener("click",function(ev){
   var t=ev.target.closest("button");if(!t)return;
   if(t.dataset.retry){phase="load";view();boot();return}
-  if(t.dataset.code){var cv=($("#code")&&$("#code").value||"").trim();if(!cv){codeErr="Escribe tu código";view();return}
+  if(t.dataset.code){var cv=($("#code")&&$("#code").value||"").trim();var mm=cv.match(/[?&]c=([A-Za-z0-9]+)/);if(mm)cv=mm[1];if(!cv){codeErr="Escribe tu código";view();return}
     phase="load";view();
     (async function(){try{await redeem(cv);var ok=await loadAll();phase=ok?"ok":"nolink";codeErr=ok?"":"Código no válido"}catch(e){phase="nolink";codeErr=/enlace no v/i.test(e&&e.message||"")?"Código no válido":NUBE.msg(e)}view()})();return}
   if(t.dataset.unlink){

@@ -625,7 +625,7 @@ function citaDe(rec,v){
   rec.cita=v;
   if(v){var h=(rec.hCh||0)+(rec.hPint||0),sal=new Date(v.slice(0,10)+"T00:00:00");sal.setDate(sal.getDate()+Math.max(2,Math.ceil(h/8)+3));
     var s=sal.getFullYear()+"-"+("0"+(sal.getMonth()+1)).slice(-2)+"-"+("0"+sal.getDate()).slice(-2);
-    pushQ({uid:rec.id,pl:rec.matricula||"",car:((rec.marca||"")+" "+(rec.modelo||"")).trim()||"Vehículo",ins:"Particular",sal:s,pr:"NORMAL",st:"rec",c:rec.hCh,p:rec.hPint,m:0,eur:rec.bi,cliente:rec.cliente,tel:rec.tel||"",email:rec.email||"",cita:v,tas:rec.tasador});
+    pushQ({uid:rec.id,pl:rec.matricula||"",car:((rec.marca||"")+" "+(rec.modelo||"")).trim()||"Vehículo",ins:"Particular",sal:s,pr:"NORMAL",st:"stk",c:rec.hCh,p:rec.hPint,m:0,eur:rec.bi,cliente:rec.cliente,tel:rec.tel||"",email:rec.email||"",cita:v,tas:rec.tasador});
     rec.plan="Planificador"}
   save()}
 function sendPlan(){
