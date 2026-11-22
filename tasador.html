@@ -615,7 +615,7 @@ function openPlan(){
    '<div class="field"><label for="p-cita">Cita de recepción (opcional)</label><input type="datetime-local" id="p-cita"></div>'+
    '<div class="field"><label for="p-sal">Fecha de salida prevista</label><input type="date" id="p-sal" value="'+addDays(dias)+'"></div>'+
    '<div class="field"><label for="p-pr">Prioridad</label><select id="p-pr"><option>NORMAL</option><option>MEDIO</option><option>FUERTE</option><option>RÁPIDO</option></select></div>'+
-   '<div class="field"><label for="p-st">Entra en la columna</label><select id="p-st"><option value="rec">Recepcionado</option><option value="val">Valoración</option><option value="apr">Pendiente de aprobación</option><option value="pie"'+(r.rec>0?' selected':'')+'>Pendiente de piezas</option><option value="esp">En espera chapa</option></select></div></div>'+
+   '<div class="field"><label for="p-st">Entra en la columna</label><select id="p-st"><option value="stk" selected>Stock reparaciones</option><option value="rec">Recepcionado</option><option value="val">Valoración</option><option value="des">Desmontaje</option></select></div></div>'+
    '<p class="note">Viajan al planificador: '+hh(r.hCh)+' de chapa, '+hh(r.hPint)+' de pintura y un importe de '+eur(r.bi)+' (base imponible).</p><div class="err" id="perr" style="color:var(--red);min-height:18px"></div>'+
    '<div class="row" style="margin-top:6px"><button class="btn acc" data-a="planok">Enviar al planificador</button><button class="btn" data-a="planx">Cancelar</button></div>');
 }
@@ -638,7 +638,7 @@ function sendPlan(){
   q.push({uid:uid,pl:mat,car:car,ins:$("#p-ins").value.trim()||"Particular",sal:sal,pr:$("#p-pr").value,st:st,c:r.hCh,p:r.hPint,m:0,eur:r.bi,cliente:B.cliente,obs:B.obs,piezas:r.ids.map(function(i){return PID[i].n}),tas:B.tasador,tel:B.tel,email:B.email,cita:cita});save();
   try{localStorage.setItem(QKEY,JSON.stringify(q))}catch(e){ $("#perr").textContent="No se pudo guardar el envío en este navegador.";return}
   B.sent=uid;
-  var names={rec:"Recepcionado",val:"Valoración",apr:"Pendiente de aprobación",pie:"Pendiente de piezas",esp:"En espera chapa"};
+  var names={stk:"Stock reparaciones",rec:"Recepcionado",val:"Valoración",des:"Desmontaje"};
   ovOpen('<h3>Enviado al planificador</h3><p class="sub">La reparación aparecerá en la columna <b>'+names[st]+'</b> con '+hh(r.hCh)+' de chapa y '+hh(r.hPint)+' de pintura. El presupuesto queda guardado como aceptado.</p><div class="row" style="margin-top:16px"><a class="btn pri" href="planificador-demo.html">Abrir el planificador</a><button class="btn" data-a="planx">Seguir aquí</button></div>');
   rerender();
 }
