@@ -246,6 +246,10 @@ table.heat{min-width:640px}
 .tile strong{display:block;font:800 30px/1.1 var(--display);font-variant-numeric:tabular-nums}
 .tile small{color:var(--mute);font-variant-numeric:tabular-nums}
 .tile.w strong{color:var(--warn)}.tile.b strong{color:var(--bad)}
+/* cuadros de Entrega que funcionan como filtro */
+.tile.tf{cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}.tile.tf:hover{border-color:var(--mute)}
+.tile.tf.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink);background:color-mix(in srgb,var(--ink) 7%,var(--chip))}
+.egfl{margin:8px 0 0;font-size:12.5px;color:var(--mute)}.egfl b{color:var(--ink)}
 .read{margin:10px 0 0;font-weight:600}
 @media (max-width:640px){
   .bars{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -685,7 +689,7 @@ table.heat{min-width:640px}
 
 
   /* ---------- Entrega ---------- */
-  var egStk=false;
+  var egStk=false,egF={}; // egF: filtros activos de Entrega (o = sin dificultad, w = ajustadas, b = con dificultad)
   var STEP=['val','des','cha','pp','cab','mon','ctl','lst'];
   function mondayOf(d){var x=new Date(d);x.setHours(0,0,0,0);var w=x.getDay();x.setDate(x.getDate()-(w===0?6:w-1));return x}
   function stepIx(k){k=lg(k);if(k==='mrp'||k==='min')return STEP.indexOf('mon');if(k==='rec'||k==='stk')return -1;return STEP.indexOf(k)}
@@ -727,11 +731,18 @@ table.heat{min-width:640px}
     }
     var tot={n:sch.length,b:0,w:0,o:0,h:0,eur:0};
     sch.forEach(function(x){tot[x.e.lvl==='g'?'o':x.e.lvl]++;tot.h+=x.e.rem;tot.eur+=x.c.eur});
+    var egOn=Object.keys(egF).length,EGN={o:'Sin dificultad',w:'Ajustadas',b:'Con dificultad'};
+    if(egOn)groups=groups.map(function(g){return {key:g.key,m:g.m,items:g.items.filter(function(x){return egF[x.e.lvl==='g'?'o':x.e.lvl]})}}).filter(function(g){return g.items.length});
     var cw=G[String(wk0)],cwN=cw?cw.items.length:0,cwR=cw?cw.items.filter(function(x){return x.e.lvl==='b'}).length:0,cwW=cw?cw.items.filter(function(x){return x.e.lvl==='w'}).length:0,vN=G.v?G.v.items.length:0;
     var read=!tot.n?'No hay vehículos en el taller.':(cwN?'Esta semana tienes '+cwN+' '+(cwN===1?'entrega':'entregas')+': '+(cwR?cwR+' con dificultad':'ninguna con dificultad')+(cwW?' y '+cwW+' ajustada'+(cwW>1?'s':''):'')+'.':'No hay entregas previstas esta semana.')+(vN?' Además '+vN+(vN===1?' vehículo vencido.':' vehículos vencidos.'):'');
-    function tile(label,v,sub,k){return '<div class="tile '+(k||'')+'"><b>'+label+'</b><strong>'+v+'</strong><small>'+sub+'</small></div>'}
+    function tile(label,v,sub,k,fl){
+      if(!fl)return '<div class="tile '+(k||'')+'"><b>'+label+'</b><strong>'+v+'</strong><small>'+sub+'</small></div>';
+      var on=fl==='all'?!egOn:!!egF[fl];
+      return '<button type="button" class="tile tf '+(k||'')+(on?' on':'')+'" data-egf="'+fl+'" aria-pressed="'+on+'" title="'+(fl==='all'?'Ver todas las entregas':'Pulsa para filtrar; puedes juntar varios')+'"><b>'+label+'</b><strong>'+v+'</strong><small>'+sub+'</small></button>';
+    }
     var h='<div class="wrap eg"><section><h2>Entregas comprometidas</h2><p class="cap" style="margin:4px 0 10px;color:var(--mute)">Ordenadas por fecha de entrega. La predicción compara las horas que faltan, la fase en la que está cada coche y la capacidad de las secciones (operarios × horario productivo) con la fecha comprometida.</p>'+
-      '<div class="tiles">'+tile('Vehículos en curso',tot.n,'con fecha de entrega')+tile('Sin dificultad',tot.o,'van bien','')+tile('Ajustadas',tot.w,'sin margen',tot.w?'w':'')+tile('Con dificultad',tot.b,'retrasar o reforzar',tot.b?'b':'')+tile('Horas por hacer',fh(tot.h),fe(tot.eur)+' en curso')+'</div>'+
+      '<div class="tiles">'+tile('Vehículos en curso',tot.n,'con fecha de entrega','','all')+tile('Sin dificultad',tot.o,'van bien','','o')+tile('Ajustadas',tot.w,'sin margen',tot.w?'w':'','w')+tile('Con dificultad',tot.b,'retrasar o reforzar',tot.b?'b':'','b')+tile('Horas por hacer',fh(tot.h),fe(tot.eur)+' en curso')+'</div>'+
+      (egOn?'<p class="egfl">Mostrando solo: <b>'+['o','w','b'].filter(function(k){return egF[k]}).map(function(k){return EGN[k]}).join(', ')+'</b>. Pulsa «Vehículos en curso» para ver todas.</p>':'')+
       '<p style="font-weight:600;margin:12px 0 0">'+esc(read)+'</p>'+
       '<div class="egt" style="margin-top:8px"><label><input type="checkbox" data-egstk'+(egStk?' checked':'')+'> Incluir «Stock reparaciones» (aún no están en el taller)</label></div></section>';
     if(!groups.length)h+='<div class="empty">No hay entregas que mostrar.</div>';
@@ -1172,6 +1183,7 @@ table.heat{min-width:640px}
       st.hor=nh;secList().forEach(function(k){var e=$('#s-op-'+k[0]);if(e)st.ops[k[0]]=Math.max(0,Math.round(num(e.value)||0))});
       st.ops.n=Math.max(0,Math.round(num($('#s-op-n').value)||0));st.days=Math.min(7,Math.max(1,Math.round(num($('#s-days').value)||5)));
       st.hpd=hrsOf(nh.prod);save();closeDlg();render();toast('Ajustes guardados · jornada productiva de '+hrSum('prod').replace(' al día',''));return}
+    var egb=t.closest('[data-egf]');if(egb){var fv=egb.dataset.egf;if(fv==='all')egF={};else if(egF[fv])delete egF[fv];else egF[fv]=1;render();return}
     var op=t.closest('[data-open]');if(op){cardDlg(op.dataset.open);return}
     var card=t.closest('.card');if(card&&!card.classList.contains('drag')){cardDlg(card.dataset.id)}
   });
