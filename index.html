@@ -182,6 +182,35 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
 .lg::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--a)}.lg.g::before{background:var(--g)}.lg.p::before{background:var(--p)}
 @media (max-width:900px){.hgrid{grid-template-columns:1fr}.hero h1{white-space:normal}.hero h1 span{display:block}.hero h1{font-size:clamp(27px,8.4vw,60px)}.cring{max-width:400px}}
 @media (max-width:520px){.hl .vids{grid-template-columns:1fr}.cn{width:86px}.ct{font-size:11px}.ct small{display:none}}
+
+/* Cabecera limpia: logo y bandera en la misma línea, sin menú; portada equilibrada */
+header .wrap{display:flex;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:12px 40px;padding-block:20px}
+.mark{font-size:clamp(30px,3vw,40px)}
+.mark img{width:50px;height:50px}
+.hhead{margin:0;text-align:right;font:800 clamp(26px,3.5vw,50px)/1 var(--display);text-transform:uppercase;letter-spacing:.005em;white-space:normal}
+.hhead em{font-style:normal;color:var(--accent)}
+.hhead small{display:block;font:500 12px var(--body);letter-spacing:.14em;color:var(--mute);margin-top:8px;text-transform:uppercase}
+.hero{padding-block:clamp(22px,3.5vw,44px) clamp(24px,4vw,48px)}
+.hgrid{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:clamp(24px,4vw,64px);align-items:center}
+.hl .lead{font-size:clamp(18px,1.75vw,23px);line-height:1.5;margin:0 0 28px;max-width:none}
+.hl .vids{grid-template-columns:1fr 1fr;gap:24px}
+.hl .vids h3{font-size:clamp(20px,1.9vw,26px)}
+.hl .vids .sub{font-size:15px;min-height:3em}
+.cring{max-width:480px}
+.cmid{width:46%}
+.cmid .mb{font:800 clamp(28px,3.2vw,42px)/1 var(--display)}
+.cmid .agp{display:flex;flex-direction:column;gap:3px;margin-top:10px;font:700 clamp(15px,1.5vw,20px)/1.1 var(--display);text-transform:uppercase;letter-spacing:.1em}
+.cmid .agp .a{color:var(--a)}.cmid .agp .g{color:var(--g)}.cmid .agp .p{color:var(--p)}
+@media (max-width:900px){
+  header .wrap{flex-direction:column;align-items:flex-start;gap:10px;padding-block:14px}
+  .mark{font-size:26px}.mark img{width:38px;height:38px}.mark small{font-size:10.5px;margin-top:2px}
+  .hhead{text-align:left;font-size:clamp(28px,8.2vw,48px)}
+  .hhead small{display:none}
+  .hgrid{grid-template-columns:1fr}
+  .cring{max-width:420px}
+  .cmid .mb{font-size:clamp(24px,7vw,34px)}
+}
+@media (max-width:520px){.hl .vids{grid-template-columns:1fr;gap:26px}.hl .vids .sub{min-height:0}.cmid .agp{font-size:13px;letter-spacing:.07em}}
 </style>
 </head>
 <body>
@@ -189,24 +218,12 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
 <header>
   <div class="wrap wide">
     <a class="mark" href="#top"><img src="logo.png" alt="" width="36" height="36"><div><span class="mb">método</span><span>AGP</span><small>EXPERTOS EN RENTABILIDAD</small></div></a>
-    <nav aria-label="Principal">
-      <a href="#top">Inicio</a>
-      <a href="#metodo">El método</a>
-      <a href="#indicadores">Indicadores</a>
-      <a href="analisis.html">Autodiagnóstico</a>
-      <a href="#planificador">Planificador</a>
-      <a href="#dashboard">Dashboard</a>
-      <a href="#fichajes">Fichajes</a>
-      <a href="#tasador">Tasador</a>
-      <a href="#contacto">Contacto</a>
-    </nav>
+    <h1 class="hhead">La hora más cara es la que <em>no se vende.</em><small>Talleres de chapa y pintura</small></h1>
   </div>
 </header>
 
 <main id="top">
 <div class="wrap wide hero">
-    <p class="eyebrow">Talleres de chapa y pintura</p>
-    <h1><span>La hora más cara</span> <span>es la que <em>no se vende.</em></span></h1>
     <div class="hgrid">
       <div class="hl" id="historia">
         <p class="lead">El <span class="mb">métodoAGP</span> convierte las horas, los recambios y el material de pintura de tu taller en decisiones claras para ganar más con el mismo equipo.</p>
@@ -226,7 +243,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
       <figure class="ciclo" aria-label="Secuencia del métodoAGP">
         <div class="cring">
           <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M32.00 18.82 A36 36 0 0 1 68.00 18.82" fill="none" stroke="var(--a)" stroke-width="1.6" stroke-linecap="round"/><path d="M74.09 23.25 A36 36 0 1 1 17.11 64.64" fill="none" stroke="var(--g)" stroke-width="1.6" stroke-linecap="round"/><path d="M14.79 57.48 A36 36 0 0 1 25.91 23.25" fill="none" stroke="var(--p)" stroke-width="1.6" stroke-linecap="round"/><path d="M-1.6 -1.5 L0 1.4 L1.6 -1.5" transform="translate(71.16 20.88) rotate(-54.0)" fill="none" stroke="var(--mute)" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round"/><path d="M-1.6 -1.5 L0 1.4 L1.6 -1.5" transform="translate(84.24 61.12) rotate(18.0)" fill="none" stroke="var(--mute)" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round"/><path d="M-1.6 -1.5 L0 1.4 L1.6 -1.5" transform="translate(50.00 86.00) rotate(90.0)" fill="none" stroke="var(--mute)" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round"/><path d="M-1.6 -1.5 L0 1.4 L1.6 -1.5" transform="translate(15.76 61.12) rotate(162.0)" fill="none" stroke="var(--mute)" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round"/><path d="M-1.6 -1.5 L0 1.4 L1.6 -1.5" transform="translate(28.84 20.88) rotate(234.0)" fill="none" stroke="var(--mute)" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <div class="cmid"><span class="mb">método<span>AGP</span></span><small>Sigue el orden</small></div>
+          <div class="cmid"><span class="mb">método<span>AGP</span></span><span class="agp"><span class="a">Analizar</span><span class="g">Gestionar</span><span class="p">Progresar</span></span></div>
 <a class="cn a" href="analisis.html" style="left:50.00%;top:14.00%" aria-label="1. Autodiagnóstico: Dónde estás"><span class="ci"><img src="autodiagnostico.png" alt="" width="40" height="40"><b>1</b></span><span class="ct">Autodiagnóstico<small>Dónde estás</small></span></a>
 <a class="cn g" href="tasador.html" style="left:84.24%;top:38.88%" aria-label="2. Tasador rápido: Valora y presupuesta"><span class="ci"><img src="tasador.png" alt="" width="40" height="40"><b>2</b></span><span class="ct">Tasador rápido<small>Valora y presupuesta</small></span></a>
 <a class="cn g" href="planificador-demo.html" style="left:71.16%;top:79.12%" aria-label="3. Planificador: Organiza y entrega"><span class="ci"><img src="planificador.png" alt="" width="40" height="40"><b>3</b></span><span class="ct">Planificador<small>Organiza y entrega</small></span></a>
