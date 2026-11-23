@@ -216,6 +216,13 @@ header .wrap{display:flex;flex-wrap:nowrap;align-items:center;justify-content:fl
 .cmid{width:54%}
 .cmid .cexp{display:block;font:500 clamp(8px,1vw,11px)/1.2 var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-top:6px;white-space:nowrap}
 @media (max-width:520px){.hl .vids{grid-template-columns:1fr;gap:26px}.hl .vids .sub{min-height:0}.hl .lead{margin-top:26px}.cmid .cexp{font-size:clamp(7.5px,2.2vw,10px);letter-spacing:.1em}}
+/* Tres vídeos en fila encabezando la portada; debajo, el texto y el ciclo */
+.vids3{grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;margin:0 0 clamp(28px,4vw,48px)}
+.vids3 h3{font-size:clamp(20px,1.8vw,26px);margin:0 0 6px}
+.vids3 .sub{margin:0;font-size:15px;min-height:3em}
+.vids3 .vid{margin-top:14px}
+.hl .lead{margin:0;font-size:clamp(20px,2vw,28px);line-height:1.45}
+@media (max-width:820px){.vids3{grid-template-columns:1fr;gap:30px}.vids3 .sub{min-height:0}}
 </style>
 </head>
 <body>
@@ -229,20 +236,25 @@ header .wrap{display:flex;flex-wrap:nowrap;align-items:center;justify-content:fl
 
 <main id="top">
 <div class="wrap wide hero">
+    <div class="vids vids3">
+      <div>
+        <h3>La historia de un taller</h3>
+        <p class="sub">Tres minutos. Si tienes un taller de chapa y pintura, probablemente te suene.</p>
+        <div class="vid"><video controls preload="metadata" playsinline poster="historia-taller.jpg" aria-label="La historia de un taller de chapa y pintura"><source src="historia-taller-v2.mp4" type="video/mp4">Tu navegador no puede reproducir el vídeo.</video></div>
+      </div>
+      <div>
+        <h3>Qué es el <span class="mb">métodoAGP</span></h3>
+        <p class="sub">Un minuto para entender el patrón de gestión que da forma a todo lo demás.</p>
+        <div class="vid"><video controls preload="metadata" playsinline poster="metodo-agp.jpg" aria-label="Qué es el métodoAGP"><source src="metodo-agp-v3.mp4" type="video/mp4">Tu navegador no puede reproducir el vídeo.</video></div>
+      </div>
+      <div>
+        <h3>El tiempo de ciclo</h3>
+        <p class="sub">Menos de dos minutos sobre lo que cuesta cada día que un coche espera, y cómo recuperarlo.</p>
+        <div class="vid"><video controls preload="metadata" playsinline poster="tiempo-ciclo.jpg" aria-label="El tiempo de ciclo de tu taller"><source src="tiempo-ciclo.mp4" type="video/mp4">Tu navegador no puede reproducir el vídeo.</video></div>
+      </div>
+    </div>
     <div class="hgrid">
       <div class="hl" id="historia">
-        <div class="vids">
-          <div>
-            <h3>La historia de un taller</h3>
-            <p class="sub">Tres minutos. Si tienes un taller de chapa y pintura, probablemente te suene.</p>
-            <div class="vid"><video controls preload="metadata" playsinline poster="historia-taller.jpg" aria-label="La historia de un taller de chapa y pintura"><source src="historia-taller-v2.mp4" type="video/mp4">Tu navegador no puede reproducir el vídeo.</video></div>
-          </div>
-          <div>
-            <h3>Qué es el <span class="mb">métodoAGP</span></h3>
-            <p class="sub">Un minuto para entender el patrón de gestión que da forma a todo lo demás.</p>
-            <div class="vid"><video controls preload="metadata" playsinline poster="metodo-agp.jpg" aria-label="Qué es el métodoAGP"><source src="metodo-agp-v3.mp4" type="video/mp4">Tu navegador no puede reproducir el vídeo.</video></div>
-          </div>
-        </div>
         <p class="lead">El <span class="mb">métodoAGP</span> te da el control de los ciclos de reparación de tu taller, además de convertir las horas, los recambios y el material de pintura en decisiones claras para ganar más con el mismo equipo.</p>
       </div>
       <figure class="ciclo" aria-label="Secuencia del métodoAGP">
