@@ -184,12 +184,13 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
 @media (max-width:520px){.hl .vids{grid-template-columns:1fr}.cn{width:86px}.ct{font-size:11px}.ct small{display:none}}
 
 /* Cabecera limpia: logo y bandera en la misma línea, sin menú; portada equilibrada */
-header .wrap{display:flex;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:12px 40px;padding-block:20px}
+header .wrap{display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-start;gap:12px clamp(28px,3.5vw,56px);padding-block:20px}
 .mark{font-size:clamp(30px,3vw,40px)}
 .mark img{width:50px;height:50px}
-.hhead{margin:0;text-align:right;font:800 clamp(26px,3.5vw,50px)/1 var(--display);text-transform:uppercase;letter-spacing:.005em;white-space:normal}
-.hhead em{font-style:normal;color:var(--accent)}
-.hhead small{display:block;font:500 12px var(--body);letter-spacing:.14em;color:var(--mute);margin-top:8px;text-transform:uppercase}
+/* Bandera con el mismo tamaño y estilo que el logo: minúscula como "método", mayúscula como "AGP" */
+.hhead{margin:0;text-align:left;font:800 calc(clamp(30px,3vw,40px)*1.12)/1 var(--display);text-transform:none;letter-spacing:.02em;white-space:normal;padding-left:clamp(28px,3.5vw,56px);border-left:1px solid var(--line)}
+.hhead em{font-style:normal;color:var(--accent);text-transform:uppercase;letter-spacing:.04em;font-size:.893em;white-space:nowrap}
+.hhead small{display:block;font:500 12px var(--body);letter-spacing:.14em;color:var(--mute);margin-top:4px;text-transform:uppercase}
 .hero{padding-block:clamp(22px,3.5vw,44px) clamp(24px,4vw,48px)}
 .hgrid{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:clamp(24px,4vw,64px);align-items:center}
 .hl .lead{font-size:clamp(18px,1.75vw,23px);line-height:1.5;margin:0 0 28px;max-width:none}
@@ -204,8 +205,8 @@ header .wrap{display:flex;flex-wrap:nowrap;align-items:center;justify-content:sp
 @media (max-width:900px){
   header .wrap{flex-direction:column;align-items:flex-start;gap:10px;padding-block:14px}
   .mark{font-size:26px}.mark img{width:38px;height:38px}.mark small{font-size:10.5px;margin-top:2px}
-  .hhead{text-align:left;font-size:clamp(28px,8.2vw,48px)}
-  .hhead small{display:none}
+  .hhead{font-size:clamp(26px,7.4vw,40px);padding-left:0;border-left:0}
+  .hhead small{font-size:10.5px;margin-top:6px}
   .hgrid{grid-template-columns:1fr}
   .cring{max-width:420px}
   .cmid .mb{font-size:clamp(24px,7vw,34px)}
@@ -218,7 +219,7 @@ header .wrap{display:flex;flex-wrap:nowrap;align-items:center;justify-content:sp
 <header>
   <div class="wrap wide">
     <a class="mark" href="#top"><img src="logo.png" alt="" width="36" height="36"><div><span class="mb">método</span><span>AGP</span><small>EXPERTOS EN RENTABILIDAD</small></div></a>
-    <h1 class="hhead">La hora más cara es la que <em>no se vende.</em><small>Talleres de chapa y pintura</small></h1>
+    <h1 class="hhead">La hora más cara es la que <em>no se vende.</em><small>Gestión integral de talleres de automoción</small></h1>
   </div>
 </header>
 
@@ -226,7 +227,7 @@ header .wrap{display:flex;flex-wrap:nowrap;align-items:center;justify-content:sp
 <div class="wrap wide hero">
     <div class="hgrid">
       <div class="hl" id="historia">
-        <p class="lead">El <span class="mb">métodoAGP</span> convierte las horas, los recambios y el material de pintura de tu taller en decisiones claras para ganar más con el mismo equipo.</p>
+        <p class="lead">El <span class="mb">métodoAGP</span> te da el control de los ciclos de reparación de tu taller, además de convertir las horas, los recambios y el material de pintura en decisiones claras para ganar más con el mismo equipo.</p>
         <div class="vids">
           <div>
             <h3>La historia de un taller</h3>
@@ -448,6 +449,14 @@ header .wrap{display:flex;flex-wrap:nowrap;align-items:center;justify-content:sp
   t.textContent = EMAIL;
   document.getElementById("hablemosBtn").href = b.href;
   document.getElementById("dashBtn").href = "mailto:" + EMAIL + "?subject=" + encodeURIComponent("métodoAGP: quiero ver el dashboard de mi taller");
+</script>
+<script>
+  // Vídeos: al reproducir uno se pausa el otro, y arrancan siempre con sonido
+  var vids = document.querySelectorAll(".vid video");
+  vids.forEach(function (v) {
+    v.muted = false; v.volume = 1;
+    v.addEventListener("play", function () { vids.forEach(function (o) { if (o !== v) o.pause(); }); });
+  });
 </script>
 <script src="descarga.js"></script>
 </body>
