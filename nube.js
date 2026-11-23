@@ -11,7 +11,7 @@
 var URL_="https://rauxafgiklkblnuddcwt.supabase.co",KEY_="sb_publishable_InvC_oz5ks0yjkVLsyRDDw_xd85hokP";
 var SDK="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
 var FK="agp-fichajes-v1",PK="agp-planificador-demo-v1",SNAP="agp-nube-snap-";
-var FASES=["stk","rec","val","apr","pie","esp","pch","des","cha","pin","pp","ecb","cab","mon","ctl","lst","ent","arc"];
+var FASES=["stk","rec","val","apr","pie","esp","pch","des","cha","pin","pp","ecb","cab","mon","mrp","min","ctl","lst","ent","arc"];
 var INCT=["vac","baja","perm","festivo","retraso","extra"];
 var N=window.NUBE={URL:URL_,fotos:{},st:{estado:"off",msg:"",taller:null,email:""}};
 
@@ -192,7 +192,7 @@ function prep(F){
 }
 function pEmp(e){return sj([e.cid,e.name,e.sec,e.h,e.days,e.from,e.to||null,e.tok])}
 function rEmp(e,t){
-  var r={id:e.cid,taller_id:t,nombre:e.name,seccion:["chapa","pintura","mecanica","indirecto"].indexOf(e.sec)>-1?e.sec:"indirecto",
+  var r={id:e.cid,taller_id:t,nombre:e.name,seccion:["chapa","pintura","mecanica","mecanica_rapida","mecanica_incidental","indirecto"].indexOf(e.sec)>-1?e.sec:"indirecto",
     horas_dia:+e.h||8,dias:e.days||[1,2,3,4,5],alta:e.from||today()};
   if(e.to){r.baja=e.to;r.enlace=null}else{r.baja=null;r.enlace=e.tok}
   return r;
@@ -288,7 +288,7 @@ async function doSync(){
   await pushKind("jobs","trabajos","id",F.jobs.filter(ok),function(j){return j.id},pJob,function(j){
     var fin=j.e?Math.max(j.e,j.s):null;
     return {id:j.id,taller_id:tid,operario_id:e2c[j.emp],tarjeta_id:tj[String(j.card)]||null,or_num:String(j.card),matricula:j.pl||null,fase:j.st||"cha",
-      seccion:j.sec==="pintura"?"pintura":"chapa",inicio:iso(j.s),fin:fin?iso(fin):null}},snap.jobs,tid);
+      seccion:["pintura","mecanica_rapida","mecanica_incidental"].indexOf(j.sec)>-1?j.sec:j.sec==="mecanica"?"mecanica_incidental":"chapa",inicio:iso(j.s),fin:fin?iso(fin):null}},snap.jobs,tid);
   snapSave(snap);
   await pushKind("inc","incidencias","id",F.inc.filter(function(i){return INCT.indexOf(i.type)>-1&&(i.emp==="ALL"||e2c[i.emp])}),function(i){return i.id},pInc,function(i){
     return {id:i.id,taller_id:tid,operario_id:i.emp==="ALL"?null:e2c[i.emp],tipo:i.type,desde:i.date,hasta:i.date,horas:i.h==null?null:i.h,nota:i.label||null}},snap.inc,tid);

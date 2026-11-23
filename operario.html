@@ -103,7 +103,7 @@ a{color:var(--blue)}
 <script>
 (function(){
 "use strict";
-var STN={rec:"Recepcionado",val:"Valoración",esp:"En espera chapa",des:"Desmontaje",cha:"Chapa",pp:"Preparación pintura",cab:"Cabina",mon:"Montaje",ctl:"Control y lavado",apr:"Valoración",pie:"En espera chapa",pch:"Desmontaje",pin:"Preparación pintura"};
+var STN={rec:"Recepcionado",val:"Valoración",esp:"En espera chapa",des:"Desmontaje",cha:"Chapa",pp:"Preparación pintura",cab:"Cabina",mon:"Montaje",mrp:"Mecánica rápida",min:"Mecánica incidental",ctl:"Control y lavado",apr:"Valoración",pie:"En espera chapa",pch:"Desmontaje",pin:"Preparación pintura"};
 function isPin(k){return k==="pp"||k==="cab"||k==="pin"}
 var $=function(s){return document.querySelector(s)};
 function p2(n){return (n<10?"0":"")+n}
@@ -131,7 +131,7 @@ function investedMs(){var t=0;jobs.forEach(function(j){t+=(j.e||Date.now())-j.s}
 function carOf(id){for(var i=0;i<cars.length;i++)if(cars[i].id===id)return cars[i];return null}
 function myCars(){
   if(!me)return [];
-  return cars.filter(function(c){return STN[c.fase]&&(me.seccion==="pintura"?isPin(c.fase):!isPin(c.fase))})
+  return cars.filter(function(c){if(!STN[c.fase])return false;var q=me.seccion;if(q==="pintura")return isPin(c.fase);if(q==="mecanica_rapida")return c.fase==="mrp";if(q==="mecanica_incidental"||q==="mecanica")return c.fase==="min";return !isPin(c.fase)&&c.fase!=="mrp"&&c.fase!=="min"})
     .sort(function(a,b){return String(a.fecha_salida||"").localeCompare(String(b.fecha_salida||""))});
 }
 
@@ -184,12 +184,12 @@ function view(){
   h+='<div class="card"><div class="me"><span class="av">'+esc(ini(me.nombre))+'</span><div><b>'+esc(me.nombre)+'</b><span class="pill '+(st.inside?'in':st.out?'out':'no')+'">'+(st.inside?'Dentro desde '+hm(st.since):st.out?'Fuera · saliste '+hm(st.out):'Sin fichar hoy')+'</span></div></div></div>';
   h+='<button class="big '+(st.inside?'out':'in')+'" data-mark="'+(st.inside?'out':'in')+'"'+(busy?' disabled':'')+'>'+(st.inside?'Fichar salida':'Fichar entrada')+'</button>';
   h+='<div class="kv"><div><b>'+fdur(st.ms)+'</b><span>presente hoy</span></div><div><b>'+fdur(investedMs())+'</b><span>en coches hoy</span></div></div>';
-  var tracks=me.seccion==="chapa"||me.seccion==="pintura";
+  var tracks=me.seccion!=="indirecto";
   if(tracks&&st.inside){
     if(oj){var oc=carOf(oj.card);h+='<div class="cur"><h2 style="color:var(--green)">Trabajando en</h2><div class="pl">'+esc(oj.pl||(oc&&oc.matricula)||oj.or)+'</div><div class="mute">'+esc(oc?oc.vehiculo||"":"")+' · '+esc(STN[oj.st]||oj.st)+'</div><div class="tm" id="jt"></div><div class="row2"><button class="btn cam" data-photo="'+esc(oj.card||"")+'">📷 Hacer foto</button><button class="btn stop" data-job="end"'+(busy?' disabled':'')+'>Acabo</button></div><div class="mute" style="font-size:13px;margin-top:8px">'+(phc[oj.card]||0)+' foto(s) en este coche (últimos 7 días)</div></div>'}
     var list=myCars(),q=filter.trim().toUpperCase();
     if(q)list=list.filter(function(c){return ((c.matricula||"")+" "+c.or_num+" "+(c.vehiculo||"")).toUpperCase().indexOf(q)>-1});
-    h+='<div class="card"><h2>Coches de '+(me.seccion==="pintura"?"pintura":"chapa")+'</h2><input class="search" id="q" type="search" placeholder="Buscar matrícula u OR" value="'+esc(filter)+'" autocomplete="off">';
+    h+='<div class="card"><h2>Coches de '+({pintura:"pintura",mecanica_rapida:"mecánica rápida",mecanica_incidental:"mecánica incidental",mecanica:"mecánica"}[me.seccion]||"chapa")+'</h2><input class="search" id="q" type="search" placeholder="Buscar matrícula u OR" value="'+esc(filter)+'" autocomplete="off">';
     if(!list.length)h+='<p class="mute" style="margin:6px 0">'+(q?'Ningún coche coincide.':'No hay coches en tu fase en el planificador.')+'</p>';
     else h+='<div class="cars">'+list.map(function(c){var on=oj&&oj.card===c.id;return '<div class="car"><div><span class="pl">'+esc(c.matricula)+'</span><small>'+esc(c.vehiculo||"")+' · '+esc(STN[c.fase])+'</small></div><div class="acts"><button class="btn cam sm" data-photo="'+esc(c.id)+'" aria-label="Hacer foto">📷</button>'+(on?'<span class="pill in">En curso</span>':'<button class="btn go sm" data-job="start" data-card="'+esc(c.id)+'"'+(busy?' disabled':'')+'>Comienzo</button>')+'</div></div>'}).join("")+'</div>';
     h+='</div>';
@@ -254,7 +254,7 @@ function doJob(kind,card){
   var cd=carOf(card);if(!cd){toast("Ese coche ya no está en el planificador");return}
   act(async function(){
     var o=openJob();if(o)chk(await C.from("trabajos").update({fin:new Date().toISOString()}).eq("id",o.id));
-    chk(await C.from("trabajos").insert({taller_id:me.taller_id,operario_id:me.id,tarjeta_id:cd.id,or_num:cd.or_num,matricula:cd.matricula,fase:cd.fase,seccion:me.seccion==="pintura"?"pintura":"chapa"}));
+    chk(await C.from("trabajos").insert({taller_id:me.taller_id,operario_id:me.id,tarjeta_id:cd.id,or_num:cd.or_num,matricula:cd.matricula,fase:cd.fase,seccion:["pintura","mecanica_rapida","mecanica_incidental"].indexOf(me.seccion)>-1?me.seccion:me.seccion==="mecanica"?"mecanica_incidental":"chapa"}));
   },"Comienzo · "+(cd.matricula||cd.or_num));
 }
 

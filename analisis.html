@@ -134,6 +134,10 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
   .top3 li,.crit,.big div{break-inside:avoid}
 }
 .mb{text-transform:none;letter-spacing:0}
+.secs{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0 6px}
+.secs label{display:flex;align-items:center;gap:8px;padding:10px 14px;border:1px solid var(--line,#d8dde3);border-radius:10px;cursor:pointer;font-weight:600}
+.secs label small{font-weight:400;opacity:.7}
+.secs input{width:18px;height:18px}
 </style>
 </head>
 <body>
@@ -155,7 +159,15 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
   </div>
 
   <div class="wrap">
-    <h2>Paso 1 · Elige cómo quieres analizarte</h2>
+    <h2>Paso 1 · ¿Qué secciones tiene tu taller?</h2>
+    <div class="secs" id="secs" role="group" aria-label="Secciones del taller">
+      <label><input type="checkbox" data-s="c" checked> Chapa</label>
+      <label><input type="checkbox" data-s="p" checked> Pintura</label>
+      <label><input type="checkbox" data-s="mr"> Mecánica rápida <small>(mantenimiento)</small></label>
+      <label><input type="checkbox" data-s="mi"> Mecánica incidental <small>(averías, diagnosis)</small></label>
+    </div>
+    <p class="modehint">Solo se te pedirán y calcularán los datos de las secciones que marques.</p>
+    <h2>Paso 2 · Elige cómo quieres analizarte</h2>
     <div class="mode" role="group" aria-label="Modo de análisis">
       <button type="button" id="mq" aria-pressed="true">Rápido (2 min)</button>
       <button type="button" id="mf" aria-pressed="false">Completo (10 min)</button>
@@ -203,31 +215,45 @@ var H_CONV = 1760;          // 8 h x 220 días por operario (tiempo de convenio)
 
 // Valores del método (no se muestran en pantalla salvo SHOW_TARGETS)
 var T = { recH:50, matH:28, mix:{mo:.40, mat:.15, rec:.45}, mMO:.30, mRec:.25, mMat:.50, estr:.25, indir:.30,
-          hCh:5.5, hPi:4.5,
+          hCh:5.5, hPi:4.5, recM:40,
           litros:{base:.06, barniz:.12, fondo:.04}, precio:{base:70, barniz:19, fondo:17} };
 
 /* ---------- campos ---------- */
 var F = [
  // bloque A
- {id:"ch",  b:"A", l:"Chapistas", u:"personas", m:"qf", req:1, h:"Operarios de mano de obra directa en chapa."},
- {id:"pi",  b:"A", l:"Pintores", u:"personas", m:"qf", req:1, h:"Operarios de mano de obra directa en pintura."},
+ {id:"ch",  b:"A", l:"Chapistas", u:"personas", m:"qf", req:1, s:"c", h:"Operarios de mano de obra directa en chapa."},
+ {id:"pi",  b:"A", l:"Pintores", u:"personas", m:"qf", req:1, s:"p", h:"Operarios de mano de obra directa en pintura."},
+ {id:"nm",  b:"A", l:"Mecánicos", u:"personas", m:"qf", req:1, s:"m", h:"Operarios de mano de obra directa en mecánica (propios, sin subcontratar)."},
+ {id:"pctR", b:"A", l:"% de la facturación de mecánica que es rápida", u:"%", m:"qf", s:"mm", h:"El resto se considera mecánica incidental. Si no lo sabes, déjalo vacío."},
  {id:"indir",b:"A", l:"Personal de mano de obra indirecta", u:"personas", m:"f", h:"Recepción, administración, jefe de taller, mozos…"},
  {id:"aus",  b:"A", l:"Horas de ausencia anuales", u:"h", m:"f", row:1, h:"Bajas, retrasos, ausencias de operarios directos."},
  {id:"extra",b:"A", l:"Horas extra anuales", u:"h", m:"f", h:"Total de horas extra de chapistas y pintores."},
- {id:"fc",   b:"A", l:"Horas facturadas de chapa", u:"h", m:"f", req:1, row:1, h:"Año completo."},
- {id:"fp",   b:"A", l:"Horas facturadas de pintura", u:"h", m:"f", req:1, h:"Año completo."},
+ {id:"fc",   b:"A", l:"Horas facturadas de chapa", u:"h", m:"f", req:1, s:"c", row:1, h:"Año completo."},
+ {id:"fp",   b:"A", l:"Horas facturadas de pintura", u:"h", m:"f", req:1, s:"p", h:"Año completo."},
+ {id:"fm",   b:"A", l:"Horas facturadas de mecánica", u:"h", m:"f", req:1, s:"m", h:"Rápida + incidental, año completo."},
  {id:"precio", b:"A", l:"Precio medio de venta de la hora", u:"€/h", m:"qf", req:1, h:"Sin IVA."},
  {id:"rend", b:"A", l:"Rendimiento actual estimado", u:"%", m:"q", req:1, h:"Horas facturadas entre horas compradas. Si no lo sabes, pon tu mejor estimación."},
  {id:"facMO",b:"G", l:"Facturación de mano de obra", u:"€/año", m:"qf", h:"Si lo dejas vacío se calcula con horas × precio."},
- {id:"rec",  b:"G", l:"Facturación de recambios", u:"€/año", m:"qf", h:"Sin IVA. Si no lo sabes, déjalo vacío: lo indicaremos como dato pendiente."},
- {id:"mat",  b:"G", l:"Facturación de material de pintura", u:"€/año", m:"qf", h:"Sin IVA. Si no lo sabes, déjalo vacío: lo indicaremos como dato pendiente."},
+ {id:"rec",  b:"G", l:"Facturación de recambios de chapa", u:"€/año", m:"qf", s:"c", h:"Sin IVA. Si no lo sabes, déjalo vacío: lo indicaremos como dato pendiente."},
+ {id:"mat",  b:"G", l:"Facturación de material de pintura", u:"€/año", m:"qf", s:"p", h:"Sin IVA. Si no lo sabes, déjalo vacío: lo indicaremos como dato pendiente."},
+ {id:"recM", b:"G", l:"Facturación de recambios de mecánica", u:"€/año", m:"qf", s:"m", h:"Sin IVA. Opcional."},
  // bloque P
  {id:"pers", b:"P", l:"Gasto de personal", u:"€/año", m:"f", h:"Toda la plantilla (directa e indirecta), con seguridad social."},
  {id:"estr", b:"P", l:"Gastos de estructura", u:"€/año", m:"f", h:"Gastos no facturables: alquiler, suministros, seguros, etc."},
- {id:"cRec", b:"P", l:"Costes / compra de recambios", u:"€/año", m:"f", h:"Lo que te han costado los recambios en el año, sin IVA."},
- {id:"cMat", b:"P", l:"Costes / compra de material de pintura", u:"€/año", m:"f", h:"Lo que te ha costado el material de pintura en el año, sin IVA."}
+ {id:"cRec", b:"P", l:"Costes / compra de recambios", u:"€/año", m:"f", s:"cm", h:"Lo que te han costado los recambios en el año, sin IVA."},
+ {id:"cMat", b:"P", l:"Costes / compra de material de pintura", u:"€/año", m:"f", s:"p", h:"Lo que te ha costado el material de pintura en el año, sin IVA."}
 ];
 var mode = "q";
+var SEC = {c:true,p:true,mr:false,mi:false};
+function secOk(f){
+  if(!f.s) return true;
+  var m = SEC.mr||SEC.mi;
+  if(f.s==="c") return SEC.c;
+  if(f.s==="p") return SEC.p;
+  if(f.s==="m"||f.s==="mm") return f.s==="mm" ? (SEC.mr&&SEC.mi) : m;
+  if(f.s==="cm") return SEC.c||m;
+  return true;
+}
 var KEY = "agp-autodiag-v1";
 
 function el(t,c,h){var e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;}
@@ -241,7 +267,8 @@ function build(){
   });
 }
 function applyMode(){
-  F.forEach(function(f){ document.getElementById("f_"+f.id).hidden = f.m.indexOf(mode)<0; });
+  F.forEach(function(f){ document.getElementById("f_"+f.id).hidden = f.m.indexOf(mode)<0 || !secOk(f); });
+  Array.prototype.forEach.call(document.querySelectorAll("#secs input"),function(i){i.checked=!!SEC[i.getAttribute("data-s")];});
   document.getElementById("mq").setAttribute("aria-pressed", mode==="q");
   document.getElementById("mf").setAttribute("aria-pressed", mode==="f");
   document.getElementById("fsP").hidden = (mode==="q");
@@ -264,45 +291,53 @@ function pct(n,d){return (n*100).toLocaleString("es-ES",{minimumFractionDigits:d
 function hrs(n){return Math.round(n).toLocaleString("es-ES",{useGrouping:"always"})+" h";}
 function lit(n){return n.toLocaleString("es-ES",{maximumFractionDigits:0,useGrouping:"always"})+" l";}
 function get(id){var i=document.getElementById("i_"+id);return i?num(i.value):null;}
-function save(){try{var o={mode:mode};F.forEach(function(f){o[f.id]=document.getElementById("i_"+f.id).value;});localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}}
-function load(){try{var o=JSON.parse(localStorage.getItem(KEY)||"null");if(!o)return;mode=o.mode==="f"?"f":"q";F.forEach(function(f){if(o[f.id]!=null)document.getElementById("i_"+f.id).value=o[f.id];});}catch(e){}}
+function save(){try{var o={mode:mode,sec:SEC};F.forEach(function(f){o[f.id]=document.getElementById("i_"+f.id).value;});localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}}
+function load(){try{var o=JSON.parse(localStorage.getItem(KEY)||"null");if(!o)return;mode=o.mode==="f"?"f":"q";if(o.sec)SEC={c:!!o.sec.c,p:!!o.sec.p,mr:!!o.sec.mr,mi:!!o.sec.mi};F.forEach(function(f){if(o[f.id]!=null)document.getElementById("i_"+f.id).value=o[f.id];});}catch(e){}}
 
 /* ---------- cálculo ---------- */
 function calc(){
   var v={}; F.forEach(function(f){v[f.id]=get(f.id);});
   var errs=[], need=function(id){var f=document.getElementById("f_"+id);f.classList.add("err");};
   F.forEach(function(f){document.getElementById("f_"+f.id).classList.remove("err");});
-  var req=F.filter(function(f){return f.req && f.m.indexOf(mode)>=0;});
+  var anySec=SEC.c||SEC.p||SEC.mr||SEC.mi, mec=SEC.mr||SEC.mi;
+  if(!anySec){ return {errs:["Marca al menos una sección"]}; }
+  var req=F.filter(function(f){return f.req && f.m.indexOf(mode)>=0 && secOk(f);});
   req.forEach(function(f){ if(v[f.id]==null){errs.push(f.l);need(f.id);} });
-  var chv=v.ch||0, piv=v.pi||0;
-  if(chv+piv<=0){ errs.push("Al menos un chapista o pintor"); need("ch"); need("pi"); }
+  var chv=SEC.c?(v.ch||0):0, piv=SEC.p?(v.pi||0):0, nmv=mec?(v.nm||0):0;
+  if(chv+piv+nmv<=0){ errs.push("Al menos un operario directo"); if(SEC.c)need("ch"); if(SEC.p)need("pi"); if(mec)need("nm"); }
+  if(v.pctR!=null && (v.pctR<0||v.pctR>100)){ errs.push("% de mecánica rápida entre 0 y 100"); need("pctR"); }
   if(v.precio!=null && v.precio<=0){ errs.push("Precio medio de la hora"); need("precio"); }
   if(mode==="q" && v.rend!=null && (v.rend<=0||v.rend>130)){ errs.push("Rendimiento entre 1 y 130"); need("rend"); }
   if(errs.length) return {errs:errs};
 
-  var dir=chv+piv, extra=v.extra||0;
+  var dir=chv+piv+nmv, extra=v.extra||0;
   var C = dir*H_CONV + extra;
-  var Cc = C*chv/dir, Cp = C*piv/dir;
-  var Fc,Fp;
-  if(mode==="q"){ var r=v.rend/100; Fc=Cc*r; Fp=Cp*r; } else { Fc=v.fc; Fp=v.fp; }
-  var Ft=Fc+Fp, R=Ft/C;
+  var Cc = C*chv/dir, Cp = C*piv/dir, Cm = C*nmv/dir;
+  var Fc,Fp,Fm;
+  if(mode==="q"){ var r=v.rend/100; Fc=Cc*r; Fp=Cp*r; Fm=Cm*r; } else { Fc=SEC.c?(v.fc||0):0; Fp=SEC.p?(v.fp||0):0; Fm=mec?(v.fm||0):0; }
+  var pr_= (SEC.mr&&SEC.mi) ? (v.pctR!=null?v.pctR/100:null) : (SEC.mr?1:0);
+  var Fmr = pr_!=null ? Fm*pr_ : null, Fmi = pr_!=null ? Fm*(1-pr_) : null;
+  var Ft=Fc+Fp+Fm, R=Ft/C;
   var facMO = v.facMO!=null ? v.facMO : Ft*v.precio;
-  var rec=v.rec, mat=v.mat, tot=facMO+(rec||0)+(mat||0);
-  var o={v:v,dir:dir,C:C,Cc:Cc,Cp:Cp,Fc:Fc,Fp:Fp,Ft:Ft,R:R,facMO:facMO,rec:rec,mat:mat,tot:tot,precio:v.precio,miss:{}};
+  var rec=SEC.c?v.rec:0, mat=SEC.p?v.mat:0, recM=mec?v.recM:0;
+  if(!SEC.c) rec=0; if(!SEC.p) mat=0;
+  var tot=facMO+(rec||0)+(mat||0)+(recM||0);
+  var o={v:v,dir:dir,C:C,Cc:Cc,Cp:Cp,Cm:Cm,Fc:Fc,Fp:Fp,Fm:Fm,Fmr:Fmr,Fmi:Fmi,recM:recM,mec:mec,Ft:Ft,R:R,facMO:facMO,rec:rec,mat:mat,tot:tot,precio:v.precio,miss:{}};
 
   // potencial
   var moPot = C*v.precio;
   o.perdidaMO = Math.max(0, moPot - Ft*v.precio);
-  var potRec = T.recH*Cc, potMat = T.matH*Cp;
-  o.potTot = moPot + potRec + potMat;
-  o.partial = (rec==null || mat==null);
-  o.potCmp = moPot + (rec!=null?potRec:0) + (mat!=null?potMat:0);
+  var potRec = T.recH*Cc, potMat = T.matH*Cp, potRecM = T.recM*Cm;
+  o.potTot = moPot + potRec + potMat + potRecM;
+  o.partial = (SEC.c&&rec==null) || (SEC.p&&mat==null) || (mec&&recM==null);
+  o.potCmp = moPot + (rec!=null?potRec:0) + (mat!=null?potMat:0) + (recM!=null?potRecM:0);
   o.gapTot = Math.max(0, o.potCmp - tot);
 
   // ratios
   o.recH = (rec!=null && Fc>0) ? rec/Fc : null;
   o.matH = (mat!=null && Fp>0) ? mat/Fp : null;
-  o.mix = (rec!=null && mat!=null && tot>0) ? {mo:facMO/tot, mat:mat/tot, rec:rec/tot} : null;
+  o.recHm = (recM!=null && mec && Fm>0) ? recM/Fm : null;
+  o.mix = (!mec && SEC.c && SEC.p && rec!=null && mat!=null && tot>0) ? {mo:facMO/tot, mat:mat/tot, rec:rec/tot} : null;
 
   // tiempos (modo completo)
   o.abs = (v.aus!=null) ? v.aus/C : null;
@@ -314,8 +349,9 @@ function calc(){
     o.mMO = 1 - o.cHReal/v.precio;
     o.estrShare = v.estr/(v.pers+v.estr);
   }
-  o.mRec = (v.cRec!=null && rec>0) ? (rec-v.cRec)/rec : null;
-  o.mMat = (v.cMat!=null && mat>0) ? (mat-v.cMat)/mat : null;
+  var recAll=(rec||0)+(recM||0);
+  o.mRec = (v.cRec!=null && recAll>0) ? (recAll-v.cRec)/recAll : null;
+  o.mMat = (SEC.p && v.cMat!=null && mat>0) ? (mat-v.cMat)/mat : null;
 
   // pintura: litros esperados
   var L=T.litros,P=T.precio;
@@ -335,23 +371,29 @@ function rows(o){
   r.push({n:"Rendimiento global (facturadas / compradas)",val:pct(o.R),s:st(o.R,.90,.75),target:"100 %",dev:1-o.R,eur:o.perdidaMO,
     advice:"Cada punto de rendimiento que recuperas se convierte en horas facturadas sin contratar a nadie. Revisa la planificación diaria, las esperas de material y los tiempos muertos entre fases."});
   if(mode==="f"){
-    var Rc=o.Fc/o.Cc, Rp=o.Fp/o.Cp;
-    r.push({n:"Rendimiento de chapa",val:isFinite(Rc)?pct(Rc):"—",s:isFinite(Rc)?st(Rc,.90,.75):"na",target:"100 %",dev:1-Rc,
+    var Rc=o.Fc/o.Cc, Rp=o.Fp/o.Cp, Rm=o.Fm/o.Cm;
+    if(SEC.c) r.push({n:"Rendimiento de chapa",val:isFinite(Rc)?pct(Rc):"—",s:isFinite(Rc)?st(Rc,.90,.75):"na",target:"100 %",dev:1-Rc,
       advice:"En chapa, mira el tiempo parado esperando recambios y las valoraciones o autorizaciones del seguro."});
-    r.push({n:"Rendimiento de pintura",val:isFinite(Rp)?pct(Rp):"—",s:isFinite(Rp)?st(Rp,.90,.75):"na",target:"100 %",dev:1-Rp,
+    if(o.mec) r.push({n:"Rendimiento de mecánica",val:isFinite(Rm)?pct(Rm):"—",s:isFinite(Rm)?st(Rm,.90,.75):"na",target:"100 %",dev:1-Rm,
+      advice:"En mecánica, revisa la agenda de citas, el tiempo de espera de piezas y los huecos entre trabajos."});
+    if(SEC.p) r.push({n:"Rendimiento de pintura",val:isFinite(Rp)?pct(Rp):"—",s:isFinite(Rp)?st(Rp,.90,.75):"na",target:"100 %",dev:1-Rp,
       advice:"En pintura, un cuello habitual es la cabina: ordena la carga de trabajo para que no se pare ni se sature."});
   }
-  r.push(o.recH!=null?{n:"Recambios por hora de chapa facturada",val:eur2(o.recH),s:st(o.recH/T.recH,.95,.80),target:eur2(T.recH),dev:1-o.recH/T.recH,eur:Math.max(0,(T.recH-o.recH)*o.Fc),
+  if(SEC.c) r.push(o.recH!=null?{n:"Recambios por hora de chapa facturada",val:eur2(o.recH),s:st(o.recH/T.recH,.95,.80),target:eur2(T.recH),dev:1-o.recH/T.recH,eur:Math.max(0,(T.recH-o.recH)*o.Fc),
     advice:"Revisa si se está facturando todo el recambio que se monta, el margen aplicado y las piezas que se compran y no se repercuten."}:
     {n:"Recambios por hora de chapa facturada",val:"—",s:"na",miss:(o.rec==null?"Falta: facturación de recambios.":"Faltan horas facturadas de chapa.")});
-  r.push(o.matH!=null?{n:"Material de pintura por hora de pintura facturada",val:eur2(o.matH),s:st(o.matH/T.matH,.95,.80),target:eur2(T.matH),dev:1-o.matH/T.matH,eur:Math.max(0,(T.matH-o.matH)*o.Fp),
+  if(o.mec) r.push(o.recHm!=null?{n:"Recambios por hora de mecánica facturada (estimación)",val:eur2(o.recHm),s:st(o.recHm/T.recM,.95,.80),target:eur2(T.recM),dev:1-o.recHm/T.recM,eur:Math.max(0,(T.recM-o.recHm)*o.Fm),
+    advice:"Valor de referencia estimado en 40 €/h; aún se está afinando por tipo de mecánica. Revisa que se factura todo el recambio y consumible que se usa."}:
+    {n:"Recambios por hora de mecánica facturada (estimación)",val:"—",s:"na",miss:(o.recM==null?"Falta: facturación de recambios de mecánica.":"Faltan horas facturadas de mecánica.")});
+  if(o.mec&&o.Fmr!=null) r.push({n:"Mecánica rápida / incidental (horas facturadas)",val:hrs(o.Fmr)+" / "+hrs(o.Fmi),s:"na",neutral:1,miss:"Informativo: el objetivo por tipo de mecánica está pendiente de definir."});
+  if(SEC.p) r.push(o.matH!=null?{n:"Material de pintura por hora de pintura facturada",val:eur2(o.matH),s:st(o.matH/T.matH,.95,.80),target:eur2(T.matH),dev:1-o.matH/T.matH,eur:Math.max(0,(T.matH-o.matH)*o.Fp),
     advice:"Comprueba que el material se factura según los tiempos de pintura y que se cobra lo que se consume, incluidos los productos auxiliares."}:
     {n:"Material de pintura por hora de pintura facturada",val:"—",s:"na",miss:(o.mat==null?"Falta: facturación de material de pintura.":"Faltan horas facturadas de pintura.")});
   var d=o.mix?Math.max(Math.abs(o.mix.mo-T.mix.mo),Math.abs(o.mix.mat-T.mix.mat),Math.abs(o.mix.rec-T.mix.rec)):0;
-  if(!o.mix) r.push({n:"Reparto de la facturación (mano de obra / pintura / recambios)",val:"—",s:"na",miss:"Faltan: facturación de recambios y de material de pintura."});
+  if(SEC.c&&SEC.p&&!o.mec){ if(!o.mix) r.push({n:"Reparto de la facturación (mano de obra / pintura / recambios)",val:"—",s:"na",miss:"Faltan: facturación de recambios y de material de pintura."});
   else r.push({n:"Reparto de la facturación (mano de obra / pintura / recambios)",val:pct(o.mix.mo)+" / "+pct(o.mix.mat)+" / "+pct(o.mix.rec),
     s:d<=.05?"ok":(d<=.10?"warn":"bad"),target:pct(T.mix.mo)+" / "+pct(T.mix.mat)+" / "+pct(T.mix.rec),dev:d*2,
-    advice:"Un reparto desviado suele indicar que se vende poca mano de obra en relación al recambio o que el material de pintura está infrafacturado."});
+    advice:"Un reparto desviado suele indicar que se vende poca mano de obra en relación al recambio o que el material de pintura está infrafacturado."}); }
   // tiempos
   r.push(o.abs!=null?{n:"Absentismo (ausencia / compradas)",val:pct(o.abs,1),s:"na",neutral:1,miss:"El método lo mide pero no fija un valor óptimo: marca tu propio objetivo.",
       advice:"Registra las ausencias por causa (bajas, retrasos, permisos) para saber cuáles puedes reducir."}:
@@ -380,6 +422,8 @@ function rows(o){
 }
 
 /* ---------- informe ---------- */
+function secTxt(){var a=[];if(SEC.c)a.push("chapa");if(SEC.p)a.push("pintura");if(SEC.mr)a.push("mecánica rápida");if(SEC.mi)a.push("mecánica incidental");return a.join(" + ");}
+function missTxt(o){var a=[];if(SEC.c&&o.rec==null)a.push("recambios de chapa");if(SEC.p&&o.mat==null)a.push("material de pintura");if(o.mec&&o.recM==null)a.push("recambios de mecánica");return a.join(", ");}
 function render(o){
   var R=rows(o), h="";
   var overall = R[0].s; // semáforo del rendimiento
@@ -392,12 +436,13 @@ function render(o){
 
   // potencial
   h+='<div class="block"><h3>Facturación actual y potencial</h3><div class="scroll"><table class="tbl"><thead><tr><th></th><th class="n">Actual</th><th class="n">Con rendimiento al 100 %</th></tr></thead><tbody>'+
-     '<tr><td>Horas facturadas (chapa + pintura)</td><td class="n">'+hrs(o.Ft)+'</td><td class="n">'+hrs(o.C)+'</td></tr>'+
+     '<tr><td>Horas facturadas ('+secTxt()+')</td><td class="n">'+hrs(o.Ft)+'</td><td class="n">'+hrs(o.C)+'</td></tr>'+
      '<tr><td>Mano de obra</td><td class="n">'+eur(o.facMO)+'</td><td class="n">'+eur(o.C*o.precio)+'</td></tr>'+
-     '<tr><td>Recambios</td><td class="n">'+(o.rec!=null?eur(o.rec):'<span class="miss">Sin dato</span>')+'</td><td class="n">'+eur(T.recH*o.Cc)+'</td></tr>'+
-     '<tr><td>Material de pintura</td><td class="n">'+(o.mat!=null?eur(o.mat):'<span class="miss">Sin dato</span>')+'</td><td class="n">'+eur(T.matH*o.Cp)+'</td></tr>'+
+     (SEC.c?'<tr><td>Recambios de chapa</td><td class="n">'+(o.rec!=null?eur(o.rec):'<span class="miss">Sin dato</span>')+'</td><td class="n">'+eur(T.recH*o.Cc)+'</td></tr>':'')+
+     (SEC.p?'<tr><td>Material de pintura</td><td class="n">'+(o.mat!=null?eur(o.mat):'<span class="miss">Sin dato</span>')+'</td><td class="n">'+eur(T.matH*o.Cp)+'</td></tr>':'')+
+     (o.mec?'<tr><td>Recambios de mecánica (estimación 40 €/h)</td><td class="n">'+(o.recM!=null?eur(o.recM):'<span class="miss">Sin dato</span>')+'</td><td class="n">'+eur(T.recM*o.Cm)+'</td></tr>':'')+
      '<tr><td><b>Total</b></td><td class="n"><b>'+(o.partial?'<span class="miss">Incompleto</span>':eur(o.tot))+'</b></td><td class="n"><b>'+eur(o.potTot)+'</b></td></tr>'+
-     '</tbody></table></div>'+(o.partial?'<p class="note" style="margin-top:12px">Falta la facturación de '+(o.rec==null&&o.mat==null?'recambios y de material de pintura':(o.rec==null?'recambios':'material de pintura'))+'. Añádela para ver el total y todos los indicadores asociados.</p>':'')+'</div>';
+     '</tbody></table></div>'+(o.partial?'<p class="note" style="margin-top:12px">Falta la facturación de '+missTxt(o)+'. Añádela para ver el total y todos los indicadores asociados.</p>':'')+'</div>';
 
   // cuellos de botella
   var cands=R.filter(function(x){return x.s==="warn"||x.s==="bad";}).sort(function(a,b){
@@ -419,6 +464,7 @@ function render(o){
     '</tbody></table></div></div>';
 
   // pintura
+  if(SEC.p){
   var L=o.lAct, L1=o.l100, P=T.precio;
   function pr(n,k){return '<tr><td>'+n+'</td><td class="n">'+lit(L[k])+'</td><td class="n">'+eur(L[k]*P[k])+'</td><td class="n">'+lit(L1[k])+'</td><td class="n">'+eur(L1[k]*P[k])+'</td></tr>';}
   h+='<div class="block"><h3><img class="hic" src="pintura.png" alt="" width="26" height="26">Consumo de material de pintura</h3><p class="sub">Litros listos al uso y valor en euros que consumiría tu sección de pintura, calculados sobre las horas facturadas de pintura ('+hrs(o.Fp)+' al rendimiento actual y '+hrs(o.Cp)+' al 100 %).</p>'+
@@ -427,6 +473,7 @@ function render(o){
      '<tr><td><b>Total</b></td><td class="n"><b>'+lit(L.base+L.barniz+L.fondo)+'</b></td><td class="n"><b>'+eur(o.eAct)+'</b></td><td class="n"><b>'+lit(L1.base+L1.barniz+L1.fondo)+'</b></td><td class="n"><b>'+eur(o.e100)+'</b></td></tr>'+
      '</tbody></table></div>';
   h+='</div>';
+  }
 
   // checklist
   h+='<div class="block"><h3>Checklist para llegar al 100 % de rendimiento</h3><ul class="check">'+
@@ -439,7 +486,7 @@ function render(o){
      'Factura todo lo que se monta y se consume: recambios, material de pintura y tiempos de trabajos extra.'].map(function(t){return '<li>'+t+'</li>';}).join("")+'</ul></div>';
 
   // criterios
-  h+='<div class="block"><div class="crit"><b>Criterios de cálculo.</b> Tiempo de convenio: 8 h × 220 días = 1.760 h por operario. Tiempo comprado: convenio + horas extra, repartido entre chapa y pintura según el número de operarios. En modo rápido el rendimiento introducido se aplica por igual a chapa y pintura. Potencial = horas compradas × precio medio de la hora, más recambios y material con los ratios por hora del método. Margen sobre la mano de obra = 1 − (gasto de personal + estructura) / horas facturadas / precio de la hora. Resultados orientativos; no incluyen datos que no hayas introducido.</div></div>';
+  h+='<div class="block"><div class="crit"><b>Criterios de cálculo.</b> Tiempo de convenio: 8 h × 220 días = 1.760 h por operario. Tiempo comprado: convenio + horas extra, repartido entre las secciones activas según el número de operarios. Mecánica: recambios estimados en 40 €/h facturada (valor orientativo, pendiente de afinar). En modo rápido el rendimiento introducido se aplica por igual a chapa y pintura. Potencial = horas compradas × precio medio de la hora, más recambios y material con los ratios por hora del método. Margen sobre la mano de obra = 1 − (gasto de personal + estructura) / horas facturadas / precio de la hora. Resultados orientativos; no incluyen datos que no hayas introducido.</div></div>';
 
   // CTA
   var sub="métodoAGP: mi autodiagnóstico";
@@ -455,6 +502,7 @@ function render(o){
 
 /* ---------- eventos ---------- */
 build(); load(); applyMode();
+Array.prototype.forEach.call(document.querySelectorAll("#secs input"),function(i){i.addEventListener("change",function(){SEC[i.getAttribute("data-s")]=i.checked;applyMode();save();});});
 document.getElementById("mq").onclick=function(){mode="q";applyMode();save();};
 document.getElementById("mf").onclick=function(){mode="f";applyMode();save();};
 document.getElementById("clr").onclick=function(){

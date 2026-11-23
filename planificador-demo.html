@@ -103,6 +103,8 @@ button{cursor:pointer}
 .plate i{display:block;width:8px;align-self:stretch;background:#1c46b5;margin-right:5px;margin-block:-2px}
 .car{font-size:11.5px;opacity:.9}
 .ins{font-size:11.5px;font-weight:600}
+.leg{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:12px;color:var(--mute);padding:8px 0 2px}.leg i{display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.25);vertical-align:-3px;margin-right:5px}.leg b{color:var(--ink);font-weight:600}
+.dlg label.chk{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;font-size:14px;color:var(--ink);padding:4px 0}.dlg .chk input{width:18px;height:18px;padding:0;flex:none}
 .vs{display:flex;flex-wrap:wrap;gap:3px;margin-top:2px}.vs span{font-size:10px;font-weight:700;border-radius:4px;padding:1px 5px;background:rgba(255,255,255,.55);color:#222;border:1px solid rgba(0,0,0,.18)}.vs span.w{background:#fff3cd;border-color:#c99a00}.vs span.n{background:rgba(255,255,255,.35);color:#555;border-color:rgba(0,0,0,.12)}.vs span.g{background:#d1f0d8;border-color:#1f8a3b}.vs span.r{background:#f8d7da;border-color:#b02a37}
 .gst{border:1px solid var(--line,#ccc);border-radius:10px;padding:8px 10px;margin:8px 0}.gst h4{margin:0 0 6px;font-size:13px}.gst .g2{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}.gst label{display:flex;flex-direction:column;font-size:11.5px;gap:2px}.gst select{font:inherit;font-size:13px}@media (max-width:520px){.gst .g2{grid-template-columns:1fr}}
 .ics{display:flex;gap:5px;margin-block:1px}
@@ -237,7 +239,7 @@ table.heat{min-width:640px}
 <script>
 (function(){
   var $=function(s){return document.querySelector(s)};
-  var COLS=[['stk','Stock reparaciones'],['rec','Recepcionado'],['val','Valoración'],['des','Desmontaje'],['cha','Chapa'],['pp','Preparación pintura'],['cab','Cabina'],['mon','Montaje'],['ctl','Control y lavado'],['lst','Listo para entrega']];
+  var COLS=[['stk','Stock reparaciones'],['rec','Recepcionado'],['val','Valoración'],['des','Desmontaje'],['cha','Chapa'],['pp','Preparación pintura'],['cab','Cabina'],['mon','Montaje'],['mrp','Mecánica rápida'],['min','Mecánica incidental'],['ctl','Control y lavado'],['lst','Listo para entrega']];
   var LEG={pch:'des',pin:'pp',apr:'val',pie:'des',esp:'des',ecb:'cab'}; // estados antiguos → nuevos
   function lg(k){return LEG[k]||k}
   function isP(k){k=lg(k);return k==='pp'||k==='cab'}  // sección de pintura = preparación + cabina
@@ -246,13 +248,17 @@ table.heat{min-width:640px}
   var FC=['NO FACTURABLE','POR FACTURAR','FACTURADA','COBRADA','IMPAGADA O RECLAMADA'];
   var PT=['Presencial (perito)','Foto-peritación','Particular (sin perito)'];
   var PG=['Aseguradora contraria','Aseguradora propia','Cliente particular','Flota, renting o empresa','Garantía o concesión'];
-  var PRE={stk:1,rec:1,val:1},PROD={des:1,cha:1,pp:1,cab:1,mon:1},WORK={des:1,cha:1,pp:1,cab:1,mon:1,ctl:1};
+  var PRE={stk:1,rec:1,val:1},PROD={des:1,cha:1,pp:1,cab:1,mon:1,mrp:1,min:1},WORK={des:1,cha:1,pp:1,cab:1,mon:1,mrp:1,min:1,ctl:1};
   function perOk(c){return c.per==='CERRADA'||c.per==='NO APLICA'}
   function perOpen(c){return c.per==='PENDIENTE'||c.per==='INICIADA'||c.per==='PENDIENTE PERITO'||c.per==='PENDIENTE COMPROMISO'||c.per==='PETICIÓN AMPLIACIÓN'}
   function rgOk(c){return c.rg==='RECIBIDO'||c.rg==='NO APLICA'}
   function rgOpen(c){return c.rg==='POR PEDIR'||c.rg==='PEDIDO'||c.rg==='PARCIAL RECIBIDO'}
   var TABS=['Planificación','Producción','Entrega','Archivo','Tiempos','Informes'];
-  var COLORS=[['white','Blanco'],['red','Rojo'],['purple','Morado'],['green','Verde'],['blue','Azul'],['orange','Naranja'],['yellow','Amarillo']];
+  var DOW=[['1','Lunes','blue'],['2','Martes','green'],['3','Miércoles','yellow'],['4','Jueves','orange'],['5','Viernes','purple']];
+  var DOWF=DOW.map(function(d){return [d[0],d[1]]}).concat([['we','Fin de semana']]);
+  function dowOf(c){return new Date((c.sal||'2000-01-03')+'T00:00:00').getDay()}
+  function dayCol(c){var d=dowOf(c);return d>=1&&d<=5?DOW[d-1][2]:'white'}
+  function dayKey(c){var d=dowOf(c);return d>=1&&d<=5?String(d):'we'}
   var KEY='agp-planificador-demo-v1';
   var tab=0, f={q:'',as:'',ins:'',pri:'',due:'',tc:''}, toastT;
   var today=new Date(); today.setHours(0,0,0,0);
@@ -294,11 +300,27 @@ table.heat{min-width:640px}
     S(26455,'RÁPIDO','5231HWC','Toyota Aygo X','Naranja','Aseguradora Alianza',2,0,3,540,'mon','green',2,4,1,-1,'7/7',0,'car,wrench,check')
   ])}
 
-  var st={cards:seed(),ops:{c:5,m:1,p:4},days:5,hpd:8,seed:true};
+  var st={cards:seed(),ops:{c:5,r:0,i:1,p:4},secs:{c:true,p:true,r:false,i:false},days:5,hpd:8,seed:true};
   try{var raw=localStorage.getItem(KEY);if(raw){var o=JSON.parse(raw);if(o&&o.cards&&o.ops){st=o}}}catch(e){}
   function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}if(window.NUBE&&NUBE.touch)NUBE.touch()}
+  var SECK=[['c','Chapa'],['r','Mecánica rápida'],['i','Mecánica incidental'],['p','Pintura']];
+  var SECS={c:'C',r:'MR',i:'MI',p:'P'},SECL={c:'Chapa',r:'Mec. rápida',i:'Mec. incidental',p:'Pintura'};
+  function secOn(k){return !!(st.secs&&st.secs[k])}
+  function secList(){return SECK.filter(function(x){return secOn(x[0])})}
+  function hs(c,k){if(!secOn(k))return 0;return k==='c'?(c.c||0):k==='p'?(c.p||0):k==='r'?(c.mr||0):(c.mi||0)}
+  function normSt(){
+    if(!st.secs)st.secs={c:true,p:true,r:false,i:false};
+    if(!st.ops)st.ops={};
+    if(st.ops.m!==undefined){if(st.ops.i===undefined)st.ops.i=st.ops.m;delete st.ops.m}
+    ['c','r','i','p'].forEach(function(k){if(st.ops[k]===undefined)st.ops[k]=0});
+  }
+  function colOn(k){return k==='des'||k==='cha'||k==='mon'?secOn('c'):k==='pp'||k==='cab'?secOn('p'):k==='mrp'?secOn('r'):k==='min'?secOn('i'):true}
+  function COLSV(){return COLS.filter(function(k){return colOn(k[0])||st.cards.some(function(c){return c.st===k[0]})})}
+  normSt();
   function norm(c){ // migra estados antiguos y completa los campos de los procesos virtuales
     var old=c.st;c.st=lg(c.st);
+    if(c.mr===undefined&&c.mi===undefined){c.mr=0;c.mi=c.m||0}
+    c.m=(c.mr||0)+(c.mi||0);
     if(c.hist)c.hist.forEach(function(h){h.st=lg(h.st)});
     if(!c.per)c.per=old==='apr'?'PENDIENTE COMPROMISO':(c.st==='stk'||c.st==='rec')?'PENDIENTE':c.st==='val'?'INICIADA':'CERRADA';
     if(!c.rg)c.rg=old==='pie'?'PEDIDO':(c.st==='stk'||c.st==='rec'||c.st==='val')?'POR PEDIR':'RECIBIDO';
@@ -329,7 +351,7 @@ table.heat{min-width:640px}
     if(f.as&&String(c.as)!==f.as)return false;
     if(f.ins&&c.ins!==f.ins)return false;
     if(f.pri&&c.pr!==f.pri)return false;
-    if(f.tc&&c.tc!==f.tc)return false;
+    if(f.tc&&dayKey(c)!==f.tc)return false;
     if(f.due){var d=due(c.sal).d;
       if(f.due==='v'&&d>=0)return false;
       if(f.due==='h'&&d!==0)return false;
@@ -338,10 +360,11 @@ table.heat{min-width:640px}
   }
 
   function sums(list){
-    var r={n:list.length,c:0,m:0,p:0,eur:0};
-    list.forEach(function(x){r.c+=x.c;r.m+=x.m;r.p+=x.p;r.eur+=x.eur});
-    r.t=r.c+r.m+r.p;return r;
+    var r={n:list.length,c:0,r:0,i:0,p:0,eur:0};
+    list.forEach(function(x){r.c+=hs(x,'c');r.r+=hs(x,'r');r.i+=hs(x,'i');r.p+=hs(x,'p');r.eur+=x.eur});
+    r.m=r.r+r.i;r.t=r.c+r.r+r.i+r.p;return r;
   }
+  function tots(s){return secList().map(function(k){return SECS[k[0]]+':'+fh(s[k[0]])}).join(' ')}
 
   function opts(arr,sel,first){
     return '<option value="">'+first+'</option>'+arr.map(function(a){var v=Array.isArray(a)?a[0]:a,l=Array.isArray(a)?a[1]:a;return '<option value="'+esc(v)+'"'+(String(sel)===String(v)?' selected':'')+'>'+esc(l)+'</option>'}).join('');
@@ -388,6 +411,7 @@ table.heat{min-width:640px}
   // ── Histórico de tiempo trabajado por fase y operario (datos del reloj de fichajes) ──
   var FK='agp-fichajes-v1';
   function fich(){try{var F=JSON.parse(localStorage.getItem(FK));if(F&&F.emps)return F}catch(e){}return null}
+  function secKey(k){k=lg(k);return k==='pp'||k==='cab'?'p':k==='mrp'?'r':k==='min'?'i':'c'}
   function jobsHist(){
     var F=fich(),out=[];if(!F||!F.jobs)return out;
     var names={},T=new Date().toDateString(),now=Date.now();F.emps.forEach(function(e){names[e.id]=e.name});
@@ -470,9 +494,11 @@ table.heat{min-width:640px}
   function histCard(id){
     var cd=st.cards.filter(function(x){return x.id===id})[0],out=cd?cycleCard(cd):'';
     var J=jobsHist().filter(function(j){return j.card===id});if(!J.length)return out;
-    var wc=0,wp=0;J.forEach(function(j){if(isP(j.st))wp+=j.ms;else wc+=j.ms});
+    var W={c:0,p:0,r:0,i:0};J.forEach(function(j){W[secKey(j.st)]+=j.ms});
     function efl(f,ms){return ms?' · eficiencia '+Math.round(f/(ms/3600000)*100)+' %':''}
-    var cmp=cd?'<p class="cap" style="margin:6px 0">Facturado frente a trabajado: '+(wc?'chapa '+fh(cd.c||0)+' / '+th(wc)+efl(cd.c||0,wc):'')+(wc&&wp?' · ':'')+(wp?'pintura '+fh(cd.p||0)+' / '+th(wp)+efl(cd.p||0,wp):'')+'</p>':'';
+    var FB={c:cd?cd.c||0:0,p:cd?cd.p||0:0,r:cd?cd.mr||0:0,i:cd?cd.mi||0:0},NM={c:'chapa',p:'pintura',r:'mecánica rápida',i:'mecánica incidental'};
+    var parts=['c','r','i','p'].filter(function(k){return W[k]}).map(function(k){return NM[k]+' '+fh(FB[k])+' / '+th(W[k])+efl(FB[k],W[k])});
+    var cmp=cd&&parts.length?'<p class="cap" style="margin:6px 0">Facturado frente a trabajado: '+parts.join(' · ')+'</p>':'';
     return out+cmp;
   }
   function cycleAgg(){ // media por fase de todos los coches (incluye las fases en curso)
@@ -495,15 +521,15 @@ table.heat{min-width:640px}
     J.forEach(function(j){
       var p=P[j.st]=P[j.st]||{ms:0,cars:{},emps:{}};p.ms+=j.ms;p.cars[j.card]=1;p.emps[j.emp]=1;
       var o=O[j.emp]=O[j.emp]||{tot:0,ph:{}};o.tot+=j.ms;o.ph[j.st]=(o.ph[j.st]||0)+j.ms;
-      var c=C[j.card]=C[j.card]||{pl:j.pl,car:j.car,tot:0,ph:{},sec:{c:0,p:0},es:{c:{},p:{}}};c.tot+=j.ms;var q=c.ph[j.st]=c.ph[j.st]||{};q[j.emp]=(q[j.emp]||0)+j.ms;
-      var sc=isP(j.st)?'p':'c';c.sec[sc]+=j.ms;c.es[sc][j.emp]=(c.es[sc][j.emp]||0)+j.ms;
+      var c=C[j.card]=C[j.card]||{pl:j.pl,car:j.car,tot:0,ph:{},sec:{c:0,p:0,r:0,i:0},es:{c:{},p:{},r:{},i:{}}};c.tot+=j.ms;var q=c.ph[j.st]=c.ph[j.st]||{};q[j.emp]=(q[j.emp]||0)+j.ms;
+      var sc=secKey(j.st);c.sec[sc]+=j.ms;c.es[sc][j.emp]=(c.es[sc][j.emp]||0)+j.ms;
     });
     // tiempo facturado = horas de chapa (C) y de pintura (P) de la reparación en la tarjeta
-    var TOT={c:{f:0,w:0},p:{f:0,w:0}},OP={};
+    var TOT={c:{f:0,w:0},p:{f:0,w:0},r:{f:0,w:0},i:{f:0,w:0}},OP={};
     Object.keys(C).forEach(function(id){
-      var card=st.cards.filter(function(x){return x.id===id})[0],c=C[id];c.fac=card?{c:card.c||0,p:card.p||0}:null;
+      var card=st.cards.filter(function(x){return x.id===id})[0],c=C[id];c.fac=card?{c:card.c||0,p:card.p||0,r:card.mr||0,i:card.mi||0}:null;
       if(!c.fac)return;
-      ['c','p'].forEach(function(s){var w=c.sec[s];if(!w)return;
+      ['c','p','r','i'].forEach(function(s){var w=c.sec[s];if(!w)return;
         TOT[s].f+=c.fac[s];TOT[s].w+=w/3600000;
         Object.keys(c.es[s]).forEach(function(e){var o=OP[e]=OP[e]||{f:0,w:0};o.f+=c.fac[s]*c.es[s][e]/w;o.w+=c.es[s][e]/3600000});
       });
@@ -511,7 +537,7 @@ table.heat{min-width:640px}
     function ef(f,w){if(!w)return '—';var v=f/w*100;return '<span'+(v<80?' class="bad"':'')+'>'+Math.round(v)+' %</span>'}
     function fhh(n){return r1h(n)+' h'}
     var today0=new Date();today0.setHours(0,0,0,0);
-    var PROD={pch:1,cha:1,pin:1,mon:1};
+    var PROD={des:1,cha:1,pp:1,cab:1,mon:1,mrp:1,min:1};
     var rowsP=COLS.filter(function(k){return P[k[0]]||st.cards.some(function(c){return c.st===k[0]})}).map(function(k){
       var key=k[0],p=P[key]||{ms:0,cars:{},emps:{}},nc=Object.keys(p.cars).length,now=st.cards.filter(function(c){return c.st===key}),days=0,hw=0;
       now.forEach(function(c){days+=Math.max(0,Math.round((today0-new Date(c.mv+'T00:00:00'))/864e5));J.forEach(function(j){if(j.card===c.id&&j.st===key)hw+=j.ms/3600000})});
@@ -523,17 +549,17 @@ table.heat{min-width:640px}
       return '<tr><td>'+esc(n)+'</td>'+used.map(function(k){return '<td class="n">'+(O[n].ph[k[0]]?th(O[n].ph[k[0]]):'—')+'</td>'}).join('')+'<td class="n"><b>'+th(O[n].tot)+'</b></td><td class="n">'+(OP[n]?fhh(OP[n].f):'—')+'</td><td class="n">'+(OP[n]?ef(OP[n].f,OP[n].w):'—')+'</td></tr>'}).join('');
     var rowsC=Object.keys(C).sort(function(a,b){return C[b].tot-C[a].tot}).map(function(id){
       var c=C[id],det=COLS.filter(function(k){return c.ph[k[0]]}).map(function(k){return esc(k[1])+': '+Object.keys(c.ph[k[0]]).map(function(e){return esc(e)+' '+th(c.ph[k[0]][e])}).join(', ')}).join(' · ');
-      var fa=c.fac?(c.sec.c?'C '+fhh(c.fac.c):'')+(c.sec.c&&c.sec.p?' · ':'')+(c.sec.p?'P '+fhh(c.fac.p):''):'—';
-      var fT=c.fac?(c.sec.c?c.fac.c:0)+(c.sec.p?c.fac.p:0):0;
+      var fa=c.fac?(['c','r','i','p'].filter(function(x){return c.sec[x]}).map(function(x){return SECS[x]+' '+fhh(c.fac[x])}).join(' · ')||'—'):'—';
+      var fT=c.fac?['c','r','i','p'].reduce(function(a,x){return a+(c.sec[x]?c.fac[x]:0)},0):0;
       return '<tr><td><b>'+esc(c.pl)+'</b> <span class="h-z">'+esc(id)+'</span></td><td class="n"><b>'+th(c.tot)+'</b></td><td class="n">'+fa+'</td><td class="n">'+(c.fac?ef(fT,c.tot/3600000):'—')+'</td><td style="white-space:normal;min-width:260px">'+det+'</td></tr>'}).join('');
-    var fTot=TOT.c.f+TOT.p.f,wTot=TOT.c.w+TOT.p.w;
-    var rowF=[['Chapa',TOT.c],['Pintura',TOT.p],['Total',{f:fTot,w:wTot}]].map(function(r){return '<tr><td>'+(r[0]==='Total'?'<b>Total</b>':r[0])+'</td><td class="n">'+fhh(r[1].f)+'</td><td class="n">'+fhh(r[1].w)+'</td><td class="n">'+(r[1].w?(r[1].f-r[1].w>=0?'+':'')+fhh(r[1].f-r[1].w):'—')+'</td><td class="n"><b>'+ef(r[1].f,r[1].w)+'</b></td></tr>'}).join('');
+    var fTot=TOT.c.f+TOT.p.f+TOT.r.f+TOT.i.f,wTot=TOT.c.w+TOT.p.w+TOT.r.w+TOT.i.w;
+    var rowF=[['Chapa',TOT.c],['Mecánica rápida',TOT.r],['Mecánica incidental',TOT.i],['Pintura',TOT.p],['Total',{f:fTot,w:wTot}]].filter(function(r){return r[0]==='Total'||r[1].f||r[1].w}).map(function(r){return '<tr><td>'+(r[0]==='Total'?'<b>Total</b>':r[0])+'</td><td class="n">'+fhh(r[1].f)+'</td><td class="n">'+fhh(r[1].w)+'</td><td class="n">'+(r[1].w?(r[1].f-r[1].w>=0?'+':'')+fhh(r[1].f-r[1].w):'—')+'</td><td class="n"><b>'+ef(r[1].f,r[1].w)+'</b></td></tr>'}).join('');
     m.innerHTML='<div class="wrap plan">'+CYC+
       '<section class="pb"><h2>Tiempo facturado frente a trabajado</h2><p class="cap">Eficiencia = tiempo facturado ÷ tiempo invertido. El tiempo facturado son las horas de chapa (C) y de pintura (P) de cada reparación; el trabajado, lo que los operarios han imputado. Por encima de 100 % se factura más de lo que se trabaja; por debajo de 80 % se marca en rojo.</p><div class="tw"><table class="t"><tr><th>Sección</th><th class="n">Facturado</th><th class="n">Trabajado</th><th class="n">Diferencia</th><th class="n">Eficiencia</th></tr>'+rowF+'</table></div></section>'+
       '<section class="pb"><h2>Tiempo trabajado por fase</h2><p class="cap">Horas que los operarios han imputado a los coches en cada fase. Los coches que llevan días en una fase de producción con menos de 1 h trabajada al día se marcan como posible cuello de botella: están ahí, pero nadie les está dedicando tiempo.</p><div class="tw"><table class="t"><tr><th>Fase</th><th class="n">Tiempo trabajado</th><th class="n">Coches</th><th class="n">Media por coche</th><th class="n">Operarios</th><th class="n">Coches ahora</th><th class="n">Días medios ahora</th><th class="n">Trabajo por día</th></tr>'+rowsP+'</table></div></section>'+
       '<section class="pb"><h2>Por operario</h2><p class="cap">Tiempo imputado por cada operario en cada fase.</p><div class="tw"><table class="t"><tr><th>Operario</th>'+used.map(function(k){return '<th class="n">'+esc(k[1])+'</th>'}).join('')+'<th class="n">Total</th><th class="n">Facturado</th><th class="n">Eficiencia</th></tr>'+rowsO+'</table></div></section>'+
       '<section class="pb"><h2>Por coche</h2><p class="cap">Tiempo total de cada coche y reparto por fase y operario. También se ve al abrir la tarjeta del coche.</p><div class="tw"><table class="t"><tr><th>Coche</th><th class="n">Trabajado</th><th class="n">Facturado</th><th class="n">Eficiencia</th><th>Detalle</th></tr>'+rowsC+'</table></div></section>'+
-      '<p class="note">El histórico se guarda en el reloj de fichajes y se acumula con el uso. El tiempo facturado de un coche se reparte entre sus operarios en proporción al tiempo que ha trabajado cada uno en esa sección (chapa o pintura). La mecánica no se compara porque no se imputa tiempo. Si un coche cambia de fase mientras un operario trabaja en él, su tiempo se parte entre las dos fases. Un «Comienzo» sin «Acabo» de un día anterior no se cuenta.</p></div>';
+      '<p class="note">El histórico se guarda en el reloj de fichajes y se acumula con el uso. El tiempo facturado de un coche se reparte entre sus operarios en proporción al tiempo que ha trabajado cada uno en esa sección (chapa o pintura). La mecánica (rápida e incidental) se compara igual que la chapa y la pintura cuando sus operarios fichan. Si un coche cambia de fase mientras un operario trabaja en él, su tiempo se parte entre las dos fases. Un «Comienzo» sin «Acabo» de un día anterior no se cuenta.</p></div>';
   }
   function r1h(n){return (Math.round(n*10)/10).toLocaleString('es-ES')}
   function wkSig(m){return JSON.stringify(m)}
@@ -570,8 +596,8 @@ table.heat{min-width:640px}
   }
   function cardHtml(c){
     var d=due(c.sal),hrs=[];
-    if(c.c)hrs.push('C '+fh(c.c));if(c.m)hrs.push('M '+fh(c.m));if(c.p)hrs.push('P '+fh(c.p));
-    return '<article class="card t-'+c.tc+'" draggable="true" tabindex="0" data-id="'+esc(c.id)+'" aria-label="OR '+esc(c.id)+', '+esc(c.pl)+'">'+
+    secList().forEach(function(k){var h=hs(c,k[0]);if(h)hrs.push(SECS[k[0]]+' '+fh(h))});
+    return '<article class="card t-'+dayCol(c)+'" draggable="true" tabindex="0" data-id="'+esc(c.id)+'" aria-label="OR '+esc(c.id)+', '+esc(c.pl)+'">'+
       '<div class="r1"><span class="or">'+esc(c.id)+'</span><span class="cm'+(c.cm?' has':'')+'" title="Comentarios">'+c.cm+'</span><span class="ct" title="Control de tareas">CT '+esc(c.ct)+'</span></div>'+
       '<div class="r2"><span class="pri p-'+esc(c.pr)+'">'+esc(c.pr)+'</span><span class="plate"><i></i>'+esc(c.pl)+'</span></div>'+
       '<div class="car">'+esc(c.car)+' · '+esc(c.col)+'</div>'+
@@ -603,35 +629,33 @@ table.heat{min-width:640px}
       '<label class="chip"><span>Asesor:</span><select data-f="as">'+opts(asesores.map(function(a){return [a,'Asesor '+a]}),f.as,'todos')+'</select></label>'+
       '<label class="chip"><span>Seguro:</span><select data-f="ins">'+opts(seguros,f.ins,'todos')+'</select></label>'+
       '<label class="chip"><span>Prioridad:</span><select data-f="pri">'+opts(['RÁPIDO','FUERTE','MEDIO','NORMAL'],f.pri,'todas')+'</select></label>'+
-      '<label class="chip"><span>Fecha de entrega:</span><select data-f="due">'+opts([['v','Vencidas'],['h','Hoy'],['f','Próximas']],f.due,'todos')+'</select></label>'+
-      '<label class="chip"><span>Color tarjeta:</span><select data-f="tc">'+opts(COLORS,f.tc,'todos')+'</select></label>'+
+      '<label class="chip"><span>Plazo:</span><select data-f="due">'+opts([['v','Vencidas'],['h','Hoy'],['f','Próximas']],f.due,'todos')+'</select></label>'+
+      '<label class="chip"><span>Día de entrega:</span><select data-f="tc">'+opts(DOWF,f.tc,'todos')+'</select></label>'+
       (f.q||f.as||f.ins||f.pri||f.due||f.tc?'<button class="clear" type="button" id="clr">Quitar filtros</button>':'')+
     '</div></div>';
+    var sl=secList(),capT=0;sl.forEach(function(k){capT+=cap(st.ops[k[0]]||0)});
     var sum='<div class="sum"><div class="wrap">'+
       '<div class="big">'+all.n+'<small>VEHÍCULOS</small></div>'+
       '<div class="stats">'+
         '<div class="stat"><b>Total</b><span>'+fh(all.t)+'</span></div>'+
-        '<div class="stat"><b>Chapa</b><span>'+fh(all.c)+'</span></div>'+
-        '<div class="stat"><b>Mecánica</b><span>'+fh(all.m)+'</span></div>'+
-        '<div class="stat"><b>Pintura</b><span>'+fh(all.p)+'</span></div>'+
+        sl.map(function(k){return '<div class="stat"><b>'+SECL[k[0]]+'</b><span>'+fh(all[k[0]])+'</span></div>'}).join('')+
         '<div class="stat"><b>Importe</b><span>'+fe(all.eur)+'</span></div>'+
       '</div>'+
       '<div class="ops">'+
-        '<label>Op. chapa<input type="number" min="0" step="1" data-op="c" value="'+st.ops.c+'"></label>'+
-        '<label>Op. mecánica<input type="number" min="0" step="1" data-op="m" value="'+st.ops.m+'"></label>'+
-        '<label>Op. pintura<input type="number" min="0" step="1" data-op="p" value="'+st.ops.p+'"></label>'+
+        sl.map(function(k){return '<label>Op. '+SECL[k[0]].toLowerCase()+'<input type="number" min="0" step="1" data-op="'+k[0]+'" value="'+(st.ops[k[0]]||0)+'"></label>'}).join('')+
         '<label>Días lab.<input type="number" min="1" max="7" step="1" data-op="days" value="'+st.days+'"></label>'+
       '</div>'+
-      '<div class="bars">'+bar('Chapa',all.c,cap(st.ops.c))+bar('Mecánica',all.m,cap(st.ops.m))+bar('Pintura',all.p,cap(st.ops.p))+bar('Total',all.t,cap(st.ops.c+st.ops.m+st.ops.p))+'</div>'+
+      '<div class="bars">'+sl.map(function(k){return bar(SECL[k[0]],all[k[0]],cap(st.ops[k[0]]||0))}).join('')+bar('Total',all.t,capT)+'</div>'+
     '</div></div>';
-    var board='<div class="wrap"><div class="board" id="board">'+COLS.map(function(col){
+    var leg='<div class="wrap"><div class="leg"><b>Color = día de entrega:</b>'+DOW.map(function(d){return '<span><i style="background:var(--k-'+d[2]+')"></i>'+d[1]+'</span>'}).join('')+'<span><i style="background:var(--k-white)"></i>Fin de semana</span></div></div>';
+    var board='<div class="wrap"><div class="board" id="board">'+COLSV().map(function(col){
       var list=st.cards.filter(function(c){return c.st===col[0]&&visible(c)});
       var s=sums(list);
       return '<section class="col" data-col="'+col[0]+'"><h2>'+col[1]+'<em>'+s.n+'</em></h2>'+
-        '<div class="tot">'+fe(s.eur)+' T:'+fh(s.t)+' C:'+fh(s.c)+' M:'+fh(s.m)+' P:'+fh(s.p)+'</div>'+
+        '<div class="tot">'+fe(s.eur)+' T:'+fh(s.t)+' '+tots(s)+'</div>'+
         '<div class="stack">'+(list.length?list.map(cardHtml).join(''):'<div class="empty">Sin vehículos</div>')+'</div></section>';
     }).join('')+'</div><p class="note">Datos de ejemplo. Arrastra una tarjeta a otra columna, o ábrela para moverla. Los cambios se guardan en este navegador.</p></div>';
-    m.innerHTML=filt+sum+board;
+    m.innerHTML=filt+sum+leg+board;
   }
 
   function toast(t){var e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){e.hidden=true},2600)}
@@ -650,9 +674,9 @@ table.heat{min-width:640px}
     var d=due(c.sal);
     openDlg('<h3>OR '+esc(c.id)+' · '+esc(c.pl)+'</h3><div class="cdg"><div class="cl">'+
       '<dl class="kv"><dt>Fase actual</dt><dd><b>'+esc(colName(c.st))+'</b></dd><dt>Matrícula</dt><dd>'+esc(c.pl)+'</dd><dt>Vehículo</dt><dd>'+esc(c.car)+' · '+esc(c.col)+'</dd><dt>Seguro</dt><dd>'+esc(c.ins)+'</dd>'+
-      '<dt>Horas</dt><dd>C '+fh(c.c)+' · M '+fh(c.m)+' · P '+fh(c.p)+'</dd>'+(WK[c.id]?'<dt>Trabajando</dt><dd>'+WK[c.id].map(esc).join(', ')+'</dd>':'')+'<dt>Importe</dt><dd>'+fe(c.eur)+'</dd>'+
-      (c.cita?'<dt>Cita de recepción</dt><dd>'+ddmm(c.cita.slice(0,10))+' · '+esc(c.cita.slice(11,16))+'</dd>':'')+(c.cliente?'<dt>Cliente</dt><dd>'+esc(c.cliente)+(c.tel?' · '+esc(c.tel):'')+'</dd>':'')+'<dt>Salida</dt><dd>'+ddmm(c.sal)+' · '+d.t+'</dd><dt>Prioridad</dt><dd>'+esc(c.pr)+'</dd><dt>En esta fase</dt><dd>'+dIn(c)+(dIn(c)===1?' día':' días')+'</dd></dl>'+
-      gestDlg(c)+'</div><div class="cr">'+histCard(c.id)+phGallery(c.id)+'<label class="f">Mover a<select id="mv">'+COLS.map(function(k){return '<option value="'+k[0]+'"'+(k[0]===c.st?' selected':'')+'>'+k[1]+'</option>'}).join('')+'</select></label>'+
+      '<dt>Horas</dt><dd>'+(secList().map(function(k){return SECS[k[0]]+' '+fh(hs(c,k[0]))}).join(' · ')||'—')+'</dd>'+(WK[c.id]?'<dt>Trabajando</dt><dd>'+WK[c.id].map(esc).join(', ')+'</dd>':'')+'<dt>Importe</dt><dd>'+fe(c.eur)+'</dd>'+
+      (c.cita?'<dt>Cita de recepción</dt><dd>'+ddmm(c.cita.slice(0,10))+' · '+esc(c.cita.slice(11,16))+'</dd>':'')+(c.cliente?'<dt>Cliente</dt><dd>'+esc(c.cliente)+(c.tel?' · '+esc(c.tel):'')+'</dd>':'')+'<dt>Salida prevista</dt><dd><input type="date" data-sal="'+esc(c.id)+'" value="'+esc(c.sal)+'"> <small>'+d.t+'</small></dd>'+(c.sh&&c.sh.length?'<dt>Cambios de fecha</dt><dd>'+c.sh.length+' (la anterior era el '+ddmm(c.sh[c.sh.length-1].d)+')</dd>':'')+'<dt>Prioridad</dt><dd>'+esc(c.pr)+'</dd><dt>En esta fase</dt><dd>'+dIn(c)+(dIn(c)===1?' día':' días')+'</dd></dl>'+
+      gestDlg(c)+'</div><div class="cr">'+histCard(c.id)+phGallery(c.id)+'<label class="f">Mover a<select id="mv">'+COLSV().map(function(k){return '<option value="'+k[0]+'"'+(k[0]===c.st?' selected':'')+'>'+k[1]+'</option>'}).join('')+'</select></label>'+
       '<div class="row"><button class="btn danger" type="button" id="del">Eliminar</button><button class="btn" type="button" data-close>Cerrar</button><button class="btn primary" type="button" id="mvOk" data-id="'+esc(c.id)+'">Mover</button></div></div></div>');
     $('#dlg').classList.add('bd');
   }
@@ -664,33 +688,33 @@ table.heat{min-width:640px}
       '<label class="full">Vehículo<input id="n-car" required placeholder="Toyota Corolla"></label>'+
       '<label>Seguro<input id="n-ins" placeholder="Aseguradora"></label>'+
       '<label>Fecha de salida<input id="n-sal" type="date" required value="'+iso(5)+'"></label>'+
-      '<label>Horas chapa<input id="n-c" type="number" min="0" step="0.5" value="0"></label>'+
-      '<label>Horas pintura<input id="n-p" type="number" min="0" step="0.5" value="0"></label>'+
-      '<label>Horas mecánica<input id="n-m" type="number" min="0" step="0.5" value="0"></label>'+
+      (secOn('c')?'<label>Horas chapa<input id="n-c" type="number" min="0" step="0.5" value="0"></label>':'')+
+      (secOn('p')?'<label>Horas pintura<input id="n-p" type="number" min="0" step="0.5" value="0"></label>':'')+
+      (secOn('r')?'<label>Horas mecánica rápida<input id="n-mr" type="number" min="0" step="0.5" value="0"></label>':'')+(secOn('i')?'<label>Horas mecánica incidental<input id="n-mi" type="number" min="0" step="0.5" value="0"></label>':'')+
       '<label>Importe (€)<input id="n-e" type="number" min="0" step="10" value="0"></label>'+
-      '<label class="full">Columna<select id="n-st">'+COLS.map(function(k){return '<option value="'+k[0]+'">'+k[1]+'</option>'}).join('')+'</select></label>'+
+      '<label class="full">Columna<select id="n-st">'+COLSV().map(function(k){return '<option value="'+k[0]+'">'+k[1]+'</option>'}).join('')+'</select></label>'+
     '</div><div class="row"><button class="btn" type="button" data-close>Cancelar</button><button class="btn primary" type="submit">Añadir</button></div></form>');
   }
 
   function setDlg(){
     openDlg('<h3>Ajustes</h3><label class="f">Horas por jornada<input id="s-h" type="number" min="1" max="12" step="0.5" value="'+st.hpd+'"></label>'+
+      '<div class="gst"><h4>Secciones del taller</h4><p class="cap">Marca las secciones que tiene tu taller. Lo que no marques se oculta en todo el planificador.</p>'+SECK.map(function(k){return '<label class="chk"><input type="checkbox" data-sec="'+k[0]+'"'+(secOn(k[0])?' checked':'')+'> '+k[1]+'</label>'}).join('')+'<p class="cap">Mecánica rápida: mantenimiento (aceite, filtros, ruedas). Mecánica incidental: averías, motor y diagnosis.</p></div>'+
       '<p class="note" style="padding-bottom:0">La capacidad de cada sección es operarios × horas por jornada × días laborables.</p>'+
       '<div class="row"><button class="btn danger" type="button" id="clrAll">Vaciar todos los coches</button><button class="btn danger" type="button" id="rst">Restaurar datos de ejemplo</button><button class="btn" type="button" data-close>Cerrar</button><button class="btn primary" type="button" id="sOk">Guardar</button></div>');
   }
 
   /* ---------- Planificación ---------- */
   var hz=10;
-  var THR={stk:30,rec:1,val:2,esp:3,des:2,cha:4,pp:3,ecb:1,cab:1,mon:1,ctl:1,lst:2};   // días máximos razonables en cada fase
-  var CAPW={stk:20,rec:4,val:4,esp:4,des:4,cha:5,pp:4,ecb:2,cab:2,mon:3,ctl:3,lst:4};   // tope de vehículos por fase
-  var REM={stk:[1,1,1],rec:[1,1,1],val:[1,1,1],esp:[1,1,1],des:[1,1,1],cha:[.5,1,1],pp:[0,1,.5],ecb:[0,.25,.5],cab:[0,.25,.5],mon:[0,0,.5],ctl:[0,0,0],lst:[0,0,0]}; // pendiente [chapa,pintura,mecánica]
+  var THR={stk:30,rec:1,val:2,esp:3,des:2,cha:4,pp:3,ecb:1,cab:1,mon:1,mrp:1,min:3,ctl:1,lst:2};   // días máximos razonables en cada fase
+  var CAPW={stk:20,rec:4,val:4,esp:4,des:4,cha:5,pp:4,ecb:2,cab:2,mon:3,mrp:4,min:4,ctl:3,lst:4};   // tope de vehículos por fase
+  var REM={stk:[1,1,1],rec:[1,1,1],val:[1,1,1],esp:[1,1,1],des:[1,1,1],cha:[.5,1,1],pp:[0,1,.5],ecb:[0,.25,.5],cab:[0,.25,.5],mon:[0,0,.5],mrp:[0,0,1],min:[0,0,1],ctl:[0,0,0],lst:[0,0,0]}; // pendiente [chapa,pintura,mecánica]
   var THR_PER=3,THR_RG=4; // días de espera razonables de peritación y de recambio
   function delayOf(c){ // días de espera estimados antes de empezar: fase + procesos virtuales abiertos
     var d=c.st==='val'?1:0;
     if(PRE[c.st]){if(perOpen(c))d=Math.max(d,2);if(rgOpen(c))d=Math.max(d,3)}
     return d;
   }
-  var SEC=[['c','Chapa'],['m','Mecánica'],['p','Pintura']];
-  var SECN={c:'chapa',m:'mecánica',p:'pintura'};
+  var SECN={c:'chapa',r:'mecánica rápida',i:'mecánica incidental',p:'pintura'};
   var DN=['do','lu','ma','mi','ju','vi','sá'];
   function pad(n){return n<10?'0'+n:''+n}
   function dm(d){return pad(d.getDate())+'/'+pad(d.getMonth()+1)}
@@ -717,12 +741,12 @@ table.heat{min-width:640px}
 
   // horas necesarias cada día para cumplir la fecha de salida: se planifica hacia atrás (pintura al final, chapa justo antes)
   function loadMap(list,DAYS){
-    var N=DAYS.length,L={c:[],m:[],p:[]},i;
-    for(i=0;i<N;i++){L.c.push(0);L.m.push(0);L.p.push(0)}
+    var N=DAYS.length,L={c:[],r:[],i:[],p:[]},i;
+    for(i=0;i<N;i++){L.c.push(0);L.r.push(0);L.i.push(0);L.p.push(0)}
     function put(k,h,a,b){if(h<=0)return;if(a<0)a=0;if(b<a)b=a;var n=b-a+1;for(var j=a;j<=b&&j<N;j++)L[k][j]+=h/n}
     var limc=2*st.hpd,limp=st.hpd;
     list.forEach(function(c){
-      var r=REM[c.st]||[1,1,1],rc=c.c*r[0],rp=c.p*r[1],rm=c.m*r[2],s0=delayOf(c);
+      var r=REM[c.st]||[1,1,1],rc=hs(c,'c')*r[0],rp=hs(c,'p')*r[1],rr=hs(c,'r')*r[2],ri=hs(c,'i')*r[2],s0=delayOf(c);
       var cd=rc>0?Math.ceil(rc/limc-1e-9):0,pd=rp>0?Math.ceil(rp/limp-1e-9):0,tot=cd+pd;
       var sd=new Date(c.sal+'T00:00:00'),si=-1;
       DAYS.forEach(function(d,j){if(d<=sd)si=j});
@@ -730,13 +754,13 @@ table.heat{min-width:640px}
       if(a<s0){a=s0;e=a+tot-1}
       var ce=a+cd-1;
       put('c',rc,a,ce);put('p',rp,ce+1,e);
-      if(tot>0)put('m',rm,a,e);else put('m',rm,Math.min(s0,e),Math.max(e,s0));
+      ['r','i'].forEach(function(k){var h=k==='r'?rr:ri;if(tot>0)put(k,h,a,e);else put(k,h,Math.min(s0,e),Math.max(e,s0))});
     });
     return L;
   }
 
   function phaseStats(list){
-    return COLS.map(function(k){
+    return COLSV().map(function(k){
       var g=list.filter(function(c){return c.st===k[0]}),days=g.map(dIn),s=sums(g);
       var over=days.filter(function(d){return d>THR[k[0]]}).length,a=avg(days);
       return {k:k[0],name:k[1],n:g.length,h:s.t,avg:a,over:over,thr:THR[k[0]],cap:CAPW[k[0]],score:g.length?g.length/CAPW[k[0]]+a/THR[k[0]]:0};
@@ -754,9 +778,9 @@ table.heat{min-width:640px}
 
   // plan con capacidad real: por orden de fecha de salida, máx. 2 chapistas y 1 pintor por vehículo
   function schedule(list,DAYS){
-    var N=DAYS.length,cap={c:st.ops.c*st.hpd,m:st.ops.m*st.hpd,p:st.ops.p*st.hpd},used={c:[],m:[],p:[]},i;
-    for(i=0;i<N;i++){used.c.push(0);used.m.push(0);used.p.push(0)}
-    var lim={c:2*st.hpd,p:st.hpd,m:st.hpd};
+    var N=DAYS.length,cap={c:(st.ops.c||0)*st.hpd,r:(st.ops.r||0)*st.hpd,i:(st.ops.i||0)*st.hpd,p:(st.ops.p||0)*st.hpd},used={c:[],r:[],i:[],p:[]},i;
+    for(i=0;i<N;i++){used.c.push(0);used.r.push(0);used.i.push(0);used.p.push(0)}
+    var lim={c:2*st.hpd,p:st.hpd,r:st.hpd,i:st.hpd};
     function alloc(k,h,from){
       if(h<=0)return from-1;
       var j=Math.max(from,0),end=from-1;
@@ -765,20 +789,20 @@ table.heat{min-width:640px}
     }
     function need(h,l){return h>0?Math.ceil(h/l-1e-9):0}
     return list.slice().sort(function(a,b){return a.sal<b.sal?-1:a.sal>b.sal?1:0}).map(function(c){
-      var r=REM[c.st]||[1,1,1],rc=c.c*r[0],rp=c.p*r[1],rm=c.m*r[2],s0=delayOf(c);
-      var ec=alloc('c',rc,s0),ep=alloc('p',rp,ec+1),em=alloc('m',rm,s0);
-      var fin=Math.max(ec,ep,em,s0);
-      var ic=s0+need(rc,lim.c)-1,ip=ic+need(rp,lim.p),im=s0+need(rm,lim.m)-1;
-      var idealFin=Math.max(ic,ip,im,s0);
+      var r=REM[c.st]||[1,1,1],rc=hs(c,'c')*r[0],rp=hs(c,'p')*r[1],rr=hs(c,'r')*r[2],ri=hs(c,'i')*r[2],rm=rr+ri,s0=delayOf(c);
+      var ec=alloc('c',rc,s0),ep=alloc('p',rp,ec+1),er=alloc('r',rr,s0),ei=alloc('i',ri,s0);
+      var fin=Math.max(ec,ep,er,ei,s0);
+      var ic=s0+need(rc,lim.c)-1,ip=ic+need(rp,lim.p),ir=s0+need(rr,lim.r)-1,ii=s0+need(ri,lim.i)-1;
+      var idealFin=Math.max(ic,ip,ir,ii,s0);
       var sd=new Date(c.sal+'T00:00:00'),si=-1;
       DAYS.forEach(function(d,j){if(d<=sd)si=j});
       var late=(rc+rp+rm>0&&fin>si)?fin-si:0,cause='';
       if(late>0){
         if(idealFin>si){cause=PRE[c.st]&&perOpen(c)?'Compromiso de pago pendiente':PRE[c.st]&&rgOpen(c)?'Falta de recambio':'Plazo corto para las horas'}
         else{
-          var q={c:rc>0?ec-ic:0,p:rp>0?ep-(ec+need(rp,lim.p)):0,m:rm>0?em-im:0},k='c';
-          if(q.p>q[k])k='p';if(q.m>q[k])k='m';
-          var ends={c:ec,p:ep,m:em};
+          var q={c:rc>0?ec-ic:0,p:rp>0?ep-(ec+need(rp,lim.p)):0,r:rr>0?er-ir:0,i:ri>0?ei-ii:0},k='c';
+          ['p','r','i'].forEach(function(x){if(q[x]>q[k])k=x});
+          var ends={c:ec,p:ep,r:er,i:ei};
           cause=(ends[k]>=N&&cap[k]<=0)?'Sin operarios de '+SECN[k]:'Cola en '+SECN[k];
         }
       }
@@ -795,13 +819,13 @@ table.heat{min-width:640px}
   function renderPlan(){
     var list=st.cards.filter(visible),DAYS=wdays(40),n=hz,i;
     var L=loadMap(list,DAYS);
-    var capD={c:st.ops.c*st.hpd,m:st.ops.m*st.hpd,p:st.ops.p*st.hpd};capD.t=capD.c+capD.m+capD.p;
+    var capD={t:0};secList().forEach(function(k){capD[k[0]]=(st.ops[k[0]]||0)*st.hpd;capD.t+=capD[k[0]]});
     var ph=phaseStats(list),ea=waitsBy(list,function(c){return c.per==='PENDIENTE COMPROMISO'||c.per==='PENDIENTE PERITO'||c.per==='PETICIÓN AMPLIACIÓN'},function(c){return c.ins},function(c){return vDays(c,'per')}),ep=waitsBy(list,function(c){return rgOpen(c)&&c.st!=='stk'},function(c){return c.prov},function(c){return vDays(c,'rg')});
     var sch=schedule(list,DAYS),risk=sch.filter(function(x){return x.late>0}).sort(function(a,b){return b.late-a.late});
 
     // alertas
     var al=[];
-    SEC.forEach(function(s){
+    secList().forEach(function(s){
       var k=s[0],mx=0,mi=0,over=0;
       for(var j=0;j<n;j++){
         var h=L[k][j];
@@ -809,7 +833,7 @@ table.heat{min-width:640px}
         var p=h/capD[k]*100;if(p>=100)over++;if(p>mx){mx=p;mi=j}
       }
       if(capD[k]<=0&&mx===999)al.push({s:'b',t:'Sin operarios de '+SECN[k]+' con horas pendientes.',go:'p-carga'});
-      else if(mx>=100)al.push({s:mx>=115?'b':'w',t:s[1]+' al '+Math.round(mx)+' % el '+DN[DAYS[mi].getDay()]+' '+DAYS[mi].getDate()+' ('+plural(over,'día','días')+' por encima del 100 %).',go:'p-carga'});
+      else if(mx>=100)al.push({s:mx>=115?'b':'w',t:SECL[s[0]]+' al '+Math.round(mx)+' % el '+DN[DAYS[mi].getDay()]+' '+DAYS[mi].getDate()+' ('+plural(over,'día','días')+' por encima del 100 %).',go:'p-carga'});
     });
     ph.filter(function(x){return x.over>0}).sort(function(a,b){return b.over-a.over}).slice(0,2).forEach(function(x){
       al.push({s:x.over>=2?'b':'w',t:plural(x.over,'vehículo supera','vehículos superan')+' '+x.thr+' días en «'+x.name+'».',go:'p-flujo'});
@@ -829,13 +853,13 @@ table.heat{min-width:640px}
     head='<tr><th>Sección</th>';
     for(i=0;i<n;i++)head+='<th>'+DN[DAYS[i].getDay()]+' '+DAYS[i].getDate()+'</th>';
     head+='</tr>';
-    var rows=SEC.map(function(s){
-      var r='<tr><td>'+s[1]+' <small class="h-z">'+fh(capD[s[0]])+'/día</small></td>';
+    var rows=secList().map(function(s){
+      var r='<tr><td>'+SECL[s[0]]+' <small class="h-z">'+fh(capD[s[0]])+'/día</small></td>';
       for(i=0;i<n;i++)r+=heatCell(L[s[0]][i],capD[s[0]]);
       return r+'</tr>';
     }).join('');
     var tr='<tr class="tot"><td>Total <small class="h-z">'+fh(capD.t)+'/día</small></td>';
-    for(i=0;i<n;i++)tr+=heatCell(L.c[i]+L.m[i]+L.p[i],capD.t);
+    for(i=0;i<n;i++){var tl=0;secList().forEach(function(k){tl+=L[k[0]][i]});tr+=heatCell(tl,capD.t)}
     tr+='</tr>';
 
     // flujo
@@ -903,7 +927,7 @@ table.heat{min-width:640px}
     if(t.id==='del'){t.textContent='Confirmar eliminar';t.id='del2';return}
     if(t.id==='del2'){var id=$('#mvOk').dataset.id;st.cards=st.cards.filter(function(x){return x.id!==id});save();closeDlg();render();toast('Vehículo eliminado');return}
     if(t.id==='clrAll'){if(!t.dataset.sure){t.dataset.sure='1';t.textContent='¿Seguro? Se borran de la nube. Pulsa otra vez';return}st.cards=[];delete st.seed;save();closeDlg();render();toast('Planificador vaciado');return}
-    if(t.id==='rst'){st={cards:seed(),ops:{c:5,m:1,p:4},days:5,hpd:8};save();closeDlg();render();toast('Datos de ejemplo restaurados');return}
+    if(t.id==='rst'){st={cards:seed(),ops:{c:5,r:0,i:1,p:4},secs:{c:true,p:true,r:false,i:false},days:5,hpd:8};st.cards.forEach(norm);save();closeDlg();render();toast('Datos de ejemplo restaurados');return}
     if(t.id==='sOk'){st.hpd=Math.max(1,num($('#s-h').value)||8);save();closeDlg();render();return}
     var card=t.closest('.card');if(card&&!card.classList.contains('drag')){cardDlg(card.dataset.id)}
   });
@@ -913,6 +937,14 @@ table.heat{min-width:640px}
   });
   document.addEventListener('change',function(e){
     var t=e.target;
+    if(t.dataset.sec!==undefined){
+      var k0=t.dataset.sec,on=t.checked,cnt=SECK.filter(function(x){return x[0]===k0?on:secOn(x[0])}).length;
+      if(!cnt){t.checked=true;toast('El taller necesita al menos una sección');return}
+      st.secs[k0]=on;save();render();setDlg();return}
+    if(t.dataset.sal!==undefined){
+      var cs=st.cards.filter(function(x){return x.id===t.dataset.sal})[0];
+      if(cs&&t.value&&t.value!==cs.sal){(cs.sh=cs.sh||[]).push({d:cs.sal,t:Date.now()});cs.sal=t.value;save();render();var ps2=$('#dlg').scrollTop;cardDlg(cs.id);$('#dlg').scrollTop=ps2}
+      return}
     if(t.dataset.v!==undefined){
       var cv=st.cards.filter(function(x){return x.id===t.dataset.id})[0];
       if(cv){if(t.dataset.v==='pt'||t.dataset.v==='pg'){cv[t.dataset.v]=t.value}else{setV(cv,t.dataset.v,t.value)}
@@ -933,7 +965,7 @@ table.heat{min-width:640px}
     if(e.target.id==='nf'){
       var max=0;st.cards.forEach(function(c){var n=parseInt(c.id,10);if(n>max)max=n});
       st.cards.push({id:(max+1)+'-2026',pr:$('#n-pr').value,pl:$('#n-pl').value.toUpperCase().trim(),car:$('#n-car').value.trim(),col:'',ins:$('#n-ins').value.trim()||'Particular',
-        c:num($('#n-c').value),m:num($('#n-m').value),p:num($('#n-p').value),eur:num($('#n-e').value),st:$('#n-st').value,tc:'white',rec:1,as:1,ge:1,sal:$('#n-sal').value,ct:'0/0',cm:0,ic:['car'],ent:iso(0),mv:iso(0),prov:''});
+        c:$('#n-c')?num($('#n-c').value):0,mr:$('#n-mr')?num($('#n-mr').value):0,mi:$('#n-mi')?num($('#n-mi').value):0,p:$('#n-p')?num($('#n-p').value):0,eur:num($('#n-e').value),st:$('#n-st').value,tc:'white',rec:1,as:1,ge:1,sal:$('#n-sal').value,ct:'0/0',cm:0,ic:['car'],ent:iso(0),mv:iso(0),prov:''});
       norm(st.cards[st.cards.length-1]);save();closeDlg();render();toast('Cita añadida');
     }
   });
@@ -978,7 +1010,7 @@ table.heat{min-width:640px}
   render();
   if(window.NUBE){ /* base de datos compartida del taller */
     NUBE.bind('plan',{get:function(){return st},
-      put:function(o){st=o;if(st&&st.cards)st.cards.forEach(norm);try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}if($('#ov').hidden)render()},
+      put:function(o){st=o;normSt();if(st&&st.cards)st.cards.forEach(norm);try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}if($('#ov').hidden)render()},
       persist:function(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}},
       refresh:function(){WK=working();PH=photosAll();if($('#ov').hidden)render()}});
     NUBE.start();

@@ -85,7 +85,7 @@ h2{margin:0;font:700 26px/1.1 var(--display);letter-spacing:.02em;text-transform
 .person{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;transition:transform .12s,border-color .12s;min-width:0}
 .person:hover{transform:translateY(-2px);border-color:var(--ink)}
 .av{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font:700 22px var(--display);color:#fff;flex:none}
-.av.chapa{background:var(--blue)}.av.pintura{background:var(--acc)}.av.indirecto{background:#7b8a7d}
+.av.chapa{background:var(--blue)}.av.pintura{background:var(--acc)}.av.indirecto{background:#7b8a7d}.av.mecanica_rapida{background:#2f8f4e}.av.mecanica_incidental,.av.mecanica{background:#6b4fa3}
 .person .nm{font-weight:700;font-size:17px;line-height:1.2;overflow-wrap:anywhere}
 .person .sc{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);font-weight:600}
 .pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 11px;font-size:13px;font-weight:600;align-self:flex-start}
@@ -223,15 +223,18 @@ function tokGen(){if(window.NUBE&&NUBE.tok)return NUBE.tok();var a='abcdefghjkmn
 function save(){S.emps.forEach(function(e){if(!e.tok)e.tok=tokGen()});mem=S;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}IDX=null;if(window.NUBE&&NUBE.touch)NUBE.touch()}
 S=load();
 window.addEventListener('storage',function(e){if(e.key===KEY){S=load();IDX=null;if(typeof render==='function'&&!document.querySelector('#modal>*'))render()}});
-var SEC={chapa:"Chapa",pintura:"Pintura",indirecto:"Indirecto"};
+var SEC={chapa:"Chapa",pintura:"Pintura",mecanica_rapida:"Mecánica rápida",mecanica_incidental:"Mecánica incidental",mecanica:"Mecánica",indirecto:"Indirecto"};
+var SECSEL=["chapa","pintura","mecanica_rapida","mecanica_incidental","indirecto"];
+function isMec(k){return k==="mecanica_rapida"||k==="mecanica_incidental"||k==="mecanica"}
+function budOf(pc,sec){return sec==="pintura"?pc.p:sec==="mecanica_rapida"?(pc.mr||0):(sec==="mecanica_incidental"||sec==="mecanica")?(pc.mi||0):pc.c}
 
 /* ───────── Coches del planificador e imputación de tiempo ───────── */
 var PK="agp-planificador-demo-v1";
-var STN={rec:"Recepcionado",val:"Valoración",esp:"En espera chapa",des:"Desmontaje",cha:"Chapa",pp:"Preparación pintura",cab:"Cabina",mon:"Montaje",ctl:"Control y lavado",apr:"Valoración",pie:"En espera chapa",pch:"Desmontaje",pin:"Preparación pintura"};
+var STN={rec:"Recepcionado",val:"Valoración",esp:"En espera chapa",des:"Desmontaje",cha:"Chapa",pp:"Preparación pintura",cab:"Cabina",mon:"Montaje",mrp:"Mecánica rápida",min:"Mecánica incidental",ctl:"Control y lavado",apr:"Valoración",pie:"En espera chapa",pch:"Desmontaje",pin:"Preparación pintura"};
 function isPin(k){return k==="pp"||k==="cab"||k==="pin"}
 function planCars(sec){ /* chapistas: todas las fases salvo pintura (incluye montaje); pintores: pintura */
   var cards=[];try{var o=JSON.parse(localStorage.getItem(PK));if(o&&o.cards)cards=o.cards}catch(x){}
-  return cards.filter(function(c){return STN[c.st]&&(sec==="pintura"?isPin(c.st):!isPin(c.st))});
+  return cards.filter(function(c){if(!STN[c.st])return false;if(sec==="pintura")return isPin(c.st);if(sec==="mecanica_rapida")return c.st==="mrp";if(sec==="mecanica_incidental"||sec==="mecanica")return c.st==="min";return !isPin(c.st)&&c.st!=="mrp"&&c.st!=="min"});
 }
 function planCard(id){var r=null;try{var o=JSON.parse(localStorage.getItem(PK));if(o&&o.cards)o.cards.forEach(function(c){if(c.id===id)r=c})}catch(x){}return r}
 function openJob(empId){for(var i=S.jobs.length-1;i>=0;i--){var j=S.jobs[i];if(j.emp===empId&&!j.e&&ds(new Date(j.s))===today())return j}return null}
@@ -240,8 +243,8 @@ function jobsOn(empId,date){return S.jobs.filter(function(j){return j.emp===empI
 function investedOn(empId,date){var t=0;jobsOn(empId,date).forEach(function(j){t+=jobMs(j)});return t/3600000}
 function closeJob(empId,ts){var j=openJob(empId);if(j){j.e=ts||Date.now();return j}return null}
 function jobPanel(e){
-  if(e.sec!=="chapa"&&e.sec!=="pintura")return '';
-  var cars=planCars(e.sec),cur=openJob(e.id),h='<div class="sec-h" style="margin-top:18px">Coches de '+(e.sec==="pintura"?"pintura":"chapa")+' en el planificador</div>';
+  if(e.sec==="indirecto")return '';
+  var cars=planCars(e.sec),cur=openJob(e.id),h='<div class="sec-h" style="margin-top:18px">Coches de '+(SEC[e.sec]||e.sec).toLowerCase()+' en el planificador</div>';
   if(cur)h+='<div class="warn" style="background:var(--green-s,#e3f3e6);border-color:var(--green,#2f8f4e)">Trabajando en <b>'+esc(cur.pl)+' · '+esc(cur.car)+'</b> desde '+hm(cur.s)+' · <b class="num">'+fdur(jobMs(cur))+'</b><div style="margin-top:8px"><button class="btn pri" data-a="job" data-id="'+e.id+'" data-card="'+esc(cur.card)+'" data-t="end">Acabo</button></div></div>';
   if(!cars.length)return h+'<p class="mute">No hay coches en tu fase. Abre el <a href="planificador-demo.html">Planificador</a> en este mismo navegador para que aparezcan aquí.</p>';
   h+='<div style="display:grid;gap:6px;max-height:260px;overflow:auto">'+cars.map(function(c){
@@ -479,7 +482,7 @@ function range(per){
 function vProd(a,b){
   var end=b<today()?b:today(),R={},C={};
   S.emps.forEach(function(e){
-    if(!inScope(e)||(e.sec!=="chapa"&&e.sec!=="pintura"))return;
+    if(!inScope(e)||e.sec==="indirecto")return;
     var r=R[e.id]={e:e,pres:0,inv:0};
     for(var d=a;d<=end;d=addD(d,1)){r.pres+=presence(e,d).h;r.inv+=investedOn(e.id,d)}
   });
@@ -489,7 +492,7 @@ function vProd(a,b){
     return '<tr><td><b>'+esc(x.e.name)+'</b><div class="mute" style="font-size:12px">'+SEC[x.e.sec]+'</div></td><td class="r num">'+fh(x.pres)+'</td><td class="r num">'+fh(x.inv)+'</td><td class="r num"><b>'+(x.pres?pct(x.inv/x.pres*100):"—")+'</b></td></tr>'}).join("");
   var tp=0,ti=0;Object.keys(R).forEach(function(k){tp+=R[k].pres;ti+=R[k].inv});
   var cr=Object.keys(C).map(function(k){return C[k]}).sort(function(x,y){return y.inv-x.inv}).map(function(c){
-    var pc=planCard(c.card),bud=pc?(c.sec==="pintura"?pc.p:pc.c):null,ef=bud&&c.inv>0?bud/c.inv*100:null;
+    var pc=planCard(c.card),bud=pc?budOf(pc,c.sec):null,ef=bud&&c.inv>0?bud/c.inv*100:null;
     return '<tr><td><b>'+esc(c.pl)+'</b><div class="mute" style="font-size:12px">'+esc(c.car)+'</div></td><td>'+SEC[c.sec]+'</td><td class="r num">'+fh(c.inv)+'</td><td class="r num">'+(bud!=null?fh(bud):"—")+'</td><td class="r num"><b>'+(ef!=null?pct(ef):"—")+'</b></td></tr>'}).join("");
   return '<div class="calhead" style="margin-top:28px"><div><h2>Productividad y eficiencia</h2><p class="sub">Con el tiempo que los operarios imputan a cada coche (Comienzo / Acabo).</p></div></div>'+
    '<div class="kpis"><div class="kpi hl"><span>Productividad</span><b>'+(tp?pct(ti/tp*100):"—")+'</b><small>tiempo invertido ÷ presencia</small></div><div class="kpi"><span>Tiempo invertido</span><b>'+fh(ti)+'</b><small>en coches</small></div><div class="kpi"><span>Presencia</span><b>'+fh(tp)+'</b><small>chapa y pintura</small></div></div>'+
@@ -530,7 +533,7 @@ function empForm(id){
   var e=S.emps.filter(function(x){return x.id===id})[0]||{name:"",sec:"chapa",h:8,days:[1,2,3,4,5],pin:""};
   modal('<button class="x" data-a="close" aria-label="Cerrar">×</button><h3>'+(id?"Editar operario":"Nuevo operario")+'</h3>'+
    '<div class="field"><label for="en">Nombre</label><input type="text" id="en" maxlength="30" value="'+esc(e.name)+'" placeholder="Nombre y apellido"></div>'+
-   '<div class="field"><label for="es">Sección</label><select id="es">'+Object.keys(SEC).map(function(k){return '<option value="'+k+'"'+(e.sec===k?' selected':'')+'>'+SEC[k]+(k==="indirecto"?" (recepción, taller, administración…)":"")+'</option>'}).join("")+'</select></div>'+
+   '<div class="field"><label for="es">Sección</label><select id="es">'+SECSEL.concat(SECSEL.indexOf(e.sec)<0?[e.sec]:[]).map(function(k){return '<option value="'+k+'"'+(e.sec===k?' selected':'')+'>'+SEC[k]+(k==="indirecto"?" (recepción, taller, administración…)":"")+'</option>'}).join("")+'</select></div>'+
    '<div class="row" style="flex-wrap:nowrap;gap:12px"><div class="field" style="flex:1"><label for="eh">Horas por día</label><input type="number" id="eh" min="1" max="12" step="0.25" value="'+e.h+'"></div><div class="field" style="flex:1"><label for="ep">PIN (opcional)</label><input type="password" id="ep" inputmode="numeric" maxlength="6" value="'+esc(e.pin||"")+'" placeholder="4 cifras"></div></div>'+
    '<div class="field"><label>Días de trabajo</label><div class="seg" id="edays" style="width:fit-content">'+[1,2,3,4,5,6,0].map(function(d){return '<button type="button" data-wd="'+d+'" aria-pressed="'+(e.days.indexOf(d)>=0)+'">'+DOW[(d+6)%7]+'</button>'}).join("")+'</div></div>'+
    (id?'<div class="field"><label>Acceso del operario en su móvil</label><div class="mute" style="font-size:13px;margin-bottom:8px">Enlace personal: cada operario solo ve lo suyo. Envíaselo por WhatsApp y que lo abra en su móvil. Código: <b class="num">'+esc(e.tok||'')+'</b></div><button type="button" class="btn" data-a="copylink" data-id="'+id+'">Copiar enlace personal</button></div>':'')+
