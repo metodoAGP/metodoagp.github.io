@@ -58,7 +58,9 @@ button{cursor:pointer}
 
 /* resumen */
 .sum{background:var(--panel);border-bottom:1px solid var(--line)}
-.sum .wrap{display:flex;flex-wrap:wrap;gap:14px 26px;align-items:center;padding-block:12px}
+.sum .wrap{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;padding-block:10px}
+.sum .stats{gap:6px 18px}
+.sum .bars{flex:1 1 520px}
 .big{font:800 42px/0.9 var(--display)}
 .big small{display:block;font:500 11px var(--body);letter-spacing:.12em;color:var(--mute);margin-top:4px}
 .stats{display:flex;flex-wrap:wrap;gap:6px 22px}
@@ -107,6 +109,16 @@ button{cursor:pointer}
 .leg{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-size:12px;color:var(--mute);padding:8px 0 2px}.leg i{display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.25);vertical-align:-3px;margin-right:5px}.leg b{color:var(--ink);font-weight:600}
 .dlg label.chk{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;font-size:14px;color:var(--ink);padding:4px 0}.dlg .chk input{width:18px;height:18px;padding:0;flex:none}
 .vs{display:flex;flex-wrap:wrap;gap:3px;margin-top:2px}.vs span{font-size:10px;font-weight:700;border-radius:4px;padding:1px 5px;background:rgba(255,255,255,.55);color:#222;border:1px solid rgba(0,0,0,.18)}.vs span.w{background:#fff3cd;border-color:#c99a00}.vs span.n{background:rgba(255,255,255,.35);color:#555;border-color:rgba(0,0,0,.12)}.vs span.g{background:#d1f0d8;border-color:#1f8a3b}.vs span.r{background:#f8d7da;border-color:#b02a37}
+.dlg.aj{width:min(820px,100%);font-size:14px;padding:22px 26px}.dlg.aj h3{font-size:24px;margin-bottom:10px}
+.dlg.aj .gst{padding:12px 14px;margin:10px 0}.dlg.aj .gst h4{font-size:14px;font-weight:700;margin:0 0 8px}
+.dlg.aj .g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 12px}
+.dlg.aj .hh{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px}
+.dlg.aj .hr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;align-items:end;margin:6px 0}
+.dlg.aj .hr span{grid-column:1/-1;font-size:13px;color:var(--ink)}
+.dlg.aj label{font-size:12px;color:var(--mute);display:flex;flex-direction:column;gap:3px}
+.dlg.aj label.chk{flex-direction:row;font-size:14px;color:var(--ink)}
+.dlg.aj input:disabled{opacity:.4}
+@media (max-width:640px){.dlg.aj .g4{grid-template-columns:1fr 1fr}.dlg.aj .hr{grid-template-columns:1fr 1fr}.dlg.aj .hr span{grid-column:1/-1;padding-bottom:0}}
 .gst{border:1px solid var(--line,#ccc);border-radius:10px;padding:8px 10px;margin:8px 0}.gst h4{margin:0 0 6px;font-size:13px}.gst .g2{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}.gst label{display:flex;flex-direction:column;font-size:11.5px;gap:2px}.gst select{font:inherit;font-size:13px}@media (max-width:520px){.gst .g2{grid-template-columns:1fr}}
 .ics{display:flex;gap:5px;margin-block:1px}
 .ics svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.75}
@@ -303,6 +315,12 @@ table.heat{min-width:640px}
 
   var st={cards:seed(),ops:{c:5,r:0,i:1,p:4},secs:{c:true,p:true,r:false,i:false},days:5,hpd:8,seed:true};
   try{var raw=localStorage.getItem(KEY);if(raw){var o=JSON.parse(raw);if(o&&o.cards&&o.ops){st=o}}}catch(e){}
+  function tmin(v){var m=/^(\d{1,2}):(\d{2})$/.exec(v||'');return m?+m[1]*60+ +m[2]:null}
+  function horDef(){return {prod:{p:0,a:'08:00',b:'16:00',c:'14:00',d:'16:00'},com:{p:0,a:'08:00',b:'18:00',c:'14:00',d:'16:00'}}}
+  function winOf(h){var w=[],a=tmin(h.a),b=tmin(h.b);if(a!=null&&b!=null&&b>a)w.push([a,b]);if(h.p){var c=tmin(h.c),d=tmin(h.d);if(c!=null&&d!=null&&d>c)w.push([c,d])}return w}
+  function hrsOf(h){return winOf(h).reduce(function(t,w){return t+(w[1]-w[0])/60},0)}
+  function fixAj(){if(!st.hor||!st.hor.prod||!st.hor.com)st.hor=horDef();if(st.ops.n==null)st.ops.n=0;var h=hrsOf(st.hor.prod);if(h>0)st.hpd=h;else if(!st.hpd)st.hpd=8}
+  fixAj();
   function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}if(window.NUBE&&NUBE.touch)NUBE.touch()}
   var SECK=[['c','Chapa'],['p','Pintura'],['r','Mecánica rápida'],['i','Mecánica incidental']];
   var SECS={c:'C',r:'MR',i:'MI',p:'P'},SECL={c:'Chapa',r:'Mec. rápida',i:'Mec. incidental',p:'Pintura'};
@@ -451,7 +469,7 @@ table.heat{min-width:640px}
     while(d.getTime()<b){
       var s0=d.getTime(),e0=new Date(s0);e0.setDate(e0.getDate()+1);e0=e0.getTime();var wd=d.getDay();
       var lab=nd>=7||(nd===6?wd!==0:(wd>=1&&wd<=5));
-      if(lab){var ov=Math.min(b,e0)-Math.max(a,s0);if(ov>0)tot+=ov/(e0-s0)*hpd*3600000}
+      if(lab){var ws=winOf(st.hor.prod);if(!ws.length)ws=[[8*60,8*60+hpd*60]];ws.forEach(function(w){var s1=s0+w[0]*60000,e1=s0+w[1]*60000,ov=Math.min(b,e1)-Math.max(a,s1);if(ov>0)tot+=ov})}
       d.setDate(d.getDate()+1);
     }
     return tot;
@@ -642,10 +660,6 @@ table.heat{min-width:640px}
         sl.map(function(k){return '<div class="stat"><b>'+SECL[k[0]]+'</b><span>'+fh(all[k[0]])+'</span></div>'}).join('')+
         '<div class="stat"><b>Importe</b><span>'+fe(all.eur)+'</span></div>'+
       '</div>'+
-      '<div class="ops">'+
-        sl.map(function(k){return '<label>Op. '+SECL[k[0]].toLowerCase()+'<input type="number" min="0" step="1" data-op="'+k[0]+'" value="'+(st.ops[k[0]]||0)+'"></label>'}).join('')+
-        '<label>Días lab.<input type="number" min="1" max="7" step="1" data-op="days" value="'+st.days+'"></label>'+
-      '</div>'+
       '<div class="bars" style="--nb:'+(sl.length+1)+'">'+sl.map(function(k){return bar(SECL[k[0]],all[k[0]],cap(st.ops[k[0]]||0))}).join('')+bar('Total',all.t,capT)+'</div>'+
     '</div></div>';
     var leg='<div class="wrap"><div class="leg"><b>Color = día de entrega:</b>'+DOW.map(function(d){return '<span><i style="background:var(--k-'+d[2]+')"></i>'+d[1]+'</span>'}).join('')+'<span><i style="background:var(--k-white)"></i>Fin de semana</span></div></div>';
@@ -660,8 +674,8 @@ table.heat{min-width:640px}
   }
 
   function toast(t){var e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){e.hidden=true},2600)}
-  function openDlg(html){$('#dlg').classList.remove('bd');$('#dlg').innerHTML=html;$('#ov').hidden=false;var i=$('#dlg input,#dlg select,#dlg button');if(i)i.focus()}
-  function closeDlg(){$('#ov').hidden=true;$('#dlg').innerHTML='';$('#dlg').classList.remove('bd')}
+  function openDlg(html){$('#dlg').classList.remove('bd','aj');$('#dlg').innerHTML=html;$('#ov').hidden=false;var i=$('#dlg input,#dlg select,#dlg button');if(i)i.focus()}
+  function closeDlg(){$('#ov').hidden=true;$('#dlg').innerHTML='';$('#dlg').classList.remove('bd','aj')}
 
   function selV(c,k,lab,arr){return '<label>'+lab+'<select data-v="'+k+'" data-id="'+esc(c.id)+'">'+arr.map(function(o){return '<option'+(c[k]===o?' selected':'')+'>'+esc(o)+'</option>'}).join('')+'</select></label>'}
   function gestDlg(c){
@@ -698,11 +712,28 @@ table.heat{min-width:640px}
     '</div><div class="row"><button class="btn" type="button" data-close>Cancelar</button><button class="btn primary" type="submit">Añadir</button></div></form>');
   }
 
+  function hrBlock(key,title,note){
+    var h=st.hor[key],id=function(x){return 'h-'+key+'-'+x};
+    return '<div class="gst"><h4>'+title+'</h4><label class="chk"><input type="checkbox" data-hp="'+key+'"'+(h.p?' checked':'')+'> Jornada partida (si no, jornada continua)</label>'+
+      '<div class="hh"><div class="hr"><span>'+(h.p?'Mañana':'Jornada')+'</span><label>Desde<input type="time" id="'+id('a')+'" value="'+esc(h.a)+'"></label><label>Hasta<input type="time" id="'+id('b')+'" value="'+esc(h.b)+'"></label></div>'+
+      '<div class="hr"><span>Tarde</span><label>Desde<input type="time" id="'+id('c')+'" value="'+esc(h.c)+'"'+(h.p?'':' disabled')+'></label><label>Hasta<input type="time" id="'+id('d')+'" value="'+esc(h.d)+'"'+(h.p?'':' disabled')+'></label></div></div>'+
+      '<p class="cap" id="hs-'+key+'">'+note+'</p></div>';
+  }
+  function hrSum(key){var h=st.hor[key],n=hrsOf(h);return n.toLocaleString('es-ES',{maximumFractionDigits:2})+' h al día'}
   function setDlg(){
-    openDlg('<h3>Ajustes</h3><label class="f">Horas por jornada<input id="s-h" type="number" min="1" max="12" step="0.5" value="'+st.hpd+'"></label>'+
+    var secs=secList();
+    openDlg('<h3>Ajustes</h3>'+
+      hrBlock('prod','Horario productivo (operarios de chapa, pintura y mecánica)','Total: <b>'+hrSum('prod')+'</b>. Son las horas por jornada de cada operario y la base de la capacidad y de los tiempos de ciclo.')+
+      hrBlock('com','Horario comercial (taller abierto al público y personal indirecto)','Total: <b>'+hrSum('com')+'</b>. Atención al cliente, recogida y entrega. Se usará para citas y entregas.')+
+      '<div class="gst"><h4>Personal y días</h4><div class="g4">'+
+        secs.map(function(k){return '<label>'+SECL[k[0]]+' (operarios)<input type="number" min="0" step="1" id="s-op-'+k[0]+'" value="'+(st.ops[k[0]]||0)+'"></label>'}).join('')+
+        '<label>Indirecto (personas)<input type="number" min="0" step="1" id="s-op-n" value="'+(st.ops.n||0)+'"></label>'+
+        '<label>Días laborables / semana<input type="number" min="1" max="7" step="1" id="s-days" value="'+st.days+'"></label>'+
+      '</div></div>'+
       '<div class="gst"><h4>Secciones del taller</h4><p class="cap">Marca las secciones que tiene tu taller. Lo que no marques se oculta en todo el planificador.</p>'+SECK.map(function(k){return '<label class="chk"><input type="checkbox" data-sec="'+k[0]+'"'+(secOn(k[0])?' checked':'')+'> '+k[1]+'</label>'}).join('')+'<p class="cap">Mecánica rápida: mantenimiento (aceite, filtros, ruedas). Mecánica incidental: averías, motor y diagnosis.</p></div>'+
-      '<p class="note" style="padding-bottom:0">La capacidad de cada sección es operarios × horas por jornada × días laborables.</p>'+
+      '<p class="note" style="padding-bottom:0">La capacidad de cada sección es operarios × horas del horario productivo × días laborables.</p>'+
       '<div class="row"><button class="btn danger" type="button" id="clrAll">Vaciar todos los coches</button><button class="btn danger" type="button" id="rst">Restaurar datos de ejemplo</button><button class="btn" type="button" data-close>Cerrar</button><button class="btn primary" type="button" id="sOk">Guardar</button></div>');
+    $('#dlg').classList.add('aj');
   }
 
   /* ---------- Planificación ---------- */
@@ -929,8 +960,17 @@ table.heat{min-width:640px}
     if(t.id==='del'){t.textContent='Confirmar eliminar';t.id='del2';return}
     if(t.id==='del2'){var id=$('#mvOk').dataset.id;st.cards=st.cards.filter(function(x){return x.id!==id});save();closeDlg();render();toast('Vehículo eliminado');return}
     if(t.id==='clrAll'){if(!t.dataset.sure){t.dataset.sure='1';t.textContent='¿Seguro? Se borran de la nube. Pulsa otra vez';return}st.cards=[];delete st.seed;save();closeDlg();render();toast('Planificador vaciado');return}
-    if(t.id==='rst'){st={cards:seed(),ops:{c:5,r:0,i:1,p:4},secs:{c:true,p:true,r:false,i:false},days:5,hpd:8};st.cards.forEach(norm);save();closeDlg();render();toast('Datos de ejemplo restaurados');return}
-    if(t.id==='sOk'){st.hpd=Math.max(1,num($('#s-h').value)||8);save();closeDlg();render();return}
+    if(t.id==='rst'){st={cards:seed(),ops:{c:5,r:0,i:1,p:4},secs:{c:true,p:true,r:false,i:false},days:5,hpd:8};fixAj();st.cards.forEach(norm);save();closeDlg();render();toast('Datos de ejemplo restaurados');return}
+    if(t.id==='sOk'){
+      var nh={prod:{},com:{}},bad='';
+      ['prod','com'].forEach(function(k){var o=nh[k];o.p=$('[data-hp="'+k+'"]').checked?1:0;['a','b','c','d'].forEach(function(x){o[x]=$('#h-'+k+'-'+x).value});
+        var w=winOf(o);if(!w.length)bad='Revisa el horario '+(k==='prod'?'productivo':'comercial')+': la hora de salida debe ser posterior a la de entrada';
+        else if(o.p&&w.length<2)bad='Revisa la tarde del horario '+(k==='prod'?'productivo':'comercial');
+        else if(o.p&&w[1][0]<w[0][1])bad='La tarde no puede empezar antes de acabar la mañana'});
+      if(bad){toast(bad);return}
+      st.hor=nh;secList().forEach(function(k){var e=$('#s-op-'+k[0]);if(e)st.ops[k[0]]=Math.max(0,Math.round(num(e.value)||0))});
+      st.ops.n=Math.max(0,Math.round(num($('#s-op-n').value)||0));st.days=Math.min(7,Math.max(1,Math.round(num($('#s-days').value)||5)));
+      st.hpd=hrsOf(nh.prod);save();closeDlg();render();toast('Ajustes guardados · jornada productiva de '+hrSum('prod').replace(' al día',''));return}
     var card=t.closest('.card');if(card&&!card.classList.contains('drag')){cardDlg(card.dataset.id)}
   });
   document.addEventListener('keydown',function(e){
@@ -943,6 +983,7 @@ table.heat{min-width:640px}
       var k0=t.dataset.sec,on=t.checked,cnt=SECK.filter(function(x){return x[0]===k0?on:secOn(x[0])}).length;
       if(!cnt){t.checked=true;toast('El taller necesita al menos una sección');return}
       st.secs[k0]=on;save();render();setDlg();return}
+    if(t.dataset.hp!==undefined){var kk=t.dataset.hp;$('#h-'+kk+'-c').disabled=!t.checked;$('#h-'+kk+'-d').disabled=!t.checked;return}
     if(t.dataset.ent!==undefined){
       var ce=st.cards.filter(function(x){return x.id===t.dataset.ent})[0];
       if(ce&&t.value&&t.value!==ce.ent){
