@@ -103,7 +103,7 @@ button{cursor:pointer}
 .plate i{display:block;width:8px;align-self:stretch;background:#1c46b5;margin-right:5px;margin-block:-2px}
 .car{font-size:11.5px;opacity:.9}
 .ins{font-size:11.5px;font-weight:600}
-.vs{display:flex;flex-wrap:wrap;gap:3px;margin-top:2px}.vs span{font-size:10px;font-weight:700;border-radius:4px;padding:1px 5px;background:rgba(255,255,255,.55);color:#222;border:1px solid rgba(0,0,0,.18)}.vs span.w{background:#fff3cd;border-color:#c99a00}.vs span.g{background:#d1f0d8;border-color:#1f8a3b}.vs span.r{background:#f8d7da;border-color:#b02a37}
+.vs{display:flex;flex-wrap:wrap;gap:3px;margin-top:2px}.vs span{font-size:10px;font-weight:700;border-radius:4px;padding:1px 5px;background:rgba(255,255,255,.55);color:#222;border:1px solid rgba(0,0,0,.18)}.vs span.w{background:#fff3cd;border-color:#c99a00}.vs span.n{background:rgba(255,255,255,.35);color:#555;border-color:rgba(0,0,0,.12)}.vs span.g{background:#d1f0d8;border-color:#1f8a3b}.vs span.r{background:#f8d7da;border-color:#b02a37}
 .gst{border:1px solid var(--line,#ccc);border-radius:10px;padding:8px 10px;margin:8px 0}.gst h4{margin:0 0 6px;font-size:13px}.gst .g2{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}.gst label{display:flex;flex-direction:column;font-size:11.5px;gap:2px}.gst select{font:inherit;font-size:13px}@media (max-width:520px){.gst .g2{grid-template-columns:1fr}}
 .ics{display:flex;gap:5px;margin-block:1px}
 .ics svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.75}
@@ -134,11 +134,11 @@ button{cursor:pointer}
 .ov{position:fixed;inset:0;background:rgba(10,10,12,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
 .dlg{background:var(--panel);color:var(--ink);border-radius:10px;width:min(580px,100%);max-height:100%;overflow:auto;padding:18px;box-shadow:0 10px 40px rgba(0,0,0,.4)}
 .dlg .t th,.dlg .t td{padding:5px 6px;white-space:normal;font-size:12px;letter-spacing:0}.dlg .t th{font-size:10px}.dlg .tag{margin-left:4px;display:inline-block}
-.dlg.big{width:min(1100px,100%);font-size:15px;padding:24px 28px}.dlg.big h3{font-size:30px;margin-bottom:16px}
-.dlg.big .cdg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:6px 28px;align-items:start}
-.dlg.big .kv{font-size:15px}.dlg.big .gst{padding:12px 14px}.dlg.big .gst h4{font-size:15px}.dlg.big .gst label{font-size:13px}.dlg.big .gst select{font-size:15px;padding:8px}
-.dlg.big .t th,.dlg.big .t td{font-size:14px;padding:8px 10px}.dlg.big .t th{font-size:11px}.dlg.big .sec-h2{font-size:13px}.dlg.big .cap{font-size:13.5px}
-@media (max-width:860px){.dlg.big{padding:18px}.dlg.big .cdg{grid-template-columns:minmax(0,1fr)}}
+.dlg.bd{width:min(1100px,100%);font-size:15px;padding:24px 28px}.dlg.bd h3{font-size:30px;margin-bottom:16px}
+.dlg.bd .cdg{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:6px 28px;align-items:start}
+.dlg.bd .kv{font-size:15px}.dlg.bd .gst{padding:12px 14px}.dlg.bd .gst h4{font-size:15px}.dlg.bd .gst label{font-size:13px}.dlg.bd .gst select{font-size:15px;padding:8px}
+.dlg.bd .t th,.dlg.bd .t td{font-size:14px;padding:8px 10px}.dlg.bd .t th{font-size:11px}.dlg.bd .sec-h2{font-size:13px}.dlg.bd .cap{font-size:13.5px}
+@media (max-width:860px){.dlg.bd{padding:18px}.dlg.bd .cdg{grid-template-columns:minmax(0,1fr)}}
 .dlg h3{margin:0 0 12px;font:800 22px var(--display);text-transform:uppercase}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .grid label,.dlg label.f{display:flex;flex-direction:column;gap:3px;font-size:11.5px;color:var(--mute);min-width:0}
@@ -556,14 +556,17 @@ table.heat{min-width:640px}
   }
   function vChips(c){
     var a=[];
+    function chip(cl,lab,v,t){a.push('<span class="'+cl+'" title="'+t+'">'+lab+': '+esc(v)+'</span>')}
     if(c.st==='val'&&c.per==='CERRADA'&&rgOk(c))a.push('<span class="g" title="Peritación cerrada y recambio recibido: se puede empezar">Listo para empezar</span>');
     if(sinAct(c))a.push('<span class="w" title="Ningún operario ha trabajado en este coche hoy">Sin actividad hoy</span>');
-    if(perOpen(c))a.push('<span class="'+(c.per==='PENDIENTE COMPROMISO'||c.per==='PETICIÓN AMPLIACIÓN'?'r':'w')+'" title="Peritación">Perit.: '+esc(c.per)+'</span>');
-    else if(c.per==='RECHAZADA O ANULADA')a.push('<span class="r" title="Peritación">'+esc(c.per)+'</span>');
-    if(rgOpen(c)&&c.st!=='stk')a.push('<span class="'+(c.rg==='POR PEDIR'?'r':'w')+'" title="Gestión del recambio">Recamb.: '+esc(c.rg)+'</span>');
+    var pc=c.per==='CERRADA'?'g':c.per==='NO APLICA'?'n':(c.per==='PENDIENTE COMPROMISO'||c.per==='PETICIÓN AMPLIACIÓN'||c.per==='RECHAZADA O ANULADA')?'r':'w';
+    var rc=c.rg==='RECIBIDO'?'g':c.rg==='NO APLICA'?'n':c.rg==='POR PEDIR'?'r':'w';
+    var fc=c.fc==='COBRADA'?'g':c.fc==='NO FACTURABLE'?'n':c.fc==='IMPAGADA O RECLAMADA'?'r':'w';
+    chip(pc,'Perit.',c.per,'Gestión de peritación');
+    chip(rc,'Recamb.',c.rg,'Gestión del recambio');
+    chip(fc,'Fact.',c.fc,'Facturación y cobro');
     if(c.rs&&!perOk(c))a.push('<span class="r" title="Empezó sin compromiso de pago">Sin compromiso</span>');
-    if(c.fc==='POR FACTURAR'||c.fc==='IMPAGADA O RECLAMADA')a.push('<span class="'+(c.fc==='POR FACTURAR'?'w':'r')+'" title="Facturación y cobro">'+esc(c.fc)+'</span>');
-    return a.length?'<div class="vs">'+a.join('')+'</div>':'';
+    return '<div class="vs">'+a.join('')+'</div>';
   }
   function cardHtml(c){
     var d=due(c.sal),hrs=[];
@@ -632,8 +635,8 @@ table.heat{min-width:640px}
   }
 
   function toast(t){var e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){e.hidden=true},2600)}
-  function openDlg(html){$('#dlg').classList.remove('big');$('#dlg').innerHTML=html;$('#ov').hidden=false;var i=$('#dlg input,#dlg select,#dlg button');if(i)i.focus()}
-  function closeDlg(){$('#ov').hidden=true;$('#dlg').innerHTML='';$('#dlg').classList.remove('big')}
+  function openDlg(html){$('#dlg').classList.remove('bd');$('#dlg').innerHTML=html;$('#ov').hidden=false;var i=$('#dlg input,#dlg select,#dlg button');if(i)i.focus()}
+  function closeDlg(){$('#ov').hidden=true;$('#dlg').innerHTML='';$('#dlg').classList.remove('bd')}
 
   function selV(c,k,lab,arr){return '<label>'+lab+'<select data-v="'+k+'" data-id="'+esc(c.id)+'">'+arr.map(function(o){return '<option'+(c[k]===o?' selected':'')+'>'+esc(o)+'</option>'}).join('')+'</select></label>'}
   function gestDlg(c){
@@ -651,7 +654,7 @@ table.heat{min-width:640px}
       (c.cita?'<dt>Cita de recepción</dt><dd>'+ddmm(c.cita.slice(0,10))+' · '+esc(c.cita.slice(11,16))+'</dd>':'')+(c.cliente?'<dt>Cliente</dt><dd>'+esc(c.cliente)+(c.tel?' · '+esc(c.tel):'')+'</dd>':'')+'<dt>Salida</dt><dd>'+ddmm(c.sal)+' · '+d.t+'</dd><dt>Prioridad</dt><dd>'+esc(c.pr)+'</dd><dt>En esta fase</dt><dd>'+dIn(c)+(dIn(c)===1?' día':' días')+'</dd></dl>'+
       gestDlg(c)+'</div><div class="cr">'+histCard(c.id)+phGallery(c.id)+'<label class="f">Mover a<select id="mv">'+COLS.map(function(k){return '<option value="'+k[0]+'"'+(k[0]===c.st?' selected':'')+'>'+k[1]+'</option>'}).join('')+'</select></label>'+
       '<div class="row"><button class="btn danger" type="button" id="del">Eliminar</button><button class="btn" type="button" data-close>Cerrar</button><button class="btn primary" type="button" id="mvOk" data-id="'+esc(c.id)+'">Mover</button></div></div></div>');
-    $('#dlg').classList.add('big');
+    $('#dlg').classList.add('bd');
   }
 
   function newDlg(){
