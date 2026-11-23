@@ -9,8 +9,15 @@
 :root{--bg:#f6f7f8;--surface:#fff;--ink:#16202a;--mute:#5d6b78;--line:#dde3e8;--a:#1f5f8b;--g:#2f8a5b;--p:#d9572b;--bad:#b3341a;--good:#1f7a4d;--soft:#eef3f7}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f161c;--surface:#17212a;--ink:#e8eef3;--mute:#9aabb8;--line:#2a3945;--a:#6fb0dd;--g:#5fc08c;--p:#ff8a5c;--bad:#ff8f78;--good:#6fd39e;--soft:#1d2a35;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#0f161c;--surface:#17212a;--ink:#e8eef3;--mute:#9aabb8;--line:#2a3945;--a:#6fb0dd;--g:#5fc08c;--p:#ff8a5c;--bad:#ff8f78;--good:#6fd39e;--soft:#1d2a35;color-scheme:dark}
-body{background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.w{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;padding-block:0 48px;margin:0}
+.w{max-width:1072px;box-sizing:border-box;margin:0 auto;display:flex;flex-direction:column;gap:20px;padding:24px max(16px,env(safe-area-inset-left,0px)) 0 max(16px,env(safe-area-inset-right,0px))}
+.top{background:#1f2124;color:#f2f1ee}.top .in{max-width:1040px;margin:0 auto;box-sizing:border-box;padding:14px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:14px}
+.top .logo{flex:none;display:block}.top .logo img{display:block;width:48px;height:48px}
+.top .tt{margin:0;font:800 28px/1 'Barlow Condensed',Inter,sans-serif;letter-spacing:.01em;text-transform:uppercase}.top .tt small{display:block;font:500 11px Inter,system-ui,sans-serif;letter-spacing:.14em;color:#a8aaae;margin-top:5px}
+.top .back{margin-left:auto;background:#3a3b3f;color:#f2f1ee;text-decoration:none;border-radius:8px;padding:8px 12px;font-weight:600;font-size:14px;white-space:nowrap}
+@media(max-width:640px){.top .tt{font-size:23px}.top .logo img{width:40px;height:40px}.top .back{padding:7px 10px;font-size:13px}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .top{background:#0d0e0f}}
+:root[data-theme="dark"] .top{background:#0d0e0f}
 h1,h2{font-family:'Barlow Condensed',Inter,sans-serif;text-transform:uppercase;letter-spacing:.02em;margin:0;text-wrap:balance}
 h1{font-size:clamp(30px,6vw,46px);line-height:1.05}
 h2{font-size:24px;color:var(--ink)}
@@ -51,9 +58,10 @@ svg text{fill:var(--mute);font:11px Inter,sans-serif}
 .hb{display:grid;grid-template-columns:minmax(96px,170px) 1fr auto;gap:8px;align-items:center;font-size:13px;margin:7px 0}.hb div.n{min-width:0;overflow-wrap:anywhere}.hb div.t{height:14px;background:var(--soft);border-radius:3px}.hb div.t i{display:block;height:100%;border-radius:3px;background:var(--a)}.hb b{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
 .mb{text-transform:none;letter-spacing:0}
 </style>
-<body><div class="w">
+<body><div class="top"><div class="in"><a class="logo" href="index.html" title="Volver a métodoAGP"><img src="planificador-logo.png" width="48" height="48" alt="métodoAGP"></a><h1 class="tt">Dashboard de seguimiento<small><span class="mb">métodoAGP</span> · SEGUIMIENTO DEL TALLER</small></h1><a class="back" href="index.html">← <span class="mb">métodoAGP</span></a></div></div>
+<div class="w">
 <header>
-<div class="kick"><a href="index.html#dashboard" style="color:inherit;text-decoration:none">← <span class="mb">métodoAGP</span></a> · Dashboard de seguimiento</div>
+<div class="kick">Taller</div>
 <h1>Taller de ejemplo</h1>
 <p class="sub">Demostración con datos ilustrativos, no corresponden a ningún taller real. Compara el año en curso con el anterior en el mismo periodo y el TAM (últimos 12 meses móviles) con el TAM anterior.</p>
 </header>
