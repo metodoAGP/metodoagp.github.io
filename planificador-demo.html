@@ -147,8 +147,15 @@ button{cursor:pointer}
 .egr .dd{font:800 17px var(--display);line-height:1.1}
 .egr .dd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;border:1px solid rgba(0,0,0,.25)}
 .egr .why{font-size:12.5px;line-height:1.35}
+/* icono de información con explicación al pasar el ratón */
+.inf{display:inline-grid;place-items:center;width:14px;height:14px;border-radius:50%;background:var(--mute);color:#fff;font:700 10px/1 var(--body);margin-left:5px;cursor:help;position:relative;text-transform:none;letter-spacing:0;vertical-align:1px}
+.inf:hover::after,.inf:focus::after{content:attr(data-tip);position:absolute;top:20px;left:-12px;width:320px;background:var(--bar);color:#fff;font:400 12px/1.45 var(--body);padding:10px 12px;border-radius:7px;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:10;white-space:pre-line}
+.egw{overflow:visible}
 .egh2{padding:6px 14px;font:700 10.5px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
-.stp{display:flex;gap:2px;margin-top:4px}.stp i{flex:1;height:5px;border-radius:2px;background:var(--line)}.stp i.d{background:var(--ok)}.stp i.n{background:var(--warn)}
+.stp{display:flex;gap:2px;margin-top:3px}.stp i{flex:1;height:5px;border-radius:2px;background:var(--line)}
+/* horas imputadas encima de cada tramo de fase */
+.stp span{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}.stp span i{flex:none;display:block}
+.stp em{font:600 9px/1 var(--body);font-style:normal;color:var(--ink);text-align:center;height:9px;white-space:nowrap}.stp i.d{background:var(--ok)}.stp i.n{background:var(--warn)}
 .egt{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;color:var(--mute);font-size:13px}.egt label{display:flex;gap:6px;align-items:center;color:var(--ink)}
 @media (max-width:980px){.egh2{display:none}.egr{grid-template-columns:1fr 1fr;gap:6px 12px}.egr .why{grid-column:1/-1}}
 
@@ -705,6 +712,7 @@ table.heat{min-width:640px}
   function renderEntrega(){
     var list=st.cards.filter(function(c){return c.st!=='arc'&&c.st!=='ent'&&(egStk||c.st!=='stk')}),DAYS=wdays(40),sch=schedule(list,DAYS).sort(function(a,b){return a.c.sal<b.c.sal?-1:a.c.sal>b.c.sal?1:(a.c.id<b.c.id?-1:1)});
     var wk0=mondayOf(today).getTime(),groups=[],G={};
+    var IMP={},IMPF={};jobsHist().forEach(function(j){IMP[j.card]=(IMP[j.card]||0)+j.ms;var ix=stepIx(j.st);if(ix>=0){var a=IMPF[j.card]=IMPF[j.card]||[];a[ix]=(a[ix]||0)+j.ms}}); // tiempo imputado por coche y por fase (reloj de fichajes)
     sch.forEach(function(x){
       var m=mondayOf(new Date(x.c.sal+'T00:00:00')).getTime(),key=x.c.sal<iso(0)?'v':String(Math.max(m,wk0));
       if(!G[key]){G[key]={key:key,m:key==='v'?0:+key,items:[]};groups.push(G[key])}
@@ -730,14 +738,14 @@ table.heat{min-width:640px}
     groups.forEach(function(g){
       var n={o:0,w:0,b:0},hh=0,ee=0;g.items.forEach(function(x){n[x.e.lvl==='g'?'o':x.e.lvl]++;hh+=x.e.rem;ee+=x.c.eur});
       h+='<section class="egw"><div class="egh"><h3>'+ttl(g)+'</h3><span>'+plural(g.items.length,'vehículo','vehículos')+' · '+fh(hh)+' por hacer · '+fe(ee)+'</span><span class="pk">'+(n.o?'<span class="pill o">'+n.o+' sin dificultad</span>':'')+(n.w?'<span class="pill w">'+n.w+' ajustada'+(n.w>1?'s':'')+'</span>':'')+(n.b?'<span class="pill b">'+n.b+' con dificultad</span>':'')+'</span></div>'+
-        '<div class="egh2 egr" style="border:0;cursor:default;padding-block:6px"><span>Entrega</span><span>Vehículo</span><span>Estado</span><span>Horas</span><span>Fin estimado</span><span>Predicción</span><span>Por qué</span></div>'+
+        '<div class="egh2 egr" style="border:0;cursor:default;padding-block:6px"><span>Entrega</span><span>Vehículo</span><span>Estado<i class="inf" tabindex="0" data-tip="Fase en la que está el coche y días que lleva en ella.&#10;La barra tiene 8 tramos, uno por fase: Valoración, Desmontaje, Chapa, Preparación pintura, Cabina, Montaje, Control y lavado, Listo para entrega.&#10;Verde: fases hechas · Naranja: fase actual · Gris: fases pendientes.&#10;Encima de cada tramo, las horas imputadas en esa fase; el total está en la columna Horas.">i</i></span><span>Horas<i class="inf" tabindex="0" data-tip="Horas imputadas por los operarios en el reloj de fichajes, frente a las horas que se van a facturar.&#10;La barra se pone naranja al pasar del 85 % y roja si ya se ha trabajado más de lo que se factura.">i</i></span><span>Fin estimado</span><span>Predicción</span><span>Por qué</span></div>'+
         g.items.map(function(x){
           var c=x.c,e=x.e,ix=stepIx(c.st),dk=dayKey(c),dw=dk==='we'?'Fin de semana':DOW[+dk-1][1];
-          var stp=STEP.map(function(k,i){return '<i class="'+(i<ix?'d':i===ix?'n':'')+'"></i>'}).join('');
+          var pf=IMPF[c.id]||[],stp=STEP.map(function(k,i){var hh=(pf[i]||0)/3600000;return '<span title="'+esc(colName(k))+(hh?': '+r1(hh)+' h imputadas':': sin tiempo imputado')+'"><em>'+(hh?r1(hh)+'h':'')+'</em><i class="'+(i<ix?'d':i===ix?'n':'')+'"></i></span>'}).join('');
           return '<div class="egr '+e.lvl+'" data-open="'+esc(c.id)+'" tabindex="0"><div><div class="dd"><i style="background:'+STS[stOf(c)][2]+'" title="'+STS[stOf(c)][0]+'"></i>'+ddmm(c.sal)+'</div><small>'+dw.slice(0,3)+' · '+due(c.sal).t+'</small></div>'+
             '<div><b>'+esc(c.pl)+'</b> · OR '+esc(c.id)+'<small>'+esc(c.car)+' · '+esc(c.ins)+'</small></div>'+
-            '<div><b>'+esc(colName(c.st))+'</b><small>'+(dIn(c)===1?'1 día':dIn(c)+' días')+' en esta fase</small><div class="stp" title="Avance por fases">'+stp+'</div></div>'+
-            '<div><b>'+fh(e.rem)+'</b><small>de '+fh(c.c+c.p+(c.mr||0)+(c.mi||0))+'</small></div>'+
+            '<div><b>'+esc(colName(c.st))+'</b> <small style="display:inline">· '+(dIn(c)===1?'1 día':dIn(c)+' días')+' en esta fase</small><div class="stp">'+stp+'</div></div>'+
+            (function(){var tf=c.c+c.p+(c.mr||0)+(c.mi||0),ti=(IMP[c.id]||0)/3600000,pc=tf>0?ti/tf:0;return '<div title="Imputado '+fh(ti)+' de '+fh(tf)+' a facturar"><b>'+fh(ti)+'</b> <small style="display:inline">de '+fh(tf)+'</small><span class="mb" style="display:block;margin-top:4px"><i class="'+(pc>1?'b':pc>.85?'w':'')+'" style="width:'+Math.min(100,Math.round(pc*100))+'%"></i></span></div>'})()+
             '<div><b>'+e.fin+'</b></div>'+
             '<div><span class="pill '+e.lvl+'">'+e.tx+'</span></div>'+
             '<div class="why">'+e.why.map(esc).join(' ')+'</div></div>';
