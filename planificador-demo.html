@@ -148,8 +148,10 @@ button{cursor:pointer}
 .egr .dd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;border:1px solid rgba(0,0,0,.25)}
 .egr .why{font-size:12.5px;line-height:1.35}
 /* icono de información con explicación al pasar el ratón */
+.inf.open{background:var(--ink)}
+.egtl .tile:last-child .inf:hover::after,.egtl .tile:last-child .inf.open::after,.egtl .tile:last-child .inf:focus-visible::after{left:auto;right:-12px;transform:none}
 .inf{display:inline-grid;place-items:center;width:14px;height:14px;border-radius:50%;background:var(--mute);color:#fff;font:700 10px/1 var(--body);margin-left:5px;cursor:help;position:relative;text-transform:none;letter-spacing:0;vertical-align:1px}
-.inf:hover::after,.inf:focus::after{content:attr(data-tip);position:absolute;top:20px;left:-12px;width:320px;background:var(--bar);color:#fff;font:400 12px/1.45 var(--body);padding:10px 12px;border-radius:7px;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:10;white-space:pre-line}
+.inf:hover::after,.inf.open::after,.inf:focus-visible::after{content:attr(data-tip);position:absolute;top:20px;left:-12px;width:320px;background:var(--bar);color:#fff;font:400 12px/1.45 var(--body);padding:10px 12px;border-radius:7px;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:10;white-space:pre-line}
 .egw{overflow:visible}
 .egh2{padding:6px 14px;font:700 10.5px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
 .stp{display:flex;gap:2px;margin-top:3px}.stp i{flex:1;height:5px;border-radius:2px;background:var(--line)}
@@ -252,7 +254,7 @@ table.heat{min-width:640px}
 .egfl{margin:8px 0 0;font-size:12.5px;color:var(--mute)}.egfl b{color:var(--ink)}
 /* cuadros de Entrega centrados; la explicación de la «i» se abre centrada bajo el icono */
 .egtl .tile,.egtl .tile.tf{text-align:center}
-.egtl .inf:hover::after{left:50%;transform:translateX(-50%);width:280px;text-align:left}
+.egtl .inf:hover::after,.egtl .inf.open::after,.egtl .inf:focus-visible::after{left:50%;transform:translateX(-50%);width:280px;text-align:left}
 .read{margin:10px 0 0;font-weight:600}
 @media (max-width:640px){
   .bars{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -739,12 +741,12 @@ table.heat{min-width:640px}
     var cw=G[String(wk0)],cwN=cw?cw.items.length:0,cwR=cw?cw.items.filter(function(x){return x.e.lvl==='b'}).length:0,cwW=cw?cw.items.filter(function(x){return x.e.lvl==='w'}).length:0,vN=G.v?G.v.items.length:0;
     var read=!tot.n?'No hay vehículos en el taller.':(cwN?'Esta semana tienes '+cwN+' '+(cwN===1?'entrega':'entregas')+': '+(cwR?cwR+' con dificultad':'ninguna con dificultad')+(cwW?' y '+cwW+' ajustada'+(cwW>1?'s':''):'')+'.':'No hay entregas previstas esta semana.')+(vN?' Además '+vN+(vN===1?' vehículo vencido.':' vehículos vencidos.'):'');
     function tile(label,v,sub,k,fl,tip){
-      if(!fl)return '<div class="tile '+(k||'')+'"><b>'+label+'</b><strong>'+v+'</strong><small>'+sub+'</small></div>';
+      if(!fl)return '<div class="tile '+(k||'')+'"><b>'+label+(tip?'<i class="inf" data-tip="'+tip+'">i</i>':'')+'</b><strong>'+v+'</strong><small>'+sub+'</small></div>';
       var on=fl==='all'?!egOn:!!egF[fl];
       return '<button type="button" class="tile tf '+(k||'')+(on?' on':'')+'" data-egf="'+fl+'" aria-pressed="'+on+'"'+(fl==='all'?' title="Ver todas las entregas"':'')+'><b>'+label+(tip?'<i class="inf" data-tip="'+tip+'">i</i>':'')+'</b><strong>'+v+'</strong><small>'+sub+'</small></button>';
     }
     var h='<div class="wrap eg"><section><h2>Entregas comprometidas</h2><p class="cap" style="margin:4px 0 10px;color:var(--mute)">Ordenadas por fecha de entrega. La predicción compara las horas que faltan, la fase en la que está cada coche y la capacidad de las secciones (operarios × horario productivo) con la fecha comprometida.</p>'+
-      '<div class="tiles egtl">'+tile('Vehículos en curso',tot.n,'con fecha de entrega','','all')+tile('Sin dificultad',tot.o,'van bien','','o','Con las horas que faltan y la capacidad de tus operarios, el coche termina antes de su fecha de entrega, con al menos un día de margen. También cuenta los coches ya listos para entregar.&#10;Pulsa el cuadro para ver solo estos.')+tile('Ajustadas',tot.w,'sin margen',tot.w?'w':'','w','Llega justo a la fecha, sin margen; o tiene la peritación, el compromiso de pago o el recambio sin cerrar; o lleva en su fase más días de lo normal.&#10;Vigílalos para que no pasen a «Con dificultad». Pulsa el cuadro para ver solo estos.')+tile('Con dificultad',tot.b,'retrasar o reforzar',tot.b?'b':'','b','Con la capacidad actual no llega a su fecha de entrega, o la fecha ya ha pasado. En la columna «Por qué» tienes la causa y la acción recomendada: reforzar, reclamar o avisar al cliente.&#10;Pulsa el cuadro para ver solo estos.')+tile('Horas por hacer',fh(tot.h),fe(tot.eur)+' en curso')+'</div>'+
+      '<div class="tiles egtl">'+tile('Vehículos en curso',tot.n,'con fecha de entrega','','all','Todos los coches que están en el taller con una fecha de entrega comprometida, desde Recepcionado hasta Listo para entrega.&#10;No cuenta los de «Stock reparaciones» (salvo que marques la casilla de abajo) ni los que ya se han entregado.&#10;Pulsa el cuadro para quitar los filtros y verlos todos.')+tile('Sin dificultad',tot.o,'van bien','','o','Con las horas que faltan y la capacidad de tus operarios, el coche termina antes de su fecha de entrega, con al menos un día de margen. También cuenta los coches ya listos para entregar.&#10;Pulsa el cuadro para ver solo estos.')+tile('Ajustadas',tot.w,'sin margen',tot.w?'w':'','w','Llega justo a la fecha, sin margen; o tiene la peritación, el compromiso de pago o el recambio sin cerrar; o lleva en su fase más días de lo normal.&#10;Vigílalos para que no pasen a «Con dificultad». Pulsa el cuadro para ver solo estos.')+tile('Con dificultad',tot.b,'retrasar o reforzar',tot.b?'b':'','b','Con la capacidad actual no llega a su fecha de entrega, o la fecha ya ha pasado. En la columna «Por qué» tienes la causa y la acción recomendada: reforzar, reclamar o avisar al cliente.&#10;Pulsa el cuadro para ver solo estos.')+tile('Horas por hacer',fh(tot.h),fe(tot.eur)+' en curso','','','Horas de chapa, pintura y mecánica que faltan para terminar todos los coches en curso. Se estiman según la fase en la que está cada coche.&#10;Debajo, el importe total de esas reparaciones.&#10;Es tu carga de trabajo pendiente: compárala con la capacidad de tus operarios en la pestaña Planificación.')+'</div>'+
       (egOn?'<p class="egfl">Mostrando solo: <b>'+['o','w','b'].filter(function(k){return egF[k]}).map(function(k){return EGN[k]}).join(', ')+'</b>. Pulsa «Vehículos en curso» para ver todas.</p>':'')+
       '<p style="font-weight:600;margin:12px 0 0">'+esc(read)+'</p>'+
       '<div class="egt" style="margin-top:8px"><label><input type="checkbox" data-egstk'+(egStk?' checked':'')+'> Incluir «Stock reparaciones» (aún no están en el taller)</label></div></section>';
@@ -752,7 +754,7 @@ table.heat{min-width:640px}
     groups.forEach(function(g){
       var n={o:0,w:0,b:0},hh=0,ee=0;g.items.forEach(function(x){n[x.e.lvl==='g'?'o':x.e.lvl]++;hh+=x.e.rem;ee+=x.c.eur});
       h+='<section class="egw"><div class="egh"><h3>'+ttl(g)+'</h3><span>'+plural(g.items.length,'vehículo','vehículos')+' · '+fh(hh)+' por hacer · '+fe(ee)+'</span><span class="pk">'+(n.o?'<span class="pill o">'+n.o+' sin dificultad</span>':'')+(n.w?'<span class="pill w">'+n.w+' ajustada'+(n.w>1?'s':'')+'</span>':'')+(n.b?'<span class="pill b">'+n.b+' con dificultad</span>':'')+'</span></div>'+
-        '<div class="egh2 egr" style="border:0;cursor:default;padding-block:6px"><span>Entrega</span><span>Vehículo</span><span>Estado<i class="inf" tabindex="0" data-tip="Fase en la que está el coche y días que lleva en ella.&#10;La barra tiene 8 tramos, uno por fase: Valoración, Desmontaje, Chapa, Preparación pintura, Cabina, Montaje, Control y lavado, Listo para entrega.&#10;Verde: fases hechas · Naranja: fase actual · Gris: fases pendientes.&#10;Encima de cada tramo, las horas imputadas en esa fase; el total está en la columna Horas.">i</i></span><span>Horas<i class="inf" tabindex="0" data-tip="Horas imputadas por los operarios en el reloj de fichajes, frente a las horas que se van a facturar.&#10;La barra se pone naranja al pasar del 85 % y roja si ya se ha trabajado más de lo que se factura.">i</i></span><span>Fin estimado</span><span>Predicción</span><span>Por qué</span></div>'+
+        '<div class="egh2 egr" style="border:0;cursor:default;padding-block:6px"><span>Entrega<i class="inf" tabindex="0" data-tip="Fecha de entrega comprometida con el cliente. Debajo, el día de la semana y cuánto falta (o cuántos días lleva vencida).&#10;El cuadradito de color es el estado del coche: verde en marcha, azul listo sin operario, ámbar bloqueado, gris en cola.">i</i></span><span>Vehículo<i class="inf" tabindex="0" data-tip="Matrícula y número de orden de reparación (OR). Debajo, el modelo y la compañía o el cliente que paga.&#10;Pulsa la fila para abrir la ficha completa del coche.">i</i></span><span>Estado<i class="inf" tabindex="0" data-tip="Fase en la que está el coche y días que lleva en ella.&#10;La barra tiene 8 tramos, uno por fase: Valoración, Desmontaje, Chapa, Preparación pintura, Cabina, Montaje, Control y lavado, Listo para entrega.&#10;Verde: fases hechas · Naranja: fase actual · Gris: fases pendientes.&#10;Encima de cada tramo, las horas imputadas en esa fase; el total está en la columna Horas.">i</i></span><span>Horas<i class="inf" tabindex="0" data-tip="Horas imputadas por los operarios en el reloj de fichajes, frente a las horas que se van a facturar.&#10;La barra se pone naranja al pasar del 85 % y roja si ya se ha trabajado más de lo que se factura.">i</i></span><span>Fin estimado<i class="inf" tabindex="0" data-tip="Día en que terminaría el coche si se trabaja por orden de fecha de entrega, con los operarios y el horario que tienes en Ajustes. Supone como máximo 2 chapistas y 1 pintor a la vez en cada coche.&#10;Si cae después de la fecha de entrega, el coche pasa a «Con dificultad».">i</i></span><span>Predicción<i class="inf" tabindex="0" data-tip="Resultado de comparar el fin estimado con la fecha de entrega:&#10;· Sin dificultad: llega con margen.&#10;· Ajustada: llega justo, tiene una gestión pendiente o va lento en su fase.&#10;· Dificultad: no llega a la fecha.&#10;· Vencida: la fecha ya ha pasado.">i</i></span><span>Por qué<i class="inf" tabindex="0" data-tip="Explicación de la predicción y acción recomendada: reclamar el compromiso de pago o el recambio, reforzar una sección o avisar al cliente de la nueva fecha antes de que llegue el día.">i</i></span></div>'+
         g.items.map(function(x){
           var c=x.c,e=x.e,ix=stepIx(c.st),dk=dayKey(c),dw=dk==='we'?'Fin de semana':DOW[+dk-1][1];
           var pf=IMPF[c.id]||[],stp=STEP.map(function(k,i){var hh=(pf[i]||0)/3600000;return '<span title="'+esc(colName(k))+(hh?': '+r1(hh)+' h imputadas':': sin tiempo imputado')+'"><em>'+(hh?r1(hh)+'h':'')+'</em><i class="'+(i<ix?'d':i===ix?'n':'')+'"></i></span>'}).join('');
@@ -1154,6 +1156,8 @@ table.heat{min-width:640px}
   // eventos
   document.addEventListener('click',function(e){
     var t=e.target;
+    var inf=t.closest('.inf');document.querySelectorAll('.inf.open').forEach(function(x){if(x!==inf)x.classList.remove('open')});
+    if(inf){inf.classList.toggle('open');return}
     var tb=t.closest('.tab');if(tb){tab=+tb.dataset.t;render();return}
     var go=t.closest('[data-go]');if(go){var el=document.getElementById(go.dataset.go);if(el)el.scrollIntoView({block:'start'});return}
     if(t.closest('[data-close]')||t===$('#ov')){closeDlg();return}
@@ -1186,11 +1190,12 @@ table.heat{min-width:640px}
       st.hor=nh;secList().forEach(function(k){var e=$('#s-op-'+k[0]);if(e)st.ops[k[0]]=Math.max(0,Math.round(num(e.value)||0))});
       st.ops.n=Math.max(0,Math.round(num($('#s-op-n').value)||0));st.days=Math.min(7,Math.max(1,Math.round(num($('#s-days').value)||5)));
       st.hpd=hrsOf(nh.prod);save();closeDlg();render();toast('Ajustes guardados · jornada productiva de '+hrSum('prod').replace(' al día',''));return}
-    var egb=t.closest('[data-egf]');if(egb){var fv=egb.dataset.egf;if(fv==='all')egF={};else if(egF[fv])delete egF[fv];else egF[fv]=1;render();return}
+    var egb=t.closest('[data-egf]');if(egb){var fv=egb.dataset.egf;if(fv==='all')egF={};else if(egF[fv])delete egF[fv];else egF[fv]=1;render();if(fv!=='all'&&egF[fv]){var ii=document.querySelector('[data-egf="'+fv+'"] .inf');if(ii)ii.classList.add('open')}return}
     var op=t.closest('[data-open]');if(op){cardDlg(op.dataset.open);return}
     var card=t.closest('.card');if(card&&!card.classList.contains('drag')){cardDlg(card.dataset.id)}
   });
   document.addEventListener('keydown',function(e){
+    if(e.key==='Escape')document.querySelectorAll('.inf.open').forEach(function(x){x.classList.remove('open')});
     if(e.key==='Escape'&&!$('#ov').hidden){closeDlg();return}
     if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('card')){cardDlg(e.target.dataset.id)}
   });
