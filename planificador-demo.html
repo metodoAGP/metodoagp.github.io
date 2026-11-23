@@ -250,6 +250,9 @@ table.heat{min-width:640px}
 .tile.tf{cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%}.tile.tf:hover{border-color:var(--mute)}
 .tile.tf.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink);background:color-mix(in srgb,var(--ink) 7%,var(--chip))}
 .egfl{margin:8px 0 0;font-size:12.5px;color:var(--mute)}.egfl b{color:var(--ink)}
+/* cuadros de Entrega centrados; la explicación de la «i» se abre centrada bajo el icono */
+.egtl .tile,.egtl .tile.tf{text-align:center}
+.egtl .inf:hover::after{left:50%;transform:translateX(-50%);width:280px;text-align:left}
 .read{margin:10px 0 0;font-weight:600}
 @media (max-width:640px){
   .bars{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -735,13 +738,13 @@ table.heat{min-width:640px}
     if(egOn)groups=groups.map(function(g){return {key:g.key,m:g.m,items:g.items.filter(function(x){return egF[x.e.lvl==='g'?'o':x.e.lvl]})}}).filter(function(g){return g.items.length});
     var cw=G[String(wk0)],cwN=cw?cw.items.length:0,cwR=cw?cw.items.filter(function(x){return x.e.lvl==='b'}).length:0,cwW=cw?cw.items.filter(function(x){return x.e.lvl==='w'}).length:0,vN=G.v?G.v.items.length:0;
     var read=!tot.n?'No hay vehículos en el taller.':(cwN?'Esta semana tienes '+cwN+' '+(cwN===1?'entrega':'entregas')+': '+(cwR?cwR+' con dificultad':'ninguna con dificultad')+(cwW?' y '+cwW+' ajustada'+(cwW>1?'s':''):'')+'.':'No hay entregas previstas esta semana.')+(vN?' Además '+vN+(vN===1?' vehículo vencido.':' vehículos vencidos.'):'');
-    function tile(label,v,sub,k,fl){
+    function tile(label,v,sub,k,fl,tip){
       if(!fl)return '<div class="tile '+(k||'')+'"><b>'+label+'</b><strong>'+v+'</strong><small>'+sub+'</small></div>';
       var on=fl==='all'?!egOn:!!egF[fl];
-      return '<button type="button" class="tile tf '+(k||'')+(on?' on':'')+'" data-egf="'+fl+'" aria-pressed="'+on+'" title="'+(fl==='all'?'Ver todas las entregas':'Pulsa para filtrar; puedes juntar varios')+'"><b>'+label+'</b><strong>'+v+'</strong><small>'+sub+'</small></button>';
+      return '<button type="button" class="tile tf '+(k||'')+(on?' on':'')+'" data-egf="'+fl+'" aria-pressed="'+on+'"'+(fl==='all'?' title="Ver todas las entregas"':'')+'><b>'+label+(tip?'<i class="inf" data-tip="'+tip+'">i</i>':'')+'</b><strong>'+v+'</strong><small>'+sub+'</small></button>';
     }
     var h='<div class="wrap eg"><section><h2>Entregas comprometidas</h2><p class="cap" style="margin:4px 0 10px;color:var(--mute)">Ordenadas por fecha de entrega. La predicción compara las horas que faltan, la fase en la que está cada coche y la capacidad de las secciones (operarios × horario productivo) con la fecha comprometida.</p>'+
-      '<div class="tiles">'+tile('Vehículos en curso',tot.n,'con fecha de entrega','','all')+tile('Sin dificultad',tot.o,'van bien','','o')+tile('Ajustadas',tot.w,'sin margen',tot.w?'w':'','w')+tile('Con dificultad',tot.b,'retrasar o reforzar',tot.b?'b':'','b')+tile('Horas por hacer',fh(tot.h),fe(tot.eur)+' en curso')+'</div>'+
+      '<div class="tiles egtl">'+tile('Vehículos en curso',tot.n,'con fecha de entrega','','all')+tile('Sin dificultad',tot.o,'van bien','','o','Con las horas que faltan y la capacidad de tus operarios, el coche termina antes de su fecha de entrega, con al menos un día de margen. También cuenta los coches ya listos para entregar.&#10;Pulsa el cuadro para ver solo estos.')+tile('Ajustadas',tot.w,'sin margen',tot.w?'w':'','w','Llega justo a la fecha, sin margen; o tiene la peritación, el compromiso de pago o el recambio sin cerrar; o lleva en su fase más días de lo normal.&#10;Vigílalos para que no pasen a «Con dificultad». Pulsa el cuadro para ver solo estos.')+tile('Con dificultad',tot.b,'retrasar o reforzar',tot.b?'b':'','b','Con la capacidad actual no llega a su fecha de entrega, o la fecha ya ha pasado. En la columna «Por qué» tienes la causa y la acción recomendada: reforzar, reclamar o avisar al cliente.&#10;Pulsa el cuadro para ver solo estos.')+tile('Horas por hacer',fh(tot.h),fe(tot.eur)+' en curso')+'</div>'+
       (egOn?'<p class="egfl">Mostrando solo: <b>'+['o','w','b'].filter(function(k){return egF[k]}).map(function(k){return EGN[k]}).join(', ')+'</b>. Pulsa «Vehículos en curso» para ver todas.</p>':'')+
       '<p style="font-weight:600;margin:12px 0 0">'+esc(read)+'</p>'+
       '<div class="egt" style="margin-top:8px"><label><input type="checkbox" data-egstk'+(egStk?' checked':'')+'> Incluir «Stock reparaciones» (aún no están en el taller)</label></div></section>';
