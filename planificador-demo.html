@@ -68,13 +68,14 @@ button{cursor:pointer}
 .ops{display:flex;flex-wrap:wrap;gap:6px 10px}
 .ops label{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--mute)}
 .ops input{width:64px;background:var(--chip);border:1px solid var(--line);border-radius:5px;padding:5px 7px;font-variant-numeric:tabular-nums}
-.bars{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:8px 16px;flex:1 1 520px;min-width:0}
-.bar b{display:flex;justify-content:space-between;font:600 12px var(--body)}
+.bars{display:grid;grid-template-columns:repeat(var(--nb,5),minmax(0,1fr));gap:6px 14px;flex:1 1 100%;min-width:0}
+.bar b{display:flex;justify-content:space-between;gap:6px;font:600 11.5px var(--body);white-space:nowrap}
+.bar b span{overflow:hidden;text-overflow:ellipsis}
 .bar b em{font-style:normal;font-weight:700;font-variant-numeric:tabular-nums}
-.track{height:6px;border-radius:3px;background:var(--line);margin:5px 0 3px;overflow:hidden}
+.track{height:5px;border-radius:3px;background:var(--line);margin:3px 0 2px;overflow:hidden}
 .track i{display:block;height:100%;border-radius:3px;background:var(--ok)}
 .track i.mid{background:var(--warn)}.track i.low{background:var(--bad)}
-.bar small{color:var(--mute);font-size:11px;font-variant-numeric:tabular-nums}
+.bar small{color:var(--mute);font-size:10.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
 
 /* tablero */
 .board{display:flex;gap:12px;overflow-x:auto;padding-block:14px 22px;align-items:flex-start;scroll-snap-type:x proximity}
@@ -195,7 +196,7 @@ table.heat{min-width:640px}
 .tile.w strong{color:var(--warn)}.tile.b strong{color:var(--bad)}
 .read{margin:10px 0 0;font-weight:600}
 @media (max-width:640px){
-  .bars{grid-template-columns:1fr 1fr}
+  .bars{grid-template-columns:repeat(2,minmax(0,1fr))}
   .col{flex-basis:84vw;max-width:290px}
   .big{font-size:36px}
 }
@@ -303,7 +304,7 @@ table.heat{min-width:640px}
   var st={cards:seed(),ops:{c:5,r:0,i:1,p:4},secs:{c:true,p:true,r:false,i:false},days:5,hpd:8,seed:true};
   try{var raw=localStorage.getItem(KEY);if(raw){var o=JSON.parse(raw);if(o&&o.cards&&o.ops){st=o}}}catch(e){}
   function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}if(window.NUBE&&NUBE.touch)NUBE.touch()}
-  var SECK=[['c','Chapa'],['r','Mecánica rápida'],['i','Mecánica incidental'],['p','Pintura']];
+  var SECK=[['c','Chapa'],['p','Pintura'],['r','Mecánica rápida'],['i','Mecánica incidental']];
   var SECS={c:'C',r:'MR',i:'MI',p:'P'},SECL={c:'Chapa',r:'Mec. rápida',i:'Mec. incidental',p:'Pintura'};
   function secOn(k){return !!(st.secs&&st.secs[k])}
   function secList(){return SECK.filter(function(x){return secOn(x[0])})}
@@ -373,7 +374,7 @@ table.heat{min-width:640px}
   function bar(label,h,cap){
     var pct=cap>0?Math.round(h/cap*100):null;
     var cls=pct===null?'':(pct>=100?'':(pct>=70?'mid':'low'));
-    return '<div class="bar"><b>'+label+' <em>'+(pct===null?'—':pct+'%')+'</em></b><div class="track"><i class="'+cls+'" style="width:'+(pct===null?0:Math.min(pct,100))+'%"></i></div><small>'+fh(h)+' / '+fh(cap)+'</small></div>';
+    return '<div class="bar"><b><span>'+label+'</span> <em>'+(pct===null?'—':pct+'%')+'</em></b><div class="track"><i class="'+cls+'" style="width:'+(pct===null?0:Math.min(pct,100))+'%"></i></div><small>'+fh(h)+' / '+fh(cap)+'</small></div>';
   }
 
   function icons(list){return list.map(function(k){return '<svg aria-hidden="true"><use href="#i-'+k+'"/></svg>'}).join('')}
@@ -604,7 +605,7 @@ table.heat{min-width:640px}
       '<div class="ins">Seguro: '+esc(c.ins)+'</div>'+
       '<div class="ics">'+icons(c.ic)+'</div>'+vChips(c)+
       '<div class="hrs">'+hrs.join(' · ')+' <b>'+fe(c.eur)+'</b></div>'+wkHtml(c)+phBadge(c)+
-      '<div class="foot"><span class="who">Recepción '+c.rec+' · Asesor '+c.as+' · Gestor '+c.ge+'</span><span class="due '+d.c+'">'+d.t+'</span><span class="sal">Sal. '+ddmm(c.sal)+'</span>'+(c.cita?'<span class="sal" title="Cita de recepción">Cita '+ddmm(c.cita.slice(0,10))+' '+esc(c.cita.slice(11,16))+'</span>':'')+'</div>'+
+      '<div class="foot"><span class="who">Recepción '+c.rec+' · Asesor '+c.as+' · Gestor '+c.ge+'</span><span class="due '+d.c+'">'+d.t+'</span>'+(c.ent?'<span class="sal" title="Fecha de entrada">Ent. '+ddmm(c.ent)+'</span>':'')+'<span class="sal" title="Salida prevista">Sal. '+ddmm(c.sal)+'</span>'+(c.cita?'<span class="sal" title="Cita de recepción">Cita '+ddmm(c.cita.slice(0,10))+' '+esc(c.cita.slice(11,16))+'</span>':'')+'</div>'+
     '</article>';
   }
 
@@ -645,7 +646,7 @@ table.heat{min-width:640px}
         sl.map(function(k){return '<label>Op. '+SECL[k[0]].toLowerCase()+'<input type="number" min="0" step="1" data-op="'+k[0]+'" value="'+(st.ops[k[0]]||0)+'"></label>'}).join('')+
         '<label>Días lab.<input type="number" min="1" max="7" step="1" data-op="days" value="'+st.days+'"></label>'+
       '</div>'+
-      '<div class="bars">'+sl.map(function(k){return bar(SECL[k[0]],all[k[0]],cap(st.ops[k[0]]||0))}).join('')+bar('Total',all.t,capT)+'</div>'+
+      '<div class="bars" style="--nb:'+(sl.length+1)+'">'+sl.map(function(k){return bar(SECL[k[0]],all[k[0]],cap(st.ops[k[0]]||0))}).join('')+bar('Total',all.t,capT)+'</div>'+
     '</div></div>';
     var leg='<div class="wrap"><div class="leg"><b>Color = día de entrega:</b>'+DOW.map(function(d){return '<span><i style="background:var(--k-'+d[2]+')"></i>'+d[1]+'</span>'}).join('')+'<span><i style="background:var(--k-white)"></i>Fin de semana</span></div></div>';
     var board='<div class="wrap"><div class="board" id="board">'+COLSV().map(function(col){
@@ -675,7 +676,7 @@ table.heat{min-width:640px}
     openDlg('<h3>OR '+esc(c.id)+' · '+esc(c.pl)+'</h3><div class="cdg"><div class="cl">'+
       '<dl class="kv"><dt>Fase actual</dt><dd><b>'+esc(colName(c.st))+'</b></dd><dt>Matrícula</dt><dd>'+esc(c.pl)+'</dd><dt>Vehículo</dt><dd>'+esc(c.car)+' · '+esc(c.col)+'</dd><dt>Seguro</dt><dd>'+esc(c.ins)+'</dd>'+
       '<dt>Horas</dt><dd>'+(secList().map(function(k){return SECS[k[0]]+' '+fh(hs(c,k[0]))}).join(' · ')||'—')+'</dd>'+(WK[c.id]?'<dt>Trabajando</dt><dd>'+WK[c.id].map(esc).join(', ')+'</dd>':'')+'<dt>Importe</dt><dd>'+fe(c.eur)+'</dd>'+
-      (c.cita?'<dt>Cita de recepción</dt><dd>'+ddmm(c.cita.slice(0,10))+' · '+esc(c.cita.slice(11,16))+'</dd>':'')+(c.cliente?'<dt>Cliente</dt><dd>'+esc(c.cliente)+(c.tel?' · '+esc(c.tel):'')+'</dd>':'')+'<dt>Salida prevista</dt><dd><input type="date" data-sal="'+esc(c.id)+'" value="'+esc(c.sal)+'"> <small>'+d.t+'</small></dd>'+(c.sh&&c.sh.length?'<dt>Cambios de fecha</dt><dd>'+c.sh.length+' (la anterior era el '+ddmm(c.sh[c.sh.length-1].d)+')</dd>':'')+'<dt>Prioridad</dt><dd>'+esc(c.pr)+'</dd><dt>En esta fase</dt><dd>'+dIn(c)+(dIn(c)===1?' día':' días')+'</dd></dl>'+
+      (c.cita?'<dt>Cita de recepción</dt><dd>'+ddmm(c.cita.slice(0,10))+' · '+esc(c.cita.slice(11,16))+'</dd>':'')+(c.cliente?'<dt>Cliente</dt><dd>'+esc(c.cliente)+(c.tel?' · '+esc(c.tel):'')+'</dd>':'')+'<dt>Fecha de entrada</dt><dd><input type="date" data-ent="'+esc(c.id)+'" value="'+esc(c.ent||'')+'"></dd><dt>Salida prevista</dt><dd><input type="date" data-sal="'+esc(c.id)+'" value="'+esc(c.sal)+'"> <small>'+d.t+'</small></dd>'+(c.sh&&c.sh.length?'<dt>Cambios de fecha</dt><dd>'+c.sh.length+' (la anterior era el '+ddmm(c.sh[c.sh.length-1].d)+')</dd>':'')+'<dt>Prioridad</dt><dd>'+esc(c.pr)+'</dd><dt>En esta fase</dt><dd>'+dIn(c)+(dIn(c)===1?' día':' días')+'</dd></dl>'+
       gestDlg(c)+'</div><div class="cr">'+histCard(c.id)+phGallery(c.id)+'<label class="f">Mover a<select id="mv">'+COLSV().map(function(k){return '<option value="'+k[0]+'"'+(k[0]===c.st?' selected':'')+'>'+k[1]+'</option>'}).join('')+'</select></label>'+
       '<div class="row"><button class="btn danger" type="button" id="del">Eliminar</button><button class="btn" type="button" data-close>Cerrar</button><button class="btn primary" type="button" id="mvOk" data-id="'+esc(c.id)+'">Mover</button></div></div></div>');
     $('#dlg').classList.add('bd');
@@ -687,7 +688,8 @@ table.heat{min-width:640px}
       '<label>Prioridad<select id="n-pr"><option>NORMAL</option><option>MEDIO</option><option>FUERTE</option><option>RÁPIDO</option></select></label>'+
       '<label class="full">Vehículo<input id="n-car" required placeholder="Toyota Corolla"></label>'+
       '<label>Seguro<input id="n-ins" placeholder="Aseguradora"></label>'+
-      '<label>Fecha de salida<input id="n-sal" type="date" required value="'+iso(5)+'"></label>'+
+      '<label>Fecha de entrada<input id="n-ent" type="date" required value="'+iso(1)+'"></label>'+
+      '<label>Fecha de salida prevista<input id="n-sal" type="date" required value="'+iso(5)+'"></label>'+
       (secOn('c')?'<label>Horas chapa<input id="n-c" type="number" min="0" step="0.5" value="0"></label>':'')+
       (secOn('p')?'<label>Horas pintura<input id="n-p" type="number" min="0" step="0.5" value="0"></label>':'')+
       (secOn('r')?'<label>Horas mecánica rápida<input id="n-mr" type="number" min="0" step="0.5" value="0"></label>':'')+(secOn('i')?'<label>Horas mecánica incidental<input id="n-mi" type="number" min="0" step="0.5" value="0"></label>':'')+
@@ -941,8 +943,15 @@ table.heat{min-width:640px}
       var k0=t.dataset.sec,on=t.checked,cnt=SECK.filter(function(x){return x[0]===k0?on:secOn(x[0])}).length;
       if(!cnt){t.checked=true;toast('El taller necesita al menos una sección');return}
       st.secs[k0]=on;save();render();setDlg();return}
+    if(t.dataset.ent!==undefined){
+      var ce=st.cards.filter(function(x){return x.id===t.dataset.ent})[0];
+      if(ce&&t.value&&t.value!==ce.ent){
+        if(t.value>ce.sal){toast('La entrada no puede ser posterior a la salida');t.value=ce.ent||'';return}
+        ce.ent=t.value;if(ce.cita)ce.cita=t.value+ce.cita.slice(10);save();render();var pe=$('#dlg').scrollTop;cardDlg(ce.id);$('#dlg').scrollTop=pe}
+      return}
     if(t.dataset.sal!==undefined){
       var cs=st.cards.filter(function(x){return x.id===t.dataset.sal})[0];
+      if(cs&&t.value&&t.value!==cs.sal&&cs.ent&&t.value<cs.ent){toast('La salida no puede ser anterior a la entrada');t.value=cs.sal;return}
       if(cs&&t.value&&t.value!==cs.sal){(cs.sh=cs.sh||[]).push({d:cs.sal,t:Date.now()});cs.sal=t.value;save();render();var ps2=$('#dlg').scrollTop;cardDlg(cs.id);$('#dlg').scrollTop=ps2}
       return}
     if(t.dataset.v!==undefined){
@@ -963,9 +972,10 @@ table.heat{min-width:640px}
     e.preventDefault();
     if(e.target.id==='searchForm'){f.q=$('#q').value.trim();render();return}
     if(e.target.id==='nf'){
+      if($('#n-ent').value&&$('#n-sal').value<$('#n-ent').value){toast('La salida no puede ser anterior a la entrada');return}
       var max=0;st.cards.forEach(function(c){var n=parseInt(c.id,10);if(n>max)max=n});
       st.cards.push({id:(max+1)+'-2026',pr:$('#n-pr').value,pl:$('#n-pl').value.toUpperCase().trim(),car:$('#n-car').value.trim(),col:'',ins:$('#n-ins').value.trim()||'Particular',
-        c:$('#n-c')?num($('#n-c').value):0,mr:$('#n-mr')?num($('#n-mr').value):0,mi:$('#n-mi')?num($('#n-mi').value):0,p:$('#n-p')?num($('#n-p').value):0,eur:num($('#n-e').value),st:$('#n-st').value,tc:'white',rec:1,as:1,ge:1,sal:$('#n-sal').value,ct:'0/0',cm:0,ic:['car'],ent:iso(0),mv:iso(0),prov:''});
+        c:$('#n-c')?num($('#n-c').value):0,mr:$('#n-mr')?num($('#n-mr').value):0,mi:$('#n-mi')?num($('#n-mi').value):0,p:$('#n-p')?num($('#n-p').value):0,eur:num($('#n-e').value),st:$('#n-st').value,tc:'white',rec:1,as:1,ge:1,sal:$('#n-sal').value,ct:'0/0',cm:0,ic:['car'],ent:$('#n-ent').value||iso(0),mv:iso(0),prov:''});
       norm(st.cards[st.cards.length-1]);save();closeDlg();render();toast('Cita añadida');
     }
   });
