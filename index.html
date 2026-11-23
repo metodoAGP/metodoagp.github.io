@@ -211,7 +211,11 @@ header .wrap{display:flex;flex-wrap:nowrap;align-items:center;justify-content:fl
   .cring{max-width:420px}
   .cmid .mb{font-size:clamp(24px,7vw,34px)}
 }
-@media (max-width:520px){.hl .vids{grid-template-columns:1fr;gap:26px}.hl .vids .sub{min-height:0}.cmid .agp{font-size:13px;letter-spacing:.07em}}
+/* Texto principal debajo de los vídeos; centro del ciclo igual que el logo */
+.hl .lead{margin:30px 0 0}
+.cmid{width:54%}
+.cmid .cexp{display:block;font:500 clamp(8px,1vw,11px)/1.2 var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-top:6px;white-space:nowrap}
+@media (max-width:520px){.hl .vids{grid-template-columns:1fr;gap:26px}.hl .vids .sub{min-height:0}.hl .lead{margin-top:26px}.cmid .cexp{font-size:clamp(7.5px,2.2vw,10px);letter-spacing:.1em}}
 </style>
 </head>
 <body>
@@ -219,7 +223,7 @@ header .wrap{display:flex;flex-wrap:nowrap;align-items:center;justify-content:fl
 <header>
   <div class="wrap wide">
     <a class="mark" href="#top"><img src="logo.png" alt="" width="36" height="36"><div><span class="mb">método</span><span>AGP</span><small>EXPERTOS EN RENTABILIDAD</small></div></a>
-    <h1 class="hhead">La hora más cara es la que <em>no se vende.</em><small>Gestión integral de talleres de automoción</small></h1>
+    <h1 class="hhead">la hora más cara es la que <em>no se vende.</em><small>Gestión integral de talleres de automoción</small></h1>
   </div>
 </header>
 
@@ -227,7 +231,6 @@ header .wrap{display:flex;flex-wrap:nowrap;align-items:center;justify-content:fl
 <div class="wrap wide hero">
     <div class="hgrid">
       <div class="hl" id="historia">
-        <p class="lead">El <span class="mb">métodoAGP</span> te da el control de los ciclos de reparación de tu taller, además de convertir las horas, los recambios y el material de pintura en decisiones claras para ganar más con el mismo equipo.</p>
         <div class="vids">
           <div>
             <h3>La historia de un taller</h3>
@@ -240,11 +243,12 @@ header .wrap{display:flex;flex-wrap:nowrap;align-items:center;justify-content:fl
             <div class="vid"><video controls preload="metadata" playsinline poster="metodo-agp.jpg" aria-label="Qué es el métodoAGP"><source src="metodo-agp-v3.mp4" type="video/mp4">Tu navegador no puede reproducir el vídeo.</video></div>
           </div>
         </div>
+        <p class="lead">El <span class="mb">métodoAGP</span> te da el control de los ciclos de reparación de tu taller, además de convertir las horas, los recambios y el material de pintura en decisiones claras para ganar más con el mismo equipo.</p>
       </div>
       <figure class="ciclo" aria-label="Secuencia del métodoAGP">
         <div class="cring">
           <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M32.00 18.82 A36 36 0 0 1 68.00 18.82" fill="none" stroke="var(--a)" stroke-width="1.6" stroke-linecap="round"/><path d="M74.09 23.25 A36 36 0 1 1 17.11 64.64" fill="none" stroke="var(--g)" stroke-width="1.6" stroke-linecap="round"/><path d="M14.79 57.48 A36 36 0 0 1 25.91 23.25" fill="none" stroke="var(--p)" stroke-width="1.6" stroke-linecap="round"/><path d="M-1.6 -1.5 L0 1.4 L1.6 -1.5" transform="translate(71.16 20.88) rotate(-54.0)" fill="none" stroke="var(--mute)" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round"/><path d="M-1.6 -1.5 L0 1.4 L1.6 -1.5" transform="translate(84.24 61.12) rotate(18.0)" fill="none" stroke="var(--mute)" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round"/><path d="M-1.6 -1.5 L0 1.4 L1.6 -1.5" transform="translate(50.00 86.00) rotate(90.0)" fill="none" stroke="var(--mute)" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round"/><path d="M-1.6 -1.5 L0 1.4 L1.6 -1.5" transform="translate(15.76 61.12) rotate(162.0)" fill="none" stroke="var(--mute)" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round"/><path d="M-1.6 -1.5 L0 1.4 L1.6 -1.5" transform="translate(28.84 20.88) rotate(234.0)" fill="none" stroke="var(--mute)" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <div class="cmid"><span class="mb">método<span>AGP</span></span><span class="agp"><span class="a">Analizar</span><span class="g">Gestionar</span><span class="p">Progresar</span></span></div>
+          <div class="cmid"><span class="mb">método<span>AGP</span></span><small class="cexp">Expertos en rentabilidad</small></div>
 <a class="cn a" href="analisis.html" style="left:50.00%;top:14.00%" aria-label="1. Autodiagnóstico: Dónde estás"><span class="ci"><img src="autodiagnostico.png" alt="" width="40" height="40"><b>1</b></span><span class="ct">Autodiagnóstico<small>Dónde estás</small></span></a>
 <a class="cn g" href="tasador.html" style="left:84.24%;top:38.88%" aria-label="2. Tasador rápido: Valora y presupuesta"><span class="ci"><img src="tasador.png" alt="" width="40" height="40"><b>2</b></span><span class="ct">Tasador rápido<small>Valora y presupuesta</small></span></a>
 <a class="cn g" href="planificador-demo.html" style="left:71.16%;top:79.12%" aria-label="3. Planificador: Organiza y entrega"><span class="ci"><img src="planificador.png" alt="" width="40" height="40"><b>3</b></span><span class="ct">Planificador<small>Organiza y entrega</small></span></a>
