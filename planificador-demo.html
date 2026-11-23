@@ -119,6 +119,29 @@ button{cursor:pointer}
 .dlg.aj label.chk{flex-direction:row;font-size:14px;color:var(--ink)}
 .dlg.aj input:disabled{opacity:.4}
 @media (max-width:640px){.dlg.aj .g4{grid-template-columns:1fr 1fr}.dlg.aj .hr{grid-template-columns:1fr 1fr}.dlg.aj .hr span{grid-column:1/-1;padding-bottom:0}}
+/* entrega */
+.eg{padding-block:14px 30px;display:flex;flex-direction:column;gap:18px}
+.eg h2{margin:0;font:800 20px var(--display);text-transform:uppercase;letter-spacing:.02em}
+.egw{background:var(--chip);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.egh{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline;padding:10px 14px;border-bottom:1px solid var(--line)}
+.egh h3{margin:0;font:800 17px var(--display);text-transform:uppercase}
+.egh span{color:var(--mute);font-size:12.5px}
+.egh .pk{display:inline-flex;gap:6px;margin-left:auto}
+.pill{display:inline-block;border-radius:20px;padding:2px 9px;font:700 11px var(--body);white-space:nowrap}
+.pill.o{background:color-mix(in srgb,var(--ok) 25%,var(--chip));color:var(--ink)}.pill.w{background:color-mix(in srgb,var(--warn) 40%,var(--chip));color:var(--ink)}.pill.b{background:var(--bad);color:#fff}.pill.g{background:var(--line);color:var(--ink)}
+.egr{display:grid;grid-template-columns:78px minmax(150px,1.1fr) minmax(170px,1.1fr) 92px 100px 120px minmax(200px,2fr);gap:10px;align-items:center;padding:9px 14px;border-top:1px solid var(--line);border-left:5px solid transparent;cursor:pointer;font-size:13px}
+.egr:first-of-type{border-top:0}
+.egr:hover{background:color-mix(in srgb,var(--ink) 5%,var(--chip))}
+.egr.o{border-left-color:var(--ok)}.egr.w{border-left-color:var(--warn)}.egr.b{border-left-color:var(--bad)}.egr.g{border-left-color:var(--line)}
+.egr small{display:block;color:var(--mute);font-size:11.5px}
+.egr .dd{font:800 17px var(--display);line-height:1.1}
+.egr .dd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;border:1px solid rgba(0,0,0,.25)}
+.egr .why{font-size:12.5px;line-height:1.35}
+.egh2{padding:6px 14px;font:700 10.5px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.stp{display:flex;gap:2px;margin-top:4px}.stp i{flex:1;height:5px;border-radius:2px;background:var(--line)}.stp i.d{background:var(--ok)}.stp i.n{background:var(--warn)}
+.egt{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;color:var(--mute);font-size:13px}.egt label{display:flex;gap:6px;align-items:center;color:var(--ink)}
+@media (max-width:980px){.egh2{display:none}.egr{grid-template-columns:1fr 1fr;gap:6px 12px}.egr .why{grid-column:1/-1}}
+
 .gst{border:1px solid var(--line,#ccc);border-radius:10px;padding:8px 10px;margin:8px 0}.gst h4{margin:0 0 6px;font-size:13px}.gst .g2{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}.gst label{display:flex;flex-direction:column;font-size:11.5px;gap:2px}.gst select{font:inherit;font-size:13px}@media (max-width:520px){.gst .g2{grid-template-columns:1fr}}
 .ics{display:flex;gap:5px;margin-block:1px}
 .ics svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.75}
@@ -627,6 +650,76 @@ table.heat{min-width:640px}
     '</article>';
   }
 
+
+  /* ---------- Entrega ---------- */
+  var egStk=false;
+  var STEP=['val','des','cha','pp','cab','mon','ctl','lst'];
+  function mondayOf(d){var x=new Date(d);x.setHours(0,0,0,0);var w=x.getDay();x.setDate(x.getDate()-(w===0?6:w-1));return x}
+  function stepIx(k){k=lg(k);if(k==='mrp'||k==='min')return STEP.indexOf('mon');if(k==='rec'||k==='stk')return -1;return STEP.indexOf(k)}
+  function egInfo(x,DAYS){
+    var c=x.c,r=REM[c.st]||[1,1,1],rem=hs(c,'c')*r[0]+hs(c,'p')*r[1]+(hs(c,'r')+hs(c,'i'))*r[2],dd=due(c.sal).d,why=[],lvl='o',tx='Sin dificultad';
+    var finTxt=x.fin>=DAYS.length?'> '+dm(DAYS[DAYS.length-1]):dm(DAYS[x.fin]);
+    var slack=x.si-x.fin;
+    if(c.st==='lst'){lvl='o';tx='Listo para entregar';why.push(dd<0?'Está terminado y vencido: avisa al cliente y entrégalo.':'Terminado: coordina la entrega con el cliente.');finTxt='—'}
+    else if(rem<=0.05&&(c.st==='ctl'||c.st==='mon')){lvl='o';why.push('Sin horas pendientes: solo falta cierre y control.');if(dd<0){lvl='b';tx='Vencida';why.push('La fecha ya ha pasado.')}}
+    else if(x.late>0){lvl='b';tx='Dificultad';
+      why.push((x.cause||'Plazo corto para las horas')+'. Terminaría hacia el '+finTxt+' ('+x.late+(x.late===1?' día':' días')+' tarde).');
+      var cz=x.cause||'',ac=/Compromiso/.test(cz)?'reclama el compromiso de pago y, mientras tanto, avisa al cliente de la nueva fecha.':/recambio/i.test(cz)?'reclama el recambio al proveedor o avisa al cliente de la nueva fecha.':/Sin operarios/.test(cz)?'asigna operarios a esa sección o avisa al cliente de la nueva fecha.':/Cola/.test(cz)?'repriorizar la cola, reforzar '+(/chapa/.test(cz)?'chapa':/pintura/.test(cz)?'pintura':'esa sección')+' o avisar al cliente de la nueva fecha.':'las horas no caben en el plazo: avisa al cliente de la nueva fecha o refuerza con horas extra.';
+      why.push('Acción: '+ac);x.skipPre=/Compromiso|recambio/i.test(cz)}
+    else if(slack<=0){lvl='w';tx='Ajustada';why.push('Llega justo: terminaría el '+finTxt+', sin margen de seguridad.')}
+    else{why.push('Terminaría el '+finTxt+', con '+slack+(slack===1?' día':' días')+' de margen.')}
+    if(c.st!=='lst'){
+      if(!x.skipPre){var po=PRE[c.st]&&perOpen(c),ro=PRE[c.st]&&rgOpen(c);if(po)why.push('Peritación/compromiso sin cerrar: no se debería empezar.');
+      if(ro)why.push('Recambio sin recibir.');if((po||ro)&&lvl==='o'){lvl='w';tx='Gestión pendiente'}}
+      if(dd<0&&lvl!=='b'){lvl='b';tx='Vencida'}
+      var di=dIn(c);if(THR[lg(c.st)]&&di>THR[lg(c.st)]&&lvl==='o'){lvl='w';tx='Ritmo lento';why.push('Lleva '+di+' días en '+colName(c.st)+' (lo normal: '+THR[lg(c.st)]+').')}
+    }
+    return {rem:rem,lvl:lvl,tx:tx,why:why,fin:finTxt};
+  }
+  function renderEntrega(){
+    var list=st.cards.filter(function(c){return c.st!=='arc'&&c.st!=='ent'&&(egStk||c.st!=='stk')}),DAYS=wdays(40),sch=schedule(list,DAYS).sort(function(a,b){return a.c.sal<b.c.sal?-1:a.c.sal>b.c.sal?1:(a.c.id<b.c.id?-1:1)});
+    var wk0=mondayOf(today).getTime(),groups=[],G={};
+    sch.forEach(function(x){
+      var m=mondayOf(new Date(x.c.sal+'T00:00:00')).getTime(),key=x.c.sal<iso(0)?'v':String(Math.max(m,wk0));
+      if(!G[key]){G[key]={key:key,m:key==='v'?0:+key,items:[]};groups.push(G[key])}
+      var e=G[key];x.e=egInfo(x,DAYS);e.items.push(x);
+    });
+    groups.sort(function(a,b){return a.key==='v'?-1:b.key==='v'?1:a.m-b.m});
+    function ttl(g){
+      if(g.key==='v')return 'Vencidas';
+      var d0=new Date(g.m),d1=new Date(g.m);d1.setDate(d1.getDate()+6);
+      var off=Math.round((g.m-wk0)/6048e5);
+      return (off===0?'Esta semana':off===1?'Próxima semana':'Semana del '+dm(d0))+' · '+dm(d0)+' – '+dm(d1);
+    }
+    var tot={n:sch.length,b:0,w:0,o:0,h:0,eur:0};
+    sch.forEach(function(x){tot[x.e.lvl==='g'?'o':x.e.lvl]++;tot.h+=x.e.rem;tot.eur+=x.c.eur});
+    var cw=G[String(wk0)],cwN=cw?cw.items.length:0,cwR=cw?cw.items.filter(function(x){return x.e.lvl==='b'}).length:0,cwW=cw?cw.items.filter(function(x){return x.e.lvl==='w'}).length:0,vN=G.v?G.v.items.length:0;
+    var read=!tot.n?'No hay vehículos en el taller.':(cwN?'Esta semana tienes '+cwN+' '+(cwN===1?'entrega':'entregas')+': '+(cwR?cwR+' con dificultad':'ninguna con dificultad')+(cwW?' y '+cwW+' ajustada'+(cwW>1?'s':''):'')+'.':'No hay entregas previstas esta semana.')+(vN?' Además '+vN+(vN===1?' vehículo vencido.':' vehículos vencidos.'):'');
+    function tile(label,v,sub,k){return '<div class="tile '+(k||'')+'"><b>'+label+'</b><strong>'+v+'</strong><small>'+sub+'</small></div>'}
+    var h='<div class="wrap eg"><section><h2>Entregas comprometidas</h2><p class="cap" style="margin:4px 0 10px;color:var(--mute)">Ordenadas por fecha de entrega. La predicción compara las horas que faltan, la fase en la que está cada coche y la capacidad de las secciones (operarios × horario productivo) con la fecha comprometida.</p>'+
+      '<div class="tiles">'+tile('Vehículos en curso',tot.n,'con fecha de entrega')+tile('Sin dificultad',tot.o,'van bien','')+tile('Ajustadas',tot.w,'sin margen',tot.w?'w':'')+tile('Con dificultad',tot.b,'retrasar o reforzar',tot.b?'b':'')+tile('Horas por hacer',fh(tot.h),fe(tot.eur)+' en curso')+'</div>'+
+      '<p style="font-weight:600;margin:12px 0 0">'+esc(read)+'</p>'+
+      '<div class="egt" style="margin-top:8px"><label><input type="checkbox" data-egstk'+(egStk?' checked':'')+'> Incluir «Stock reparaciones» (aún no están en el taller)</label></div></section>';
+    if(!groups.length)h+='<div class="empty">No hay entregas que mostrar.</div>';
+    groups.forEach(function(g){
+      var n={o:0,w:0,b:0},hh=0,ee=0;g.items.forEach(function(x){n[x.e.lvl==='g'?'o':x.e.lvl]++;hh+=x.e.rem;ee+=x.c.eur});
+      h+='<section class="egw"><div class="egh"><h3>'+ttl(g)+'</h3><span>'+plural(g.items.length,'vehículo','vehículos')+' · '+fh(hh)+' por hacer · '+fe(ee)+'</span><span class="pk">'+(n.o?'<span class="pill o">'+n.o+' sin dificultad</span>':'')+(n.w?'<span class="pill w">'+n.w+' ajustada'+(n.w>1?'s':'')+'</span>':'')+(n.b?'<span class="pill b">'+n.b+' con dificultad</span>':'')+'</span></div>'+
+        '<div class="egh2 egr" style="border:0;cursor:default;padding-block:6px"><span>Entrega</span><span>Vehículo</span><span>Estado</span><span>Horas</span><span>Fin estimado</span><span>Predicción</span><span>Por qué</span></div>'+
+        g.items.map(function(x){
+          var c=x.c,e=x.e,ix=stepIx(c.st),dk=dayKey(c),dw=dk==='we'?'Fin de semana':DOW[+dk-1][1];
+          var stp=STEP.map(function(k,i){return '<i class="'+(i<ix?'d':i===ix?'n':'')+'"></i>'}).join('');
+          return '<div class="egr '+e.lvl+'" data-open="'+esc(c.id)+'" tabindex="0"><div><div class="dd"><i style="background:var(--k-'+dayCol(c)+')"></i>'+ddmm(c.sal)+'</div><small>'+dw.slice(0,3)+' · '+due(c.sal).t+'</small></div>'+
+            '<div><b>'+esc(c.pl)+'</b> · OR '+esc(c.id)+'<small>'+esc(c.car)+' · '+esc(c.ins)+'</small></div>'+
+            '<div><b>'+esc(colName(c.st))+'</b><small>'+(dIn(c)===1?'1 día':dIn(c)+' días')+' en esta fase</small><div class="stp" title="Avance por fases">'+stp+'</div></div>'+
+            '<div><b>'+fh(e.rem)+'</b><small>de '+fh(c.c+c.p+(c.mr||0)+(c.mi||0))+'</small></div>'+
+            '<div><b>'+e.fin+'</b></div>'+
+            '<div><span class="pill '+e.lvl+'">'+e.tx+'</span></div>'+
+            '<div class="why">'+e.why.map(esc).join(' ')+'</div></div>';
+        }).join('')+'</section>';
+    });
+    $('#main').innerHTML=h+'</div>';
+  }
+
   function renderTabs(){
     $('#tabs').innerHTML=TABS.map(function(t,i){
       var n=i===1?'<span>'+st.cards.length+'</span>':'';
@@ -638,8 +731,9 @@ table.heat{min-width:640px}
     renderTabs();
     var m=$('#main');
     if(tab===0){renderPlan();return}
+    if(tab===2){renderEntrega();return}
     if(tab===4){renderTiempos();return}
-    if(tab!==1){m.innerHTML='<div class="msg wrap">La vista «'+TABS[tab]+'» no forma parte de esta demostración. Están activas Planificación, Producción y Tiempos.</div>';return}
+    if(tab!==1){m.innerHTML='<div class="msg wrap">La vista «'+TABS[tab]+'» no forma parte de esta demostración. Están activas Planificación, Producción, Entrega y Tiempos.</div>';return}
     var all=sums(st.cards),cap=function(n){return n*st.hpd*st.days};
     var asesores=[],seguros=[];
     st.cards.forEach(function(c){if(asesores.indexOf(String(c.as))<0)asesores.push(String(c.as));if(seguros.indexOf(c.ins)<0)seguros.push(c.ins)});
@@ -971,6 +1065,7 @@ table.heat{min-width:640px}
       st.hor=nh;secList().forEach(function(k){var e=$('#s-op-'+k[0]);if(e)st.ops[k[0]]=Math.max(0,Math.round(num(e.value)||0))});
       st.ops.n=Math.max(0,Math.round(num($('#s-op-n').value)||0));st.days=Math.min(7,Math.max(1,Math.round(num($('#s-days').value)||5)));
       st.hpd=hrsOf(nh.prod);save();closeDlg();render();toast('Ajustes guardados · jornada productiva de '+hrSum('prod').replace(' al día',''));return}
+    var op=t.closest('[data-open]');if(op){cardDlg(op.dataset.open);return}
     var card=t.closest('.card');if(card&&!card.classList.contains('drag')){cardDlg(card.dataset.id)}
   });
   document.addEventListener('keydown',function(e){
@@ -983,6 +1078,7 @@ table.heat{min-width:640px}
       var k0=t.dataset.sec,on=t.checked,cnt=SECK.filter(function(x){return x[0]===k0?on:secOn(x[0])}).length;
       if(!cnt){t.checked=true;toast('El taller necesita al menos una sección');return}
       st.secs[k0]=on;save();render();setDlg();return}
+    if(t.dataset.egstk!==undefined){egStk=t.checked;render();return}
     if(t.dataset.hp!==undefined){var kk=t.dataset.hp;$('#h-'+kk+'-c').disabled=!t.checked;$('#h-'+kk+'-d').disabled=!t.checked;return}
     if(t.dataset.ent!==undefined){
       var ce=st.cards.filter(function(x){return x.id===t.dataset.ent})[0];
