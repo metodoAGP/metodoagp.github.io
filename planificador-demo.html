@@ -80,6 +80,9 @@ button{cursor:pointer}
 .bar small{color:var(--mute);font-size:10.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
 
 /* tablero */
+/* barra de desplazamiento horizontal también arriba, fija al bajar por la página */
+.topsc{overflow-x:auto;overflow-y:hidden;position:sticky;top:0;z-index:5;background:var(--bg);margin-top:8px;padding-top:2px}
+.topsc div{height:1px}
 .board{display:flex;gap:12px;overflow-x:auto;padding-block:14px 22px;align-items:flex-start;scroll-snap-type:x proximity}
 .col{flex:0 0 232px;scroll-snap-align:start;min-width:0}
 .col.over .stack{outline:2px dashed var(--accent);outline-offset:3px;border-radius:8px}
@@ -840,16 +843,26 @@ table.heat{min-width:640px}
       '<div class="bars" style="--nb:'+(sl.length+1)+'">'+sl.map(function(k){return bar(SECL[k[0]],all[k[0]],cap(st.ops[k[0]]||0))}).join('')+bar('Total',all.t,capT)+'</div>'+
     '</div></div>';
     var leg='<div class="wrap"><div class="leg"><b>Color = estado:</b>'+['run','rdy','blk','que'].map(function(k){return '<span title="'+STS[k][1]+'"><i style="background:'+STS[k][2]+'"></i>'+STS[k][0]+'</span>'}).join('')+'<span><i style="background:#c92f26"></i>Fecha en rojo = entrega en riesgo o vencida</span></div></div>';
-    var board='<div class="wrap"><div class="board" id="board">'+COLSV().map(function(col){
+    var board='<div class="wrap"><div class="topsc" id="topsc" aria-hidden="true"><div></div></div><div class="board" id="board">'+COLSV().map(function(col){
       var list=st.cards.filter(function(c){return c.st===col[0]&&visible(c)});
       var s=sums(list);
       return '<section class="col" data-col="'+col[0]+'"><h2>'+col[1]+'<em>'+s.n+'</em></h2>'+
         '<div class="tot">'+fe(s.eur)+' T:'+fh(s.t)+' '+tots(s)+'</div>'+
         '<div class="stack">'+(list.length?list.map(cardHtml).join(''):'<div class="empty">Sin vehículos</div>')+'</div></section>';
     }).join('')+'</div><p class="note">Datos de ejemplo. Arrastra una tarjeta a otra columna, o ábrela para moverla. Los cambios se guardan en este navegador.</p></div>';
+    var bx=$('#board'),bsl=bx?bx.scrollLeft:0;
     m.innerHTML=filt+sum+leg+board;
+    topSc();var b2=$('#board');if(b2)b2.scrollLeft=bsl;
   }
 
+  function topSc(){ // sincroniza la barra de arriba con la del tablero
+    var t=$('#topsc'),b=$('#board');if(!t||!b)return;
+    function w(){t.firstChild.style.width=(b.scrollWidth-b.clientWidth+t.clientWidth)+'px';t.style.display=b.scrollWidth>b.clientWidth+1?'':'none'}
+    w();setTimeout(w,300);
+    t.onscroll=function(){if(b.scrollLeft!==t.scrollLeft)b.scrollLeft=t.scrollLeft};
+    b.onscroll=function(){if(t.scrollLeft!==b.scrollLeft)t.scrollLeft=b.scrollLeft};
+  }
+  window.addEventListener('resize',function(){if(tab===1)topSc()});
   function toast(t){var e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){e.hidden=true},2600)}
   function openDlg(html){$('#dlg').classList.remove('bd','aj');$('#dlg').innerHTML=html;$('#ov').hidden=false;var i=$('#dlg input,#dlg select,#dlg button');if(i)i.focus()}
   function closeDlg(){$('#ov').hidden=true;$('#dlg').innerHTML='';$('#dlg').classList.remove('bd','aj')}
