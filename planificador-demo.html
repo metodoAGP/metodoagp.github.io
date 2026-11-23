@@ -94,6 +94,13 @@ button{cursor:pointer}
 .card.drag{opacity:.45}
 .t-white{background:var(--k-white)}.t-red{background:var(--k-red)}.t-purple{background:var(--k-purple)}
 .t-green{background:var(--k-green)}.t-blue{background:var(--k-blue)}.t-orange{background:var(--k-orange)}.t-yellow{background:var(--k-yellow)}
+/* Color de tarjeta = estado operativo (4 colores) */
+.s-run{background:#c9ebcb;border-left:5px solid #2f8f4e}
+.s-rdy{background:#cfe3f6;border-left:5px solid #2c6fb3}
+.s-blk{background:#fbe2a8;border-left:5px solid #d18a00}
+.s-que{background:#e4e3e0;border-left:5px solid #8d9096}
+.dl{font:700 10px var(--body);border-radius:3px;padding:2px 6px;background:rgba(0,0,0,.08);color:var(--k-ink);white-space:nowrap}
+.dl.r{background:#c92f26;color:#fff}
 .r1{display:flex;align-items:center;gap:6px}
 .or{font:700 17px/1 var(--display);letter-spacing:.01em;flex:1}
 .cm{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:18px;border-radius:9px;background:rgba(255,255,255,.75);border:1px solid rgba(0,0,0,.25);font:600 10.5px var(--body)}
@@ -295,6 +302,21 @@ table.heat{min-width:640px}
   function dowOf(c){return new Date((c.sal||'2000-01-03')+'T00:00:00').getDay()}
   function dayCol(c){var d=dowOf(c);return d>=1&&d<=5?DOW[d-1][2]:'white'}
   function dayKey(c){var d=dowOf(c);return d>=1&&d<=5?String(d):'we'}
+  // Estado operativo de la tarjeta: en marcha, listo sin operario, bloqueado o en cola
+  var DOWS=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  var STS={run:['En marcha','Alguien está trabajando ahora en el coche','#2f8f4e'],rdy:['Listo sin operario','Se puede trabajar, pero ahora no hay nadie en él','#2c6fb3'],blk:['Bloqueado','Espera peritación, compromiso de pago o recambio','#d18a00'],que:['En cola','Todavía no ha entrado a trabajo (stock, recepción) o espera entrega','#8d9096']};
+  function stOf(c){
+    if(WK[c.id]&&WK[c.id].length)return 'run';
+    var k=lg(c.st);
+    if(k==='stk'||k==='rec'||k==='lst')return 'que';
+    if(!perOk(c))return 'blk';
+    if(k==='val')return rgOk(c)?'rdy':'blk';
+    if(rgOpen(c)&&k!=='des')return 'blk';
+    return WORK[k]?'rdy':'que';
+  }
+  // Entregas en riesgo: misma previsión que la pestaña Entrega (nivel «Dificultad» o «Vencida»)
+  var RISK={};
+  function calcRisk(){RISK={};try{var list=st.cards.filter(function(c){return c.st!=='arc'&&c.st!=='ent'}),DAYS=wdays(40);schedule(list,DAYS).forEach(function(x){var e=egInfo(x,DAYS);if(e.lvl==='b')RISK[x.c.id]=e.tx+(e.why[0]?'. '+e.why[0]:'')})}catch(e){}}
   var KEY='agp-planificador-demo-v1';
   var TABORD=[2,1,0,4,3,5];
   var tab=2, f={q:'',as:'',ins:'',pri:'',due:'',tc:''}, toastT;
@@ -640,14 +662,14 @@ table.heat{min-width:640px}
   function cardHtml(c){
     var d=due(c.sal),hrs=[];
     secList().forEach(function(k){var h=hs(c,k[0]);if(h)hrs.push(SECS[k[0]]+' '+fh(h))});
-    return '<article class="card t-'+dayCol(c)+'" draggable="true" tabindex="0" data-id="'+esc(c.id)+'" aria-label="OR '+esc(c.id)+', '+esc(c.pl)+'">'+
+    return '<article class="card s-'+stOf(c)+'" draggable="true" tabindex="0" data-id="'+esc(c.id)+'" aria-label="OR '+esc(c.id)+', '+esc(c.pl)+'">'+
       '<div class="r1"><span class="or">'+esc(c.id)+'</span><span class="cm'+(c.cm?' has':'')+'" title="Comentarios">'+c.cm+'</span><span class="ct" title="Control de tareas">CT '+esc(c.ct)+'</span></div>'+
       '<div class="r2"><span class="pri p-'+esc(c.pr)+'">'+esc(c.pr)+'</span><span class="plate"><i></i>'+esc(c.pl)+'</span></div>'+
       '<div class="car">'+esc(c.car)+' · '+esc(c.col)+'</div>'+
       '<div class="ins">Seguro: '+esc(c.ins)+'</div>'+
       '<div class="ics">'+icons(c.ic)+'</div>'+vChips(c)+
       '<div class="hrs">'+hrs.join(' · ')+' <b>'+fe(c.eur)+'</b></div>'+wkHtml(c)+phBadge(c)+
-      '<div class="foot"><span class="who">Recepción '+c.rec+' · Asesor '+c.as+' · Gestor '+c.ge+'</span><span class="due '+d.c+'">'+d.t+'</span>'+(c.ent?'<span class="sal" title="Fecha de entrada">Ent. '+ddmm(c.ent)+'</span>':'')+'<span class="sal" title="Salida prevista">Sal. '+ddmm(c.sal)+'</span>'+(c.cita?'<span class="sal" title="Cita de recepción">Cita '+ddmm(c.cita.slice(0,10))+' '+esc(c.cita.slice(11,16))+'</span>':'')+'</div>'+
+      '<div class="foot"><span class="who">Recepción '+c.rec+' · Asesor '+c.as+' · Gestor '+c.ge+'</span><span class="dl'+(RISK[c.id]||d.d<0?' r':'')+'" title="'+esc(RISK[c.id]||(d.d<0?'Entrega vencida':'Entrega prevista: '+d.t))+'">'+(d.d<0?'Vencida · ':'')+DOWS[new Date(c.sal+'T00:00:00').getDay()]+' '+ddmm(c.sal)+'</span>'+(c.ent?'<span class="sal" title="Fecha de entrada">Ent. '+ddmm(c.ent)+'</span>':'')+''+(c.cita?'<span class="sal" title="Cita de recepción">Cita '+ddmm(c.cita.slice(0,10))+' '+esc(c.cita.slice(11,16))+'</span>':'')+'</div>'+
     '</article>';
   }
 
@@ -709,7 +731,7 @@ table.heat{min-width:640px}
         g.items.map(function(x){
           var c=x.c,e=x.e,ix=stepIx(c.st),dk=dayKey(c),dw=dk==='we'?'Fin de semana':DOW[+dk-1][1];
           var stp=STEP.map(function(k,i){return '<i class="'+(i<ix?'d':i===ix?'n':'')+'"></i>'}).join('');
-          return '<div class="egr '+e.lvl+'" data-open="'+esc(c.id)+'" tabindex="0"><div><div class="dd"><i style="background:var(--k-'+dayCol(c)+')"></i>'+ddmm(c.sal)+'</div><small>'+dw.slice(0,3)+' · '+due(c.sal).t+'</small></div>'+
+          return '<div class="egr '+e.lvl+'" data-open="'+esc(c.id)+'" tabindex="0"><div><div class="dd"><i style="background:'+STS[stOf(c)][2]+'" title="'+STS[stOf(c)][0]+'"></i>'+ddmm(c.sal)+'</div><small>'+dw.slice(0,3)+' · '+due(c.sal).t+'</small></div>'+
             '<div><b>'+esc(c.pl)+'</b> · OR '+esc(c.id)+'<small>'+esc(c.car)+' · '+esc(c.ins)+'</small></div>'+
             '<div><b>'+esc(colName(c.st))+'</b><small>'+(dIn(c)===1?'1 día':dIn(c)+' días')+' en esta fase</small><div class="stp" title="Avance por fases">'+stp+'</div></div>'+
             '<div><b>'+fh(e.rem)+'</b><small>de '+fh(c.c+c.p+(c.mr||0)+(c.mi||0))+'</small></div>'+
@@ -794,6 +816,7 @@ table.heat{min-width:640px}
     if(tab===4){renderTiempos();return}
     if(tab===5){renderInformes();return}
     if(tab!==1){m.innerHTML='<div class="msg wrap">La vista «'+TABS[tab]+'» no forma parte de esta demostración. Están activas Planificación, Producción, Entrega y Tiempos.</div>';return}
+    calcRisk();
     var all=sums(st.cards.filter(live)),cap=function(n){return n*st.hpd*st.days};
     var asesores=[],seguros=[];
     st.cards.forEach(function(c){if(asesores.indexOf(String(c.as))<0)asesores.push(String(c.as));if(seguros.indexOf(c.ins)<0)seguros.push(c.ins)});
@@ -816,7 +839,7 @@ table.heat{min-width:640px}
       '</div>'+
       '<div class="bars" style="--nb:'+(sl.length+1)+'">'+sl.map(function(k){return bar(SECL[k[0]],all[k[0]],cap(st.ops[k[0]]||0))}).join('')+bar('Total',all.t,capT)+'</div>'+
     '</div></div>';
-    var leg='<div class="wrap"><div class="leg"><b>Color = día de entrega:</b>'+DOW.map(function(d){return '<span><i style="background:var(--k-'+d[2]+')"></i>'+d[1]+'</span>'}).join('')+'<span><i style="background:var(--k-white)"></i>Fin de semana</span></div></div>';
+    var leg='<div class="wrap"><div class="leg"><b>Color = estado:</b>'+['run','rdy','blk','que'].map(function(k){return '<span title="'+STS[k][1]+'"><i style="background:'+STS[k][2]+'"></i>'+STS[k][0]+'</span>'}).join('')+'<span><i style="background:#c92f26"></i>Fecha en rojo = entrega en riesgo o vencida</span></div></div>';
     var board='<div class="wrap"><div class="board" id="board">'+COLSV().map(function(col){
       var list=st.cards.filter(function(c){return c.st===col[0]&&visible(c)});
       var s=sums(list);
