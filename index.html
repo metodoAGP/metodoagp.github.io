@@ -154,6 +154,34 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 .tool h3,.plan h3,.dash h3{display:flex;align-items:center;gap:14px}.tool h3 img,.plan h3 img,.dash h3 img{width:46px;height:46px;flex:none}.tool .frase,.plan .frase,.dash .frase{margin:0 0 6px}
 .mb{text-transform:none;letter-spacing:0}
+
+.wrap.wide{max-width:1240px}
+.hero{padding-block:clamp(28px,5vw,56px) clamp(24px,4vw,48px)}
+.hero h1{font-size:clamp(22px,5.4vw,64px);white-space:nowrap;margin-bottom:clamp(18px,3vw,32px)}
+.hero h1 span{display:inline}
+.hgrid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:center}
+.hl .lead{margin:0 0 22px;max-width:62ch}
+.hl .vids{gap:22px}.hl .vids h3{font-size:20px;margin:0 0 4px}.hl .vids .sub{margin:0;font-size:14px}.hl .vid{margin-top:12px}
+.ciclo{margin:0;text-align:center}
+.cring{position:relative;width:100%;max-width:460px;aspect-ratio:1;margin-inline:auto}
+.cring svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.cmid{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;width:34%}
+.cmid .mb{font:800 clamp(18px,2.6vw,26px)/1 var(--display);letter-spacing:.03em;text-transform:uppercase}.cmid .mb span{color:var(--accent)}
+.cmid small{display:block;color:var(--mute);font-size:12px;margin-top:4px}
+.cn{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:5px;text-decoration:none;color:var(--ink);width:112px}
+.ci{position:relative;display:grid;place-items:center;width:clamp(54px,12vw,68px);aspect-ratio:1;border-radius:50%;background:var(--surface);border:2px solid var(--line);transition:transform .15s,border-color .15s}
+.cn.a .ci{border-color:var(--a)}.cn.g .ci{border-color:var(--g)}.cn.p .ci{border-color:var(--p)}
+.ci img{width:62%;height:auto}
+.ci b{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font:700 11px var(--body);color:#fff}
+.cn.a .ci b{background:var(--a)}.cn.g .ci b{background:var(--g)}.cn.p .ci b{background:var(--p)}
+.cn:hover .ci,.cn:focus-visible .ci{transform:scale(1.08)}
+.ct{font:700 12.5px/1.15 var(--body);text-align:center;background:var(--bg);padding:1px 4px;border-radius:4px}
+.ct small{display:block;font-weight:400;color:var(--mute);font-size:11px;margin-top:1px}
+.ciclo figcaption{color:var(--mute);font-size:13px;margin-top:14px;line-height:1.7}
+.lg{display:inline-flex;align-items:center;gap:6px;margin-right:12px;font-weight:600;color:var(--ink)}
+.lg::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--a)}.lg.g::before{background:var(--g)}.lg.p::before{background:var(--p)}
+@media (max-width:900px){.hgrid{grid-template-columns:1fr}.hero h1{white-space:normal}.hero h1 span{display:block}.hero h1{font-size:clamp(27px,8.4vw,60px)}.cring{max-width:400px}}
+@media (max-width:520px){.hl .vids{grid-template-columns:1fr}.cn{width:86px}.ct{font-size:11px}.ct small{display:none}}
 </style>
 </head>
 <body>
@@ -162,7 +190,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
   <div class="wrap">
     <a class="mark" href="#top"><img src="logo.png" alt="" width="36" height="36"><div><span class="mb">método</span><span>AGP</span><small>EXPERTOS EN RENTABILIDAD</small></div></a>
     <nav aria-label="Principal">
-      <a href="#historia">Historia</a>
+      <a href="#top">Inicio</a>
       <a href="#metodo">El método</a>
       <a href="#indicadores">Indicadores</a>
       <a href="analisis.html">Autodiagnóstico</a>
@@ -176,28 +204,39 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
 </header>
 
 <main id="top">
-  <div class="wrap hero">
+<div class="wrap wide hero">
     <p class="eyebrow">Talleres de chapa y pintura</p>
     <h1><span>La hora más cara</span> <span>es la que <em>no se vende.</em></span></h1>
-    <p class="lead">El <span class="mb">métodoAGP</span> convierte las horas, los recambios y el material de pintura de tu taller en decisiones claras para ganar más con el mismo equipo.</p>
-  </div>
-
-  <section id="historia" class="blk" style="padding-top:0">
-    <div class="wrap">
-      <div class="vids">
-        <div>
-          <h3>La historia de un taller</h3>
-          <p class="sub">Tres minutos de vídeo. Si tienes un taller de chapa y pintura, probablemente te suene.</p>
-          <div class="vid"><video controls preload="metadata" playsinline poster="historia-taller.jpg" aria-label="La historia de un taller de chapa y pintura"><source src="historia-taller-v2.mp4" type="video/mp4">Tu navegador no puede reproducir el vídeo.</video></div>
-        </div>
-        <div>
-          <h3>Qué es el <span class="mb">métodoAGP</span></h3>
-          <p class="sub">Un minuto para entender el patrón de gestión que da forma a todo lo demás.</p>
-          <div class="vid"><video controls preload="metadata" playsinline poster="metodo-agp.jpg" aria-label="Qué es el métodoAGP"><source src="metodo-agp-v3.mp4" type="video/mp4">Tu navegador no puede reproducir el vídeo.</video></div>
+    <div class="hgrid">
+      <div class="hl" id="historia">
+        <p class="lead">El <span class="mb">métodoAGP</span> convierte las horas, los recambios y el material de pintura de tu taller en decisiones claras para ganar más con el mismo equipo.</p>
+        <div class="vids">
+          <div>
+            <h3>La historia de un taller</h3>
+            <p class="sub">Tres minutos. Si tienes un taller de chapa y pintura, probablemente te suene.</p>
+            <div class="vid"><video controls preload="metadata" playsinline poster="historia-taller.jpg" aria-label="La historia de un taller de chapa y pintura"><source src="historia-taller-v2.mp4" type="video/mp4">Tu navegador no puede reproducir el vídeo.</video></div>
+          </div>
+          <div>
+            <h3>Qué es el <span class="mb">métodoAGP</span></h3>
+            <p class="sub">Un minuto para entender el patrón de gestión que da forma a todo lo demás.</p>
+            <div class="vid"><video controls preload="metadata" playsinline poster="metodo-agp.jpg" aria-label="Qué es el métodoAGP"><source src="metodo-agp-v3.mp4" type="video/mp4">Tu navegador no puede reproducir el vídeo.</video></div>
+          </div>
         </div>
       </div>
+      <figure class="ciclo" aria-label="Secuencia del métodoAGP">
+        <div class="cring">
+          <svg viewBox="0 0 100 100" aria-hidden="true"><path d="M32.00 18.82 A36 36 0 0 1 68.00 18.82" fill="none" stroke="var(--a)" stroke-width="1.6" stroke-linecap="round"/><path d="M74.09 23.25 A36 36 0 1 1 17.11 64.64" fill="none" stroke="var(--g)" stroke-width="1.6" stroke-linecap="round"/><path d="M14.79 57.48 A36 36 0 0 1 25.91 23.25" fill="none" stroke="var(--p)" stroke-width="1.6" stroke-linecap="round"/><path d="M-1.6 -1.5 L0 1.4 L1.6 -1.5" transform="translate(71.16 20.88) rotate(-54.0)" fill="none" stroke="var(--mute)" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round"/><path d="M-1.6 -1.5 L0 1.4 L1.6 -1.5" transform="translate(84.24 61.12) rotate(18.0)" fill="none" stroke="var(--mute)" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round"/><path d="M-1.6 -1.5 L0 1.4 L1.6 -1.5" transform="translate(50.00 86.00) rotate(90.0)" fill="none" stroke="var(--mute)" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round"/><path d="M-1.6 -1.5 L0 1.4 L1.6 -1.5" transform="translate(15.76 61.12) rotate(162.0)" fill="none" stroke="var(--mute)" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round"/><path d="M-1.6 -1.5 L0 1.4 L1.6 -1.5" transform="translate(28.84 20.88) rotate(234.0)" fill="none" stroke="var(--mute)" stroke-width=".7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="cmid"><span class="mb">método<span>AGP</span></span><small>Sigue el orden</small></div>
+<a class="cn a" href="analisis.html" style="left:50.00%;top:14.00%" aria-label="1. Autodiagnóstico: Dónde estás"><span class="ci"><img src="autodiagnostico.png" alt="" width="40" height="40"><b>1</b></span><span class="ct">Autodiagnóstico<small>Dónde estás</small></span></a>
+<a class="cn g" href="tasador.html" style="left:84.24%;top:38.88%" aria-label="2. Tasador rápido: Valora y presupuesta"><span class="ci"><img src="tasador.png" alt="" width="40" height="40"><b>2</b></span><span class="ct">Tasador rápido<small>Valora y presupuesta</small></span></a>
+<a class="cn g" href="planificador-demo.html" style="left:71.16%;top:79.12%" aria-label="3. Planificador: Organiza y entrega"><span class="ci"><img src="planificador.png" alt="" width="40" height="40"><b>3</b></span><span class="ct">Planificador<small>Organiza y entrega</small></span></a>
+<a class="cn g" href="fichajes.html" style="left:28.84%;top:79.12%" aria-label="4. Reloj de fichajes: Mide el tiempo real"><span class="ci"><img src="fichajes.png" alt="" width="40" height="40"><b>4</b></span><span class="ct">Reloj de fichajes<small>Mide el tiempo real</small></span></a>
+<a class="cn p" href="dashboard-demo.html" style="left:15.76%;top:38.88%" aria-label="5. Dashboard: Decide y mejora"><span class="ci"><img src="dashboard.png" alt="" width="40" height="40"><b>5</b></span><span class="ct">Dashboard<small>Decide y mejora</small></span></a>
+        </div>
+        <figcaption><span class="lg a">Analizar</span><span class="lg g">Gestionar</span><span class="lg p">Progresar</span><br>Un ciclo que se repite: mide, decide, mejora y vuelve a medir. Pulsa una herramienta para abrirla.</figcaption>
+      </figure>
     </div>
-  </section>
+  </div>
 
   <section id="metodo" aria-label="El método en tres pasos">
     <div class="steps">
@@ -313,11 +352,12 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
       <div class="plan">
         <div>
           <p class="frase">Tiempo comprado, tiempo presente</p>
-          <h3>Reloj de fichajes</h3>
+          <h3><img src="fichajes.png" alt="" width="46" height="46">Reloj de fichajes</h3>
           <p class="sub" style="margin-bottom:18px">Cada operario ficha su entrada y su salida. El absentismo deja de ser una sensación y pasa a ser un número.</p>
           <ul>
             <li>Fichaje de entrada y salida en un toque, desde una tablet o el móvil</li>
             <li>Calendario con el tiempo comprado de hoy y de los próximos meses</li>
+            <li>Cada operario imputa su tiempo (comienzo y acabo) a los coches del planificador de su sección</li>
             <li>Absentismo por persona y por sección, con su causa: baja, permiso o retraso</li>
             <li>Vacaciones, festivos y horas extra que se descuentan o suman solos</li>
           </ul>
@@ -339,7 +379,7 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
       <div class="plan">
         <div>
           <p class="frase">Del golpe al presupuesto en minutos</p>
-          <h3>Tasador rápido</h3>
+          <h3><img src="tasador.png" alt="" width="46" height="46">Tasador rápido</h3>
           <p class="sub" style="margin-bottom:18px">Marcas los daños sobre el vehículo y obtienes el presupuesto con tus propias horas y precios, leído con los valores óptimos del método.</p>
           <ul>
             <li>Piezas parametrizadas con las horas de pintura de tu taller</li>
