@@ -203,7 +203,16 @@ input.est[type=datetime-local]::-webkit-date-and-time-value{text-align:center}
   .sl{grid-template-columns:minmax(0,1fr) auto auto}.sl .hp{display:none}
   .doc{padding:16px}.doc .two{grid-template-columns:1fr}.doc .sig{grid-template-columns:1fr;gap:34px}.doc .it{grid-template-columns:minmax(0,1fr) 60px 80px}.doc .it span:nth-child(2){display:none}
 }
+.otd .obs2{border:1px solid #bbb;min-height:64px;margin-top:6px}
+.otd .kv2{display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:4px 10px;font-size:13.5px}
+.otd .kv2 b{text-align:right;font-variant-numeric:tabular-nums}
+.otd .kv2 .tt{border-top:1.5px solid #1f2124;font-weight:700;padding-top:3px}
+.otd .lst2{margin:4px 0 0;padding-left:18px;font-size:13.5px}
+.otd .ph2{font-size:12px;color:#777;margin:2px 0 0}
 @media print{
+  body.pot #app,body.pot .top{display:none!important}
+  body.pot .ov{position:static;display:block;background:none;padding:0}
+  body.pot .modal{max-width:none;max-height:none;overflow:visible;box-shadow:none;padding:0;border-radius:0;background:none}
   body{background:#fff}
   .top,.screen,.toast,.legal{display:none!important}
   #app>*:not(.doc){display:none!important}
@@ -258,7 +267,7 @@ PIECES.forEach(function(p){DEF.horas[p.id]=p.h});
 var NIV=[["sup","Daño superficial"],["lev","Daño leve"],["med","Daño medio"],["fue","Daño fuerte"],["nue","Pieza nueva"]];
 var NIVF=[0.4,0.7,1,1.3,0.9];
 var NCAL=["SOLIDO MONOCAPA","SOLIDO BICAPA","METALIZADO BICAPA","PERLADO BICAPA","PERLADO TRICAPA","COLOR ESPECIAL"];
-DEF.cal=[28,28,28,28,28,28];DEF.calV=2;DEF.baremo="rapido";DEF.ces={};DEF.czA=0.04;DEF.czL=0.05;
+DEF.cal=[28,28,28,28,28,28];DEF.calV=2;DEF.baremo="rapido";DEF.ces={};DEF.czA=0.04;DEF.czL=0.05;DEF.ot={dm:15,ch:70,mo:15,prep:75};
 PIECES.forEach(function(p){DEF.ces[p.id]=NIVF.map(function(f){return Math.round(p.h*f*20)/20})});
 /* Referencias del método */
 var REF={mo:40,mat:15,rec:45,recH:50,matH:28,hRep:10,hCh:5.5,hPi:4.5,litros:[["Color base agua",0.06,70],["Barniz",0.12,19],["Fondo",0.04,17]]};
@@ -272,6 +281,7 @@ function load(){var o=null;try{o=JSON.parse(localStorage.getItem(KEY))}catch(e){
     if(o.cfg.coef)Object.keys(c.coef).forEach(function(k){if(o.cfg.coef[k])c.coef[k]=o.cfg.coef[k]});
     if(o.cfg.horas)Object.keys(c.horas).forEach(function(k){if(o.cfg.horas[k]!==undefined)c.horas[k]=o.cfg.horas[k]});
     if(o.cfg.baremo)c.baremo=o.cfg.baremo;
+    if(o.cfg.ot)Object.keys(c.ot).forEach(function(k){if(o.cfg.ot[k]!==undefined)c.ot[k]=o.cfg.ot[k]});
     if(o.cfg.ces)Object.keys(c.ces).forEach(function(k){if(o.cfg.ces[k]&&o.cfg.ces[k].length===5)c.ces[k]=o.cfg.ces[k]});
     if(o.cfg.czA!==undefined)c.czA=o.cfg.czA;if(o.cfg.czL!==undefined)c.czL=o.cfg.czL;c.cal=(o.cfg.calV===2&&o.cfg.cal&&o.cfg.cal.length===6)?o.cfg.cal:[0,1,2,3,4,5].map(function(){return c.matH})}
   var sv=o.saved||[],seq=o.seq||{},yr0=String(new Date().getFullYear());
@@ -286,7 +296,7 @@ var hf="pend";
 function save(){try{localStorage.setItem(KEY,JSON.stringify(C))}catch(e){}}
 
 /* ───────── Estado del presupuesto en curso ───────── */
-var B={sel:{},size:1,coefMan:"",dto:0,recs:[],cliente:"",marca:"",modelo:"",mat:"",tasador:"",obs:"",savedId:"",sent:"",tel:"",email:"",cal:0};
+var B={sel:{},size:1,coefMan:"",dto:0,recs:[],mec:[],cliente:"",marca:"",modelo:"",mat:"",tasador:"",obs:"",savedId:"",sent:"",tel:"",email:"",cal:0};
 var view="pres";
 
 /* ───────── Utilidades ───────── */
@@ -323,8 +333,9 @@ function calc(){
   ids.forEach(function(i){hPint+=pieceH(i,coef);hCh+=num(B.sel[i].ch)});
   var matQ=num(cfg.cal[B.cal||0]),moP=hPint*cfg.precioHora,mat=hPint*matQ,moC=hCh*cfg.precioHora,rec=0;
   B.recs.forEach(function(r){rec+=num(r.imp)});
+  var hMec=0,hMr=0,hMi=0;B.mec.forEach(function(m){var h=num(m.h);hMec+=h;if(m.k==="i")hMi+=h;else hMr+=h});
   var bruto=moC+moP+mat+rec,dtoP=Math.min(100,num(B.dto)),dto=bruto*dtoP/100,bi=bruto-dto,iva=bi*cfg.iva/100;
-  return {matQ:matQ,ids:ids,nb:nb,crit:crit,auto:auto,coef:coef,hPint:hPint,hCh:hCh,moP:moP,mat:mat,moC:moC,rec:rec,bruto:bruto,dtoP:dtoP,dto:dto,bi:bi,iva:iva,tot:bi+iva};
+  return {hMec:hMec,hMr:hMr,hMi:hMi,matQ:matQ,ids:ids,nb:nb,crit:crit,auto:auto,coef:coef,hPint:hPint,hCh:hCh,moP:moP,mat:mat,moC:moC,rec:rec,bruto:bruto,dtoP:dtoP,dto:dto,bi:bi,iva:iva,tot:bi+iva};
 }
 
 /* ───────── Dibujo del coche (plano desplegado, horizontal) ───────── */
@@ -391,6 +402,7 @@ function vPres(){
    '<div class="grid"><div style="display:grid;gap:20px">'+
    '<div class="card"><h2>2 · Chapa y recambios</h2><p class="sub">Indica las horas de chapa de cada pieza y añade los recambios.</p><div class="sel" style="margin-top:10px">'+list+'</div>'+
    '<div class="sec-h" style="margin-top:16px">Recambios (sin IVA)</div>'+recs+'<button class="btn sm" data-a="addrec" style="margin-top:8px">+ Añadir recambio</button></div>'+
+   '<div class="card"><div class="sec-h" style="margin-top:0">Mecánica (opcional)</div><p class="sub" style="margin:0 0 8px">Solo si la reparación incluye mecánica. Aparece en la orden de trabajo; todavía no suma al importe.</p>'+B.mec.map(function(x,i){return '<div class="sl" style="grid-template-columns:minmax(0,1fr) 84px 130px auto"><input type="text" style="width:100%;text-align:left" data-mt="'+i+'" value="'+esc(x.t)+'" placeholder="Operación" aria-label="Operación de mecánica"><input type="number" inputmode="decimal" min="0" step="0.25" style="width:84px" data-mh="'+i+'" value="'+esc(x.h||"")+'" placeholder="h" aria-label="Horas"><select data-mk="'+i+'" aria-label="Tipo de mecánica"><option value="r"'+(x.k!=="i"?' selected':'')+'>Rápida</option><option value="i"'+(x.k==="i"?' selected':'')+'>Incidental</option></select><button class="x" data-a="rmec" data-i="'+i+'" aria-label="Quitar">×</button></div>'}).join("")+'<button class="btn sm" data-a="addmec" style="margin-top:8px">+ Añadir operación</button></div>'+
    '<div class="card"><h2>3 · Datos</h2><div class="cols2" style="margin-top:10px">'+
    fld("Cliente","cliente",B.cliente)+fldT("Teléfono (WhatsApp)","tel",B.tel,"tel","600 123 456")+fldT("Email","email",B.email,"email","cliente@correo.com")+fld("Marca","marca",B.marca)+fld("Modelo","modelo",B.modelo)+plateFld(B.mat)+
    '<div class="field"><label for="f-tasador">Tasador</label><input type="text" id="f-tasador" list="tl" data-f="tasador" value="'+esc(B.tasador)+'"><datalist id="tl">'+cfg.tasadores.split(",").map(function(t){t=t.trim();return t?'<option value="'+esc(t)+'">':''}).join("")+'</datalist></div>'+
@@ -419,7 +431,7 @@ function sumHTML(r){
    '<div class="lines"><div class="ln"><span>Mano de obra chapa · '+hh(r.hCh)+'</span><b>'+eur(r.moC)+'</b></div><div class="ln"><span>Mano de obra pintura · '+hh(r.hPint)+'</span><b>'+eur(r.moP)+'</b></div><div class="ln"><span>Material de pintura</span><b>'+eur(r.mat)+'</b></div><div class="ln"><span>Recambios</span><b>'+eur(r.rec)+'</b></div>'+
    (r.dto?'<div class="ln"><span>Descuento '+nf(r.dtoP,1)+' %</span><b>−'+eur(r.dto)+'</b></div>':'')+
    '<div class="ln"><span>Base imponible</span><b>'+eur(r.bi)+'</b></div><div class="ln"><span>IVA '+nf(cfg.iva,0)+' %</span><b>'+eur(r.iva)+'</b></div></div>'+
-   '<div class="row" style="margin-top:14px"><button class="btn acc" data-a="save">Guardar</button><button class="btn az" data-a="wa">Enviar por WhatsApp</button><button class="btn az" data-a="mail">Enviar por email</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="rech">Rechazado</button><button class="btn" style="background:#2f8f5b;border-color:#2f8f5b;color:#fff" data-a="toplan">Aceptado → Planificador</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="print">Imprimir / PDF</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="new">Nuevo</button></div></div>'+
+   '<div class="row" style="margin-top:14px"><button class="btn acc" data-a="save">Guardar</button><button class="btn az" data-a="wa">Enviar por WhatsApp</button><button class="btn az" data-a="mail">Enviar por email</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="rech">Rechazado</button><button class="btn" style="background:#2f8f5b;border-color:#2f8f5b;color:#fff" data-a="toplan">Aceptado → Planificador</button>'+(cur&&cur.estado==="acep"?'<button class="btn acc" data-a="otop" data-id="'+cur.id+'">Orden de trabajo</button>':'')+'<button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="print">Imprimir / PDF</button><button class="btn" style="background:transparent;color:inherit;border-color:rgba(128,128,128,.5)" data-a="new">Nuevo</button></div></div>'+
    '<div class="card"><div class="sec-h">Lectura métodoAGP</div>'+(tot>0?'<div class="mx">'+
    bar("Mano de obra (chapa + pintura)",pMO,REF.mo)+bar("Material de pintura",pMat,REF.mat)+bar("Recambios",pRec,REF.rec)+'</div>'+
    (r.rec<=0?'<p class="note">Añade los recambios para ver el reparto real. Sin ellos el peso de la mano de obra sale inflado.</p>':'')+
@@ -483,15 +495,55 @@ function bindPres(){
 function refreshSum(){var r=calc();$("#sum").innerHTML=sumHTML(r);var d=$("#doc");if(d)d.outerHTML=docHTML(r)}
 function rerender(){var y=window.scrollY;render();window.scrollTo(0,y)}
 
+/* ───────── Orden de trabajo (sin importes, sin datos del propietario) ───────── */
+function buildOT(r){
+  var o=C.cfg.ot,mec=B.mec.filter(function(m){return m.t||num(m.h)>0}).map(function(m){return {t:m.t||"Operación",h:num(m.h),k:m.k==="i"?"i":"r"}});
+  return {fecha:today(),mat:B.mat,car:(B.marca+" "+B.modelo).trim(),tas:B.tasador,hCh:r.hCh,hPint:r.hPint,sp:[o.dm,o.ch,o.mo],pp:o.prep,
+    pz:r.ids.map(function(i){return {n:PID[i].n,ch:num(B.sel[i].ch),h:pieceH(i,r.coef)}}),
+    rec:B.recs.filter(function(x){return x.d||num(x.imp)>0}).map(function(x){return x.d||"Recambio"}),
+    mec:mec,mr:r.hMr,mi:r.hMi}
+}
+function otSal(rec){
+  try{var s=JSON.parse(localStorage.getItem("agp-planificador-demo-v1")),c=s.cards.filter(function(x){return x.src===rec.id})[0];if(c&&c.sal){var d=c.sal.split("-");return d[2]+"/"+d[1]+"/"+d[0]}}catch(e){}
+  return ""}
+function otDoc(rec){
+  var ot=rec.ot,sp=ot.sp,tot=(sp[0]+sp[1]+sp[2])||1,hd=ot.hCh*sp[0]/tot,hc=ot.hCh*sp[1]/tot,hm=ot.hCh*sp[2]/tot,
+      prep=ot.hPint*ot.pp/100,cab=ot.hPint-prep,sal=otSal(rec),cfg=C.cfg;
+  var lit=REF.litros.map(function(l){return '<div>'+l[0]+'</div><b>'+nf(ot.hPint*l[1],2)+' l</b>'}).join("");
+  var chp=ot.pz.filter(function(z){return z.ch>0}),
+      mecH=ot.mec.reduce(function(a,m){return a+m.h},0);
+  return '<div class="doc otd" id="otdoc">'+
+   '<div class="hd"><div><div class="tn">'+esc(cfg.taller)+'</div></div><div style="text-align:right"><b>Fecha</b> '+esc(ot.fecha)+'</div></div>'+
+   '<div class="ttl">Orden de trabajo</div>'+
+   '<div class="meta"><div><b>Orden de reparación nº</b> '+esc(rec.num)+'</div>'+(ot.mat?'<div><span class="dplate" style="margin-left:0"><span class="eu"><i></i>E</span><span class="n">'+esc(ot.mat)+'</span></span></div>':'')+'<div><b>Vehículo:</b> '+esc(ot.car||"—")+'</div><div><b>Tasador:</b> '+esc(ot.tas||"—")+'</div></div>'+
+   '<div class="meta"><div><b>Fecha prevista de acabado:</b> '+(sal?esc(sal):'se fijará al entrar en el planificador')+'</div></div>'+
+   '<div class="sect">Chapista · '+hh(ot.hCh)+' disponibles</div>'+
+   (ot.hCh>0?'<div class="kv2"><div>Desmontaje ('+nf(sp[0]/tot*100,0)+' %)</div><b>'+hh(hd)+'</b><div>Chapa ('+nf(sp[1]/tot*100,0)+' %)</div><b>'+hh(hc)+'</b><div>Montaje ('+nf(sp[2]/tot*100,0)+' %)</div><b>'+hh(hm)+'</b><div class="tt">Total chapa</div><b class="tt">'+hh(ot.hCh)+'</b></div>':'<p class="mute2">Sin horas de chapa.</p>')+
+   (chp.length?'<p class="ph2">Piezas con chapa: '+chp.map(function(z){return esc(z.n)+' ('+hh(z.ch)+')'}).join(' · ')+'</p>':'')+
+   '<div style="margin-top:8px"><b>Recambios a cambiar</b></div>'+(ot.rec.length?'<ul class="lst2">'+ot.rec.map(function(x){return '<li>'+esc(x)+'</li>'}).join("")+'</ul>':'<p class="mute2" style="margin:2px 0 0">Ninguno.</p>')+
+   '<div class="sect">Pintor · '+hh(ot.hPint)+' disponibles</div>'+
+   (ot.hPint>0?'<div class="pz ph"><span>Pieza a pintar</span><span></span><span>Tiempo</span></div>'+ot.pz.map(function(z){return '<div class="pz"><span>'+esc(z.n)+'</span><span></span><span>'+hh(z.h)+'</span></div>'}).join("")+'<div class="pz pt"><span>Total pintura</span><span></span><span>'+hh(ot.hPint)+'</span></div>'+
+   '<div class="kv2" style="margin-top:8px"><div>Preparación ('+nf(ot.pp,0)+' %)</div><b>'+hh(prep)+'</b><div>Cabina ('+nf(100-ot.pp,0)+' %)</div><b>'+hh(cab)+'</b></div>'+
+   '<div style="margin-top:10px"><b>Consumo de pintura sugerido</b> <span class="mute2">(litros listos al uso)</span></div><div class="kv2" style="margin-top:4px">'+lit+'</div>':'<p class="mute2">Sin horas de pintura.</p>')+
+   (ot.mec.length?'<div class="sect">Mecánica · '+hh(mecH)+' disponibles</div><div class="kv2">'+ot.mec.map(function(m){return '<div>'+esc(m.t)+' <span class="mute2">· '+(m.k==="i"?'incidental':'rápida')+'</span></div><b>'+hh(m.h)+'</b>'}).join("")+'<div class="tt">Total mecánica</div><b class="tt">'+hh(mecH)+'</b></div>':'')+
+   '<div class="sect">Observaciones del operario</div><div class="obs2"></div>'+
+   '<div class="sig"><div><div class="line"></div><span>Chapista</span></div><div><div class="line"></div><span>Pintor</span></div><div><div class="line"></div><span>Jefe de taller</span></div></div>'+
+   '</div>'}
+function openOT(rec){
+  ovOpen('<div class="row screen" style="justify-content:flex-end;gap:8px;margin-bottom:10px"><button class="btn acc" data-a="otprint">Imprimir / PDF</button><button class="btn" data-a="otx">Cerrar</button></div>'+otDoc(rec));
+  var m=$("#ov .modal");if(m)m.style.maxWidth="860px";
+  document.body.classList.add("pot");window.__otName="Orden de trabajo "+rec.num+((rec.ot.mat||"")?" "+rec.ot.mat.replace(/[^A-Z0-9]/gi,""):"");
+}
+function closeOT(){closeOv()}
 /* ───────── Guardar y enviar al planificador ───────── */
 function saveCurrent(flag,estado){
   var r=calc();if(!r.ids.length&&!r.rec){toast("Marca algún daño antes de continuar");return null}
-  var rec={fecha:today(),cliente:B.cliente,marca:B.marca,modelo:B.modelo,matricula:B.mat,tasador:B.tasador,tel:B.tel,email:B.email,cal:B.cal||0,piezas:r.ids.map(function(i){return PID[i].n}),hCh:r.hCh,hPint:r.hPint,moC:r.moC,moP:r.moP,mat:r.mat,rec:r.rec,bi:r.bi,tot:r.tot};
+  var rec={fecha:today(),cliente:B.cliente,marca:B.marca,modelo:B.modelo,matricula:B.mat,tasador:B.tasador,tel:B.tel,email:B.email,cal:B.cal||0,piezas:r.ids.map(function(i){return PID[i].n}),hCh:r.hCh,hPint:r.hPint,moC:r.moC,moP:r.moP,mat:r.mat,rec:r.rec,bi:r.bi,tot:r.tot,ot:buildOT(r)};
   var ex=B.savedId&&C.saved.filter(function(x){return x.id===B.savedId})[0];
   if(ex){for(var k in rec)ex[k]=rec[k];rec=ex}else{rec.id=Math.random().toString(36).slice(2,9);rec.num=assignNum();rec.estado="pend";C.saved.push(rec);B.savedId=rec.id}
   if(estado)rec.estado=estado;if(flag)rec.plan=flag;save();return rec;
 }
-function closeOv(){var o=$("#ov");if(o)o.remove()}
+function closeOv(){var o=$("#ov");if(o)o.remove();document.body.classList.remove("pot")}
 function ovOpen(html){closeOv();var d=document.createElement("div");d.id="ov";d.className="ov";d.dataset.a="ovclose";d.innerHTML='<div class="modal" role="dialog" aria-modal="true">'+html+'</div>';document.body.appendChild(d)}
 var QKEY="agp-entrada-planificador";
 function addDays(n){var d=new Date();d.setDate(d.getDate()+n);return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
@@ -625,7 +677,7 @@ function citaDe(rec,v){
   rec.cita=v;
   if(v){var h=(rec.hCh||0)+(rec.hPint||0),sal=new Date(v.slice(0,10)+"T00:00:00");sal.setDate(sal.getDate()+Math.max(2,Math.ceil(h/8)+3));
     var s=sal.getFullYear()+"-"+("0"+(sal.getMonth()+1)).slice(-2)+"-"+("0"+sal.getDate()).slice(-2);
-    pushQ({uid:rec.id,pl:rec.matricula||"",car:((rec.marca||"")+" "+(rec.modelo||"")).trim()||"Vehículo",ins:"Particular",sal:s,pr:"NORMAL",st:"stk",c:rec.hCh,p:rec.hPint,m:0,eur:rec.bi,cliente:rec.cliente,tel:rec.tel||"",email:rec.email||"",cita:v,tas:rec.tasador});
+    pushQ({uid:rec.id,pl:rec.matricula||"",car:((rec.marca||"")+" "+(rec.modelo||"")).trim()||"Vehículo",ins:"Particular",sal:s,pr:"NORMAL",st:"stk",c:rec.hCh,p:rec.hPint,m:0,mr:rec.ot?rec.ot.mr:0,mi:rec.ot?rec.ot.mi:0,ot:rec.ot||null,eur:rec.bi,cliente:rec.cliente,tel:rec.tel||"",email:rec.email||"",cita:v,tas:rec.tasador});
     rec.plan="Planificador"}
   save()}
 function sendPlan(){
@@ -635,7 +687,7 @@ function sendPlan(){
   var r=calc(),rec=saveCurrent("Planificador","acep");if(!rec)return;
   var q=[];try{q=JSON.parse(localStorage.getItem(QKEY))||[]}catch(e){}
   var uid=rec.id,st=$("#p-st").value,cita=$("#p-cita").value;rec.cita=cita;
-  q.push({uid:uid,pl:mat,car:car,ins:$("#p-ins").value.trim()||"Particular",sal:sal,pr:$("#p-pr").value,st:st,c:r.hCh,p:r.hPint,m:0,eur:r.bi,cliente:B.cliente,obs:B.obs,piezas:r.ids.map(function(i){return PID[i].n}),tas:B.tasador,tel:B.tel,email:B.email,cita:cita});save();
+  q.push({uid:uid,pl:mat,car:car,ins:$("#p-ins").value.trim()||"Particular",sal:sal,pr:$("#p-pr").value,st:st,c:r.hCh,p:r.hPint,m:0,mr:r.hMr,mi:r.hMi,ot:rec.ot,eur:r.bi,cliente:B.cliente,obs:B.obs,piezas:r.ids.map(function(i){return PID[i].n}),tas:B.tasador,tel:B.tel,email:B.email,cita:cita});save();
   try{localStorage.setItem(QKEY,JSON.stringify(q))}catch(e){ $("#perr").textContent="No se pudo guardar el envío en este navegador.";return}
   B.sent=uid;
   var names={stk:"Stock reparaciones",rec:"Recepcionado",val:"Valoración",des:"Desmontaje"};
@@ -655,7 +707,7 @@ function vHist(){
   var base=sMO+sMat+sRec;
   var L=hf==="all"?A:A.filter(function(x){return (x.estado||"pend")===hf});
   var chips=[["pend","Pendientes ("+cnt.pend+")"],["acep","Aceptados ("+cnt.acep+")"],["rech","Rechazados ("+cnt.rech+")"],["all","Todos ("+n+")"]].map(function(c){return '<button data-hf="'+c[0]+'" aria-pressed="'+(hf===c[0])+'">'+c[1]+'</button>'}).join("");
-  var rows=L.map(function(x){var e=x.estado||"pend";return '<tr><td><b>'+esc(x.num)+'</b><div class="mute" style="font-size:12px">'+esc(x.fecha)+'</div></td><td><b>'+esc(x.cliente||"—")+'</b><div class="mute" style="font-size:12px">'+esc([x.marca,x.modelo,x.matricula,x.tel].filter(Boolean).join(" · "))+'</div></td><td class="r num">'+hh(x.hCh+x.hPint)+'</td><td class="r num"><b>'+eur(x.tot)+'</b>'+(x.plan?'<div><span class="tag ok">En planificador</span></div>':'')+'</td><td><select class="est" data-est="'+x.id+'" aria-label="Estado del presupuesto '+esc(x.num)+'">'+["pend","acep","rech"].map(function(k){return '<option value="'+k+'"'+(e===k?' selected':'')+'>'+EST[k][0]+'</option>'}).join("")+'</select></td><td>'+(e==="acep"?'<input type="datetime-local" class="est" data-cita="'+x.id+'" value="'+esc(x.cita||"")+'" aria-label="Cita de recepción '+esc(x.num)+'">'+(x.cita&&x.plan?'<div class="mute" style="font-size:11px;margin-top:3px">En planificador</div>':''):'<span class="mute">—</span>')+'</td><td class="r"><button class="btn sm danger" data-del="'+x.id+'">Borrar</button></td></tr>'}).join("");
+  var rows=L.map(function(x){var e=x.estado||"pend";return '<tr><td><b>'+esc(x.num)+'</b><div class="mute" style="font-size:12px">'+esc(x.fecha)+'</div></td><td><b>'+esc(x.cliente||"—")+'</b><div class="mute" style="font-size:12px">'+esc([x.marca,x.modelo,x.matricula,x.tel].filter(Boolean).join(" · "))+'</div></td><td class="r num">'+hh(x.hCh+x.hPint)+'</td><td class="r num"><b>'+eur(x.tot)+'</b>'+(x.plan?'<div><span class="tag ok">En planificador</span></div>':'')+'</td><td><select class="est" data-est="'+x.id+'" aria-label="Estado del presupuesto '+esc(x.num)+'">'+["pend","acep","rech"].map(function(k){return '<option value="'+k+'"'+(e===k?' selected':'')+'>'+EST[k][0]+'</option>'}).join("")+'</select></td><td>'+(e==="acep"?'<input type="datetime-local" class="est" data-cita="'+x.id+'" value="'+esc(x.cita||"")+'" aria-label="Cita de recepción '+esc(x.num)+'">'+(x.cita&&x.plan?'<div class="mute" style="font-size:11px;margin-top:3px">En planificador</div>':''):'<span class="mute">—</span>')+'</td><td class="r">'+(e==="acep"&&x.ot?'<button class="btn sm" data-a="otop" data-id="'+x.id+'">Orden de trabajo</button> ':'')+'<button class="btn sm danger" data-del="'+x.id+'">Borrar</button></td></tr>'}).join("");
   var empty=hf==="pend"?'Bandeja limpia: no tienes presupuestos pendientes.':'No hay presupuestos en este estado.';
   return '<div class="row" style="justify-content:space-between"><div><h2>Presupuestos</h2><p class="sub">Cada presupuesto tiene su número y su estado. Márcalos como aceptados o rechazados para vaciar la bandeja de pendientes. Se guardan en este navegador.</p></div><button class="btn" data-a="csv">Descargar CSV</button></div>'+
    '<div class="kpis"><div class="kpi"><span>Presupuestos hechos</span><b>'+n+'</b></div><div class="kpi"><span>Pendientes</span><b>'+cnt.pend+'</b></div><div class="kpi"><span>Aceptados</span><b>'+cnt.acep+'</b></div><div class="kpi"><span>Rechazados</span><b>'+cnt.rech+'</b></div></div>'+
@@ -678,6 +730,8 @@ function vCfg(){
    cf("Precio hora de chapa (€)","precioHora",c.precioHora)+cf("IVA (%)","iva",c.iva)+
    '<div class="field" style="grid-column:1/-1"><label for="c-tas">Tasadores (separados por comas)</label><input type="text" id="c-tas" data-c="tasadores" value="'+esc(c.tasadores)+'" placeholder="Nombre 1, Nombre 2"></div></div>'+
    '<p class="note">El método recomienda facturar unos '+REF.matH+' € de material de pintura por hora de pintura y unos '+REF.recH+' € de recambios por hora de chapa.</p></div>'+
+   '<div class="card"><div class="sec-h">Orden de trabajo · reparto de horas</div><p class="sub" style="margin-bottom:8px">Cómo se reparte el tiempo en la orden de trabajo. Chapa: % de desmontaje, de chapa y de montaje (se ajusta a 100). Pintura: % de preparación; el resto es cabina.</p><div class="cols2">'+
+   [["dm","Desmontaje (% chapa)"],["ch","Chapa (% chapa)"],["mo","Montaje (% chapa)"],["prep","Preparación (% pintura)"]].map(function(f){return '<div class="field"><label for="o-'+f[0]+'">'+f[1]+'</label><input type="number" id="o-'+f[0]+'" inputmode="decimal" step="1" min="0" max="100" data-otc="'+f[0]+'" value="'+c.ot[f[0]]+'"></div>'}).join("")+'</div></div>'+
    '<div class="card"><div class="sec-h">Material de pintura por hora de pintura, según calidad</div><p class="sub" style="margin-bottom:8px">Lo que cobras en concepto de material de pintura por cada hora de pintura, según la calidad elegida en el presupuesto (sin IVA). El precio de la hora de mano de obra va aparte, en los ajustes generales.</p><div class="tblw"><table class="tbl"><thead><tr><th>Calidad</th><th class="r">€ material / hora de pintura</th></tr></thead><tbody>'+NCAL.map(function(n,i){return '<tr><td>'+n+'</td><td class="r"><input type="number" step="0.5" min="0" data-calp="'+i+'" value="'+c.cal[i]+'" aria-label="Material de pintura por hora, '+n+'"></td></tr>'}).join("")+'</tbody></table></div></div>'+
    '<div class="card"><div class="sec-h">Coeficiente por varias piezas</div><p class="sub" style="margin-bottom:8px">Se multiplica por las horas de pintura según cuántas piezas se pintan a la vez y el tamaño del vehículo.</p><div class="tblw"><table class="tbl"><thead><tr><th>Criterio</th><th class="r">Pequeño</th><th class="r">Mediano</th><th class="r">Grande</th></tr></thead><tbody>'+cr+'</tbody></table></div></div>'+
    '<div class="card"><div class="sec-h">Valoración por decímetros cuadrados · horas por decímetro</div><p class="sub" style="margin-bottom:8px">Sirve para cualquier pieza: las horas salen de los decímetros que indiques en cada una.</p><div class="tblw"><table class="tbl"><thead><tr><th>Tipo de daño</th><th class="r">Horas</th></tr></thead><tbody><tr><td>Daño superficial · 1 dm²</td><td class="r"><input type="number" step="0.005" min="0" data-cza="1" value="'+c.czA+'" aria-label="Horas por decímetro cuadrado superficial"></td></tr><tr><td>Daño lineal · 1 dm lineal</td><td class="r"><input type="number" step="0.005" min="0" data-czl="1" value="'+c.czL+'" aria-label="Horas por decímetro lineal"></td></tr></tbody></table></div></div></div>'+
@@ -689,7 +743,7 @@ function cf(l,k,v){return '<div class="field"><label for="c-'+k+'">'+l+'</label>
 /* ───────── Eventos ───────── */
 function r0(){return calc()}
 var TIT0=document.title;
-function pdfName(){var cur=B.savedId&&C.saved.filter(function(x){return x.id===B.savedId})[0];
+function pdfName(){if(document.body.classList.contains("pot")&&window.__otName)return window.__otName;var cur=B.savedId&&C.saved.filter(function(x){return x.id===B.savedId})[0];
   var n=cur?cur.num:"borrador",m=(B.mat||"").replace(/[^A-Z0-9]/gi,"");
   return "Presupuesto "+n+(m?" "+m:"")}
 window.addEventListener("beforeprint",function(){document.title=pdfName()});
@@ -706,12 +760,21 @@ document.addEventListener("click",function(ev){
   if(a==="all"){PIECES.forEach(function(p){if(p.g==="b"&&!B.sel[p.id])B.sel[p.id]={ch:"",niv:"med",tipo:"sup",dm:""}});rerender()}
   else if(a==="clear"){B.sel={};rerender()}
   else if(a==="addrec"){B.recs.push({d:"",imp:""});rerender()}
-  else if(a==="new"){B={sel:{},size:B.size,coefMan:"",dto:0,recs:[],cliente:"",marca:"",modelo:"",mat:"",tasador:B.tasador,obs:"",savedId:"",sent:"",tel:"",email:"",cal:B.cal||0};rerender();toast("Presupuesto nuevo")}
+  else if(a==="addmec"){B.mec.push({t:"",h:"",k:"r"});rerender()}
+  else if(a==="rmec"){B.mec.splice(+el.dataset.i,1);rerender()}
+  else if(a==="otop"){
+    var oid=el.dataset.id,orec=C.saved.filter(function(x){return x.id===oid})[0];
+    if(orec&&oid===B.savedId){var o2=saveCurrent();if(o2)orec=o2}
+    if(!orec||!orec.ot){toast("Guarda de nuevo el presupuesto para generar la orden");return}
+    openOT(orec)}
+  else if(a==="otprint"){window.print()}
+  else if(a==="otx"){closeOT()}
+  else if(a==="new"){B={sel:{},size:B.size,coefMan:"",dto:0,recs:[],mec:[],cliente:"",marca:"",modelo:"",mat:"",tasador:B.tasador,obs:"",savedId:"",sent:"",tel:"",email:"",cal:B.cal||0};rerender();toast("Presupuesto nuevo")}
   else if(a==="print"){if(r0().ids.length||r0().rec){var pv=saveCurrent();if(pv)refreshSum()}window.print()}
   else if(a==="save"){var sv=saveCurrent();if(!sv)return;refreshSum();toast("Presupuesto "+sv.num+" guardado")}
   else if(a==="wa"||a==="mail"){sendMsg(a)}
   else if(a==="toplan"){openPlan()}
-  else if(a==="rech"){var rr=saveCurrent(null,"rech");if(!rr)return;B={sel:{},size:B.size,coefMan:"",dto:0,recs:[],cliente:"",marca:"",modelo:"",mat:"",tasador:B.tasador,obs:"",savedId:"",sent:"",tel:"",email:"",cal:B.cal||0};rerender();toast("Presupuesto "+rr.num+" marcado como rechazado")}
+  else if(a==="rech"){var rr=saveCurrent(null,"rech");if(!rr)return;B={sel:{},size:B.size,coefMan:"",dto:0,recs:[],mec:[],cliente:"",marca:"",modelo:"",mat:"",tasador:B.tasador,obs:"",savedId:"",sent:"",tel:"",email:"",cal:B.cal||0};rerender();toast("Presupuesto "+rr.num+" marcado como rechazado")}
   else if(el.dataset.hf){hf=el.dataset.hf;render()}
   else if(a==="planok"){sendPlan()}
   else if(a==="planx"||a==="ovclose"&&ev.target===el){closeOv()}
@@ -727,6 +790,10 @@ document.addEventListener("keydown",function(ev){
 document.addEventListener("input",function(ev){
   var e=ev.target;
   if(e.dataset.ch!==undefined&&B.sel[e.dataset.ch]){B.sel[e.dataset.ch].ch=e.value;refreshSum()}
+  else if(e.dataset.mt!==undefined){B.mec[+e.dataset.mt].t=e.value}
+  else if(e.dataset.mh!==undefined){B.mec[+e.dataset.mh].h=e.value;refreshSum()}
+  else if(e.dataset.mk!==undefined){B.mec[+e.dataset.mk].k=e.value;refreshSum()}
+  else if(e.dataset.otc){C.cfg.ot[e.dataset.otc]=num(e.value);save()}
   else if(e.dataset.rd!==undefined){B.recs[+e.dataset.rd].d=e.value;refreshSum()}
   else if(e.dataset.ri!==undefined){B.recs[+e.dataset.ri].imp=e.value;refreshSum()}
   else if(e.dataset.f==="mat"||e.id==="p-mat"){var ps=e.selectionStart;e.value=e.value.toUpperCase().replace(/[^A-Z0-9ÑÇ -]/g,"");try{e.setSelectionRange(ps,ps)}catch(x){}if(e.dataset.f==="mat"){B.mat=e.value;refreshSum()}}

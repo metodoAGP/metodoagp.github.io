@@ -54,6 +54,11 @@ h2{font:700 13px var(--body);letter-spacing:.09em;text-transform:uppercase;color
 .kv{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .kv div{background:#f0eee9;border-radius:12px;padding:10px 12px}
 .kv b{display:block;font:700 24px var(--disp)}.kv span{font-size:12px;color:var(--mute)}
+/* orden de trabajo */
+#otov{position:fixed;inset:0;z-index:30;background:var(--bg);overflow:auto;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.otc{max-width:560px;margin:0 auto}.otb{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.otp{font:700 30px var(--disp);letter-spacing:.04em}
+.otr{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--line)}.otr.sub{padding-left:14px;color:var(--mute)}
 /* coche en curso */
 .cur{background:var(--greenS);border:1px solid var(--green);border-radius:16px;padding:14px}
 .cur .pl{font:700 28px var(--disp);letter-spacing:.04em}
@@ -144,7 +149,10 @@ async function loadAll(){
   marks=m.map(function(x){return {id:x.id,ts:Date.parse(x.ts),t:x.tipo}});
   var j=chk(await C.from("trabajos").select("id,tarjeta_id,or_num,matricula,fase,seccion,inicio,fin").gte("inicio",s0).order("inicio")).data||[];
   jobs=j.map(function(x){return {id:x.id,card:x.tarjeta_id,or:x.or_num,pl:x.matricula,st:x.fase,s:Date.parse(x.inicio),e:x.fin?Date.parse(x.fin):null}});
-  if(status().inside||true){cars=chk(await C.from("tarjetas_operario").select("id,or_num,matricula,vehiculo,fase,fecha_salida").order("fecha_salida")).data||[]}
+  if(status().inside||true){
+    var rc=await C.from("tarjetas_operario").select("id,or_num,matricula,vehiculo,fase,fecha_salida,ot").order("fecha_salida");
+    if(rc.error)rc=await C.from("tarjetas_operario").select("id,or_num,matricula,vehiculo,fase,fecha_salida").order("fecha_salida");
+    cars=chk(rc).data||[]}
   var wk=new Date(Date.now()-7*864e5).toISOString(),f=chk(await C.from("fotos").select("tarjeta_id").gte("creado",wk)).data||[];
   phc={};f.forEach(function(x){phc[x.tarjeta_id]=(phc[x.tarjeta_id]||0)+1});
   return true;
@@ -172,6 +180,22 @@ async function redeem(tok){
 async function refresh(){if(phase!=="ok"||busy)return;try{await loadAll();view()}catch(e){}}
 
 /* ── interfaz ── */
+/* ── orden de trabajo (hoja de la reparación, sin importes) ── */
+function fh1(n){return (Math.round((+n||0)*100)/100).toLocaleString("es-ES")+" h"}
+function showOT(id){
+  var c=carOf(id);if(!c||!c.ot)return;var o=c.ot,sp=o.sp||[15,70,15],t=(sp[0]+sp[1]+sp[2])||1,pp=o.pp==null?75:o.pp,prep=(o.hPint||0)*pp/100,mec=o.mec||[];
+  function row(a,b,cl){return '<div class="otr'+(cl?' '+cl:'')+'"><span>'+a+'</span><b>'+b+'</b></div>'}
+  var h='<div class="otc"><div class="otb"><div><div class="otp">'+esc(c.matricula||o.mat||"")+'</div><div class="mute">OR '+esc(c.or_num)+' · '+esc(c.vehiculo||o.car||"")+'</div></div><button class="btn" data-otx="1">Cerrar</button></div>'+
+    '<div class="mute" style="font-size:13px;margin:4px 0 10px">Tasador: '+esc(o.tas||"—")+(c.fecha_salida?' · Acabado previsto: '+esc(String(c.fecha_salida).slice(0,10).split("-").reverse().join("/")):'')+'</div>'+
+    '<h2>Chapista · '+fh1(o.hCh)+'</h2>'+row('Desmontaje',fh1(o.hCh*sp[0]/t))+row('Chapa',fh1(o.hCh*sp[1]/t))+row('Montaje',fh1(o.hCh*sp[2]/t))+
+    '<div class="mute" style="margin-top:8px"><b>Recambios a cambiar:</b> '+((o.rec||[]).map(esc).join(", ")||"ninguno")+'</div>'+
+    '<h2 style="margin-top:16px">Pintor · '+fh1(o.hPint)+'</h2>'+(o.pz||[]).map(function(z){return row(esc(z.n),fh1(z.h))}).join("")+row('Preparación',fh1(prep),'sub')+row('Cabina',fh1((o.hPint||0)-prep),'sub')+
+    '<div class="mute" style="margin-top:8px"><b>Consumo sugerido (l listos al uso):</b> color base agua '+(o.hPint*0.06).toFixed(2).replace(".",",")+' · barniz '+(o.hPint*0.12).toFixed(2).replace(".",",")+' · fondo '+(o.hPint*0.04).toFixed(2).replace(".",",")+'</div>'+
+    (mec.length?'<h2 style="margin-top:16px">Mecánica</h2>'+mec.map(function(m){return row(esc(m.t)+' <small class="mute">'+(m.k==="i"?"incidental":"rápida")+'</small>',fh1(m.h))}).join(""):'')+
+    '<div class="row2" style="margin-top:16px"><button class="btn cam" data-photo="'+esc(c.id)+'">📷 Hacer foto</button><button class="btn" data-otx="1">Cerrar</button></div></div>';
+  var old=$("#otov");if(old)old.remove();
+  var d=document.createElement("div");d.id="otov";d.innerHTML=h;document.body.appendChild(d);
+}
 function view(){
   var app=$("#app");
   if(phase==="load"){app.innerHTML='<div class="card"><h2>Conectando…</h2><p class="mute" style="margin:0">Un momento.</p></div>';return}
@@ -186,12 +210,12 @@ function view(){
   h+='<div class="kv"><div><b>'+fdur(st.ms)+'</b><span>presente hoy</span></div><div><b>'+fdur(investedMs())+'</b><span>en coches hoy</span></div></div>';
   var tracks=me.seccion!=="indirecto";
   if(tracks&&st.inside){
-    if(oj){var oc=carOf(oj.card);h+='<div class="cur"><h2 style="color:var(--green)">Trabajando en</h2><div class="pl">'+esc(oj.pl||(oc&&oc.matricula)||oj.or)+'</div><div class="mute">'+esc(oc?oc.vehiculo||"":"")+' · '+esc(STN[oj.st]||oj.st)+'</div><div class="tm" id="jt"></div><div class="row2"><button class="btn cam" data-photo="'+esc(oj.card||"")+'">📷 Hacer foto</button><button class="btn stop" data-job="end"'+(busy?' disabled':'')+'>Acabo</button></div><div class="mute" style="font-size:13px;margin-top:8px">'+(phc[oj.card]||0)+' foto(s) en este coche (últimos 7 días)</div></div>'}
+    if(oj){var oc=carOf(oj.card);h+='<div class="cur"><h2 style="color:var(--green)">Trabajando en</h2><div class="pl">'+esc(oj.pl||(oc&&oc.matricula)||oj.or)+'</div><div class="mute">'+esc(oc?oc.vehiculo||"":"")+' · '+esc(STN[oj.st]||oj.st)+'</div><div class="tm" id="jt"></div><div class="row2"><button class="btn cam" data-photo="'+esc(oj.card||"")+'">📷 Hacer foto</button>'+(oc&&oc.ot?'<button class="btn" data-ot="'+esc(oc.id)+'">📄 Orden</button>':'')+'<button class="btn stop" data-job="end"'+(busy?' disabled':'')+'>Acabo</button></div><div class="mute" style="font-size:13px;margin-top:8px">'+(phc[oj.card]||0)+' foto(s) en este coche (últimos 7 días)</div></div>'}
     var list=myCars(),q=filter.trim().toUpperCase();
     if(q)list=list.filter(function(c){return ((c.matricula||"")+" "+c.or_num+" "+(c.vehiculo||"")).toUpperCase().indexOf(q)>-1});
     h+='<div class="card"><h2>Coches de '+({pintura:"pintura",mecanica_rapida:"mecánica rápida",mecanica_incidental:"mecánica incidental",mecanica:"mecánica"}[me.seccion]||"chapa")+'</h2><input class="search" id="q" type="search" placeholder="Buscar matrícula u OR" value="'+esc(filter)+'" autocomplete="off">';
     if(!list.length)h+='<p class="mute" style="margin:6px 0">'+(q?'Ningún coche coincide.':'No hay coches en tu fase en el planificador.')+'</p>';
-    else h+='<div class="cars">'+list.map(function(c){var on=oj&&oj.card===c.id;return '<div class="car"><div><span class="pl">'+esc(c.matricula)+'</span><small>'+esc(c.vehiculo||"")+' · '+esc(STN[c.fase])+'</small></div><div class="acts"><button class="btn cam sm" data-photo="'+esc(c.id)+'" aria-label="Hacer foto">📷</button>'+(on?'<span class="pill in">En curso</span>':'<button class="btn go sm" data-job="start" data-card="'+esc(c.id)+'"'+(busy?' disabled':'')+'>Comienzo</button>')+'</div></div>'}).join("")+'</div>';
+    else h+='<div class="cars">'+list.map(function(c){var on=oj&&oj.card===c.id;return '<div class="car"><div><span class="pl">'+esc(c.matricula)+'</span><small>'+esc(c.vehiculo||"")+' · '+esc(STN[c.fase])+'</small></div><div class="acts">'+(c.ot?'<button class="btn sm" data-ot="'+esc(c.id)+'" aria-label="Orden de trabajo">📄</button>':'')+'<button class="btn cam sm" data-photo="'+esc(c.id)+'" aria-label="Hacer foto">📷</button>'+(on?'<span class="pill in">En curso</span>':'<button class="btn go sm" data-job="start" data-card="'+esc(c.id)+'"'+(busy?' disabled':'')+'>Comienzo</button>')+'</div></div>'}).join("")+'</div>';
     h+='</div>';
   }else if(tracks){
     h+='<div class="warn">Ficha tu entrada para ver los coches y empezar a imputar tiempo.</div>';
@@ -268,6 +292,8 @@ document.addEventListener("click",function(ev){
     if(!unlinkSure){unlinkSure=true;view();setTimeout(function(){unlinkSure=false;if(phase==="ok")view()},5000);return}
     C.auth.signOut().then(function(){me=null;marks=[];jobs=[];cars=[];unlinkSure=false;phase="nolink";codeErr="";view()});return}
   if(t.dataset.photo){photoFor=t.dataset.photo;$("#cam").value="";$("#cam").click();return}
+  if(t.dataset.ot){showOT(t.dataset.ot);return}
+  if(t.dataset.otx){var ov=$("#otov");if(ov)ov.remove();return}
   if(t.dataset.mark){doMark(t.dataset.mark);return}
   if(t.dataset.job){doJob(t.dataset.job,t.dataset.card);return}
 });

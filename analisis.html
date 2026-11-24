@@ -36,6 +36,15 @@ a{color:inherit}
 :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 header{border-bottom:1px solid var(--line)}
 header .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px;padding-block:16px}
+header.top{background:#1d1e21;color:#fff;border-bottom:0}
+header.top .wrap{flex-wrap:nowrap;justify-content:flex-start;gap:14px;padding-block:14px}
+.tlogo{flex:none;display:block}.tlogo img{display:block;width:48px;height:48px}
+header.top h1{margin:0;font:800 28px/1 var(--display);letter-spacing:.01em;text-transform:uppercase;color:#fff}
+header.top h1 small{display:block;font:500 11px var(--body);letter-spacing:.14em;color:#a8aaae;margin-top:5px}
+header.top .mb{text-transform:none;letter-spacing:0}
+.tback{margin-left:auto;background:#3a3b3f;color:#fff;text-decoration:none;border-radius:8px;padding:8px 12px;font-weight:600;font-size:14px;white-space:nowrap}
+.tback:hover{color:#fff;background:#4a4b50}
+@media (max-width:640px){header.top h1{font-size:23px}.tlogo img{width:40px;height:40px}.tback{padding:7px 10px;font-size:13px}}
 .mark{font:800 26px/1 var(--display);letter-spacing:.04em;text-transform:uppercase;text-decoration:none}
 .mark span{color:var(--accent)}
 .mark .mb{color:inherit;text-transform:none;letter-spacing:.02em;font-size:1.12em}
@@ -142,10 +151,11 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
 </head>
 <body>
 
-<header>
+<header class="top">
   <div class="wrap">
-    <a class="mark" href="index.html"><img src="logo.png" alt="" width="36" height="36"><div><span class="mb">método</span><span>AGP</span><small>EXPERTOS EN RENTABILIDAD</small></div></a>
-    <nav aria-label="Principal"><a href="index.html">← Volver a la web</a></nav>
+    <a class="tlogo" href="index.html" title="Volver a métodoAGP"><img src="planificador-logo.png" width="48" height="48" alt="métodoAGP"></a>
+    <h1>Autodiagnóstico<small><span class="mb">métodoAGP</span> · DIAGNÓSTICO</small></h1>
+    <a class="tback" href="index.html">← <span class="mb">métodoAGP</span></a>
   </div>
 </header>
 
