@@ -10,7 +10,7 @@
   --bg:#e6e4e1; --panel:#f3f2ef; --chip:#ffffff; --ink:#1f2124; --mute:#666a70; --line:#d2cfca;
   --bar:#2b2c2f; --bar-ink:#f2f1ee; --accent:#e5532d; --accent-ink:#ffffff;
   --ok:#3f9d3a; --warn:#e28a1c; --bad:#d6382d;
-  --k-white:#fbfaf7; --k-red:#ee7767; --k-purple:#b98ec6; --k-green:#8fe04f; --k-blue:#5fb7dc; --k-orange:#f5a03a; --k-yellow:#f2d03f; --k-ink:#1b1c1e;
+  --k-gray:#c9cacd; --k-white:#fbfaf7; --k-red:#ee7767; --k-purple:#b98ec6; --k-green:#8fe04f; --k-blue:#5fb7dc; --k-orange:#f5a03a; --k-yellow:#f2d03f; --k-ink:#1b1c1e;
   --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --body:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
@@ -92,7 +92,7 @@ button{cursor:pointer}
 .card{position:relative;border-radius:8px;padding:9px 10px 8px;color:var(--k-ink);box-shadow:0 1px 0 rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.1);cursor:grab;display:flex;flex-direction:column;gap:3px}
 .card:active{cursor:grabbing}
 .card.drag{opacity:.45}
-.t-white{background:var(--k-white)}.t-red{background:var(--k-red)}.t-purple{background:var(--k-purple)}
+.t-gray{background:var(--k-gray)}.t-white{background:var(--k-white)}.t-red{background:var(--k-red)}.t-purple{background:var(--k-purple)}
 .t-green{background:var(--k-green)}.t-blue{background:var(--k-blue)}.t-orange{background:var(--k-orange)}.t-yellow{background:var(--k-yellow)}
 .r1{display:flex;align-items:center;gap:6px}
 .or{font:700 17px/1 var(--display);letter-spacing:.01em;flex:1}
@@ -293,7 +293,14 @@ table.heat{min-width:640px}
   var DOW=[['1','Lunes','blue'],['2','Martes','green'],['3','Miércoles','yellow'],['4','Jueves','orange'],['5','Viernes','purple']];
   var DOWF=DOW.map(function(d){return [d[0],d[1]]}).concat([['we','Fin de semana']]);
   function dowOf(c){return new Date((c.sal||'2000-01-03')+'T00:00:00').getDay()}
-  function dayCol(c){var d=dowOf(c);return d>=1&&d<=5?DOW[d-1][2]:'white'}
+  /* Color de la tarjeta (criterio reducido): gris = stock, verde = con operario, rojo = entrega vencida o hoy, azul = lista/entregada, blanco = resto */
+  var LEGC=[['gray','En stock'],['green','Con operario trabajando'],['red','Entrega vencida u hoy'],['blue','Lista para entrega'],['white','En taller']];
+  function dayCol(c){
+    if(c.st==='stk')return 'gray';
+    if(WK[c.id]&&WK[c.id].length)return 'green';
+    if(c.st==='lst'||c.st==='ent'||c.st==='arc')return 'blue';
+    var d=due(c.sal);if(d.d<=0)return 'red';
+    return 'white'}
   function dayKey(c){var d=dowOf(c);return d>=1&&d<=5?String(d):'we'}
   var KEY='agp-planificador-demo-v1';
   var TABORD=[2,1,0,4,3,5];
@@ -816,7 +823,7 @@ table.heat{min-width:640px}
       '</div>'+
       '<div class="bars" style="--nb:'+(sl.length+1)+'">'+sl.map(function(k){return bar(SECL[k[0]],all[k[0]],cap(st.ops[k[0]]||0))}).join('')+bar('Total',all.t,capT)+'</div>'+
     '</div></div>';
-    var leg='<div class="wrap"><div class="leg"><b>Color = día de entrega:</b>'+DOW.map(function(d){return '<span><i style="background:var(--k-'+d[2]+')"></i>'+d[1]+'</span>'}).join('')+'<span><i style="background:var(--k-white)"></i>Fin de semana</span></div></div>';
+    var leg='<div class="wrap"><div class="leg"><b>Color de la tarjeta:</b>'+LEGC.map(function(d){return '<span><i style="background:var(--k-'+d[0]+')"></i>'+d[1]+'</span>'}).join('')+'</div></div>';
     var board='<div class="wrap"><div class="board" id="board">'+COLSV().map(function(col){
       var list=st.cards.filter(function(c){return c.st===col[0]&&visible(c)});
       var s=sums(list);
