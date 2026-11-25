@@ -36,7 +36,7 @@ button{cursor:pointer}
 @media (max-width:700px){.top .wrap{position:relative}.logo{position:absolute;top:10px;left:max(16px,env(safe-area-inset-left,0px));margin:0}.logo img{width:38px;height:38px}.brand h1{padding-left:50px}}
 .actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
 .search{display:flex;background:#3a3b3f;border-radius:6px;overflow:hidden;min-width:0}
-.search input{background:transparent;border:0;padding:8px 10px;width:210px;max-width:100%;min-width:0;color:var(--bar-ink)}
+.search input{background:transparent;border:0;padding:8px 10px;width:120px;max-width:100%;min-width:0;color:var(--bar-ink)}
 .search input::placeholder{color:#9b9da2}
 .btn{background:#3a3b3f;border:0;border-radius:6px;padding:8px 12px;color:var(--bar-ink);font-weight:600}
 .btn:hover{background:#4a4b50}
@@ -262,9 +262,9 @@ table.heat{min-width:640px}
     <div class="brand">
       <a class="logo" href="index.html" title="Volver a métodoAGP" aria-label="Volver a la página principal de métodoAGP"><img src="planificador-logo.png" alt="métodoAGP" width="56" height="56"></a>
       <h1>Planificador de taller <small style="text-transform:none;letter-spacing:.02em">métodoAGP · demostración con datos ilustrativos</small></h1>
-      <div class="actions"><a class="btn" href="index.html" style="text-decoration:none">← métodoAGP</a>
+      <div class="actions"><a class="btn" href="index.html" style="text-decoration:none">← métodoAGP</a><a class="btn" href="logigrama.html" style="text-decoration:none" title="Cómo se usa el planificador paso a paso">Logigrama</a>
         <form class="search" id="searchForm" role="search">
-          <input id="q" type="search" placeholder="Buscar OR o matrícula" aria-label="Buscar OR o matrícula" autocomplete="off">
+          <input id="q" type="search" placeholder="Buscar…" aria-label="Buscar OR o matrícula" autocomplete="off">
           <button class="btn" type="submit">Buscar</button>
         </form>
         <button class="btn" id="bSet" type="button">Ajustes</button>
