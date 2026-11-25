@@ -168,6 +168,8 @@ button{cursor:pointer}
 .due{font:700 10px var(--body);border-radius:3px;padding:2px 6px;color:#fff}
 .due.v{background:#c92f26}.due.h{background:#e8671c}.due.f{background:#fff7e0;color:#8a4b00;border:1px solid #e0a64a}.due.n{background:rgba(0,0,0,.15);color:var(--k-ink)}
 .sal{font:600 10px var(--body);opacity:.85}
+.pg{display:flex;align-items:center;gap:7px;font:600 10.5px var(--body)}.pgb{flex:1;height:6px;border-radius:99px;background:rgba(0,0,0,.16);overflow:hidden}.pgb i{display:block;height:100%;background:rgba(0,0,0,.62);border-radius:99px}
+.al{align-self:flex-start;max-width:100%;font:700 11px var(--body);padding:3px 8px;border-radius:6px;background:rgba(0,0,0,.14);color:var(--k-ink)}.al.r{background:#c92f26;color:#fff}.al.b{background:#7a4a00;color:#fff}.al.g{background:#1f6b3a;color:#fff}
 .r0{display:flex}.or{white-space:nowrap}
 .dtag{font:700 10px var(--body);padding:1px 7px;border-radius:999px;background:rgba(0,0,0,.13);color:var(--k-ink);white-space:nowrap}.dtag.r{background:#c92f26;color:#fff}
 .sp{display:flex;align-items:center;gap:6px;align-self:flex-start;max-width:100%;background:rgba(255,255,255,.6);border-radius:6px;padding:3px 8px;font:500 11.5px var(--body);color:var(--k-ink)}
@@ -304,10 +306,10 @@ table.heat{min-width:640px}
   /* Color de la tarjeta = qué se mueve: verde alguien trabaja · azul listo · ámbar bloqueado · gris en stock */
   var BQ=['Esperando cliente','Esperando aprobación','Falta equipo o cabina','Otro motivo'];
   var LEGC=[['green','Alguien está trabajando'],['blue','Listo (sin operario o sin empezar)'],['amber','Bloqueado'],['gray','En stock'],['cream','Listo para entrega']];
-  var RM=null;
+  var RM=null,RMC={};
   function riskOf(c){ // '' | 'v' vencida | 'r' en riesgo
     if(due(c.sal).d<0)return 'v';
-    if(!RM){RM={};try{var D=wdays(40);schedule(st.cards.filter(live),D).forEach(function(x){RM[x.c.id]=egInfo(x,D).lvl==='b'?'r':''})}catch(e){}}
+    if(!RM){RM={};try{var D=wdays(40);schedule(st.cards.filter(live),D).forEach(function(x){RM[x.c.id]=egInfo(x,D).lvl==='b'?'r':'';RMC[x.c.id]=x.cause||''})}catch(e){}}
     return RM[c.id]||''}
   function blockWhy(c){
     if(c.st==='stk'||c.st==='lst')return '';
@@ -319,7 +321,7 @@ table.heat{min-width:640px}
     var w=WK[c.id],op=c.op||'';
     if(w&&w.length)return {k:'green',who:w.join(', '),txt:'en marcha'};
     var bw=blockWhy(c);
-    if(bw)return {k:'amber',who:op||'sin asignar',txt:'bloqueado · '+bw};
+    if(bw)return {k:'amber',who:op||'sin asignar',txt:'bloqueado'};
     if(c.st==='lst')return {k:'cream',who:op||'sin asignar',txt:'listo para entregar'};
     if(c.st==='stk')return {k:'gray',who:op||'sin asignar',txt:'en stock'};
     return {k:'blue',who:op||'sin asignar',txt:'listo'}}
@@ -655,29 +657,38 @@ table.heat{min-width:640px}
   }
   function vChips(c){
     var a=[];
-    function chip(cl,lab,v,t){a.push('<span class="'+cl+'" title="'+t+'">'+lab+': '+esc(v)+'</span>')}
-    if(c.st==='val'&&c.per==='CERRADA'&&rgOk(c))a.push('<span class="g" title="Peritación cerrada y recambio recibido: se puede empezar">Listo para empezar</span>');
-    if(sinAct(c))a.push('<span class="w" title="Ningún operario ha trabajado en este coche hoy">Sin actividad hoy</span>');
+    function chip(cl,lab,v,t){if(cl.charAt(0)==='g'||cl.charAt(0)==='n')return;a.push('<span class="'+cl+'" title="'+t+'">'+lab+': '+esc(v)+'</span>')}
     var pc=c.per==='CERRADA'?'g':c.per==='NO APLICA'?'n':(c.per==='PENDIENTE COMPROMISO'||c.per==='PETICIÓN AMPLIACIÓN'||c.per==='RECHAZADA O ANULADA')?'r':'w';
     var rc=c.rg==='RECIBIDO'?'g':c.rg==='NO APLICA'?'n':c.rg==='POR PEDIR'?'r':'w';
     var fc=c.fc==='COBRADA'?'g':c.fc==='NO FACTURABLE'?'n':c.fc==='IMPAGADA O RECLAMADA'?'r':'w';
     chip(pc+' pt','Perit.',c.per,'Gestión de peritación');
     chip(rc+' rg','Recamb.',c.rg,'Gestión del recambio');
     chip(fc+' fc','Fact.',c.fc,'Facturación y cobro');
-    if(c.rs&&!perOk(c))a.push('<span class="r" title="Empezó sin compromiso de pago">Sin compromiso</span>');
-    return '<div class="vs">'+a.join('')+'</div>';
+    return a.length?'<div class="vs">'+a.join('')+'</div>':'';
   }
+  function alertOf(c,rk,sa){ // un solo aviso por tarjeta, el más importante
+    var d=due(c.sal),bw=blockWhy(c);
+    if(rk==='v')return {k:'r',t:'Vencida '+(-d.d)+(d.d===-1?' día':' días')+' · '+(c.st==='lst'?'entrega al cliente':'avisa al cliente')};
+    if(rk==='r')return {k:'r',t:'En riesgo · '+(RMC[c.id]||'plazo corto para las horas')};
+    if(bw){var ac=bw==='peritación'?'reclama el compromiso':bw==='recambio'?'reclama el recambio':'resuélvelo';return {k:'b',t:'Bloqueado: '+bw+' · '+ac}}
+    if(c.rs&&!perOk(c))return {k:'b',t:'Sin compromiso de pago · riesgo del taller'};
+    if(sinAct(c))return {k:'n',t:'Sin actividad hoy'};
+    if(c.st==='val'&&c.per==='CERRADA'&&rgOk(c))return {k:'g',t:'Listo para empezar'};
+    return null}
+  function avance(c){
+    var r=REM[c.st]||[1,1,1],tot=hs(c,'c')+hs(c,'p')+hs(c,'r')+hs(c,'i');if(tot<=0)return '';
+    var rem=hs(c,'c')*r[0]+hs(c,'p')*r[1]+(hs(c,'r')+hs(c,'i'))*r[2],done=Math.max(0,tot-rem),pc=Math.round(done/tot*100);
+    return '<div class="pg" title="Avance estimado según la fase en la que está el coche"><div class="pgb"><i style="width:'+pc+'%"></i></div><span>'+fh(done)+' / '+fh(tot)+'</span></div>'}
   function cardHtml(c){
-    var d=due(c.sal),hrs=[],rk=riskOf(c),sa=cardState(c);
+    var d=due(c.sal),hrs=[],rk=riskOf(c),sa=cardState(c),al=alertOf(c,rk,sa);
     secList().forEach(function(k){var h=hs(c,k[0]);if(h)hrs.push(SECS[k[0]]+' '+fh(h))});
     return '<article class="card t-'+dayCol(c)+'" draggable="true" tabindex="0" data-id="'+esc(c.id)+'" aria-label="OR '+esc(c.id)+', '+esc(c.pl)+'">'+
-      '<div class="r0"><span class="dtag'+(rk?' r':'')+'" title="Fecha de entrega comprometida'+(rk==='r'?' · en riesgo de no llegar':'')+'">Entrega '+ddmm(c.sal)+(rk==='v'?' · vencida '+(-d.d)+' d':rk==='r'?' · en riesgo':'')+'</span></div><div class="r1"><span class="or">'+esc(c.id)+'</span><span class="cm'+(c.cm?' has':'')+'" title="Comentarios">'+c.cm+'</span><span class="ct" title="Control de tareas">CT '+esc(c.ct)+'</span></div>'+
+      '<div class="r0"><span class="dtag'+(rk?' r':'')+'" title="Fecha de entrega comprometida'+(rk==='r'?' · en riesgo de no llegar':'')+'">Entrega '+ddmm(c.sal)+'</span></div><div class="r1"><span class="or">'+esc(c.id)+'</span>'+(c.cm?'<span class="cm has" title="Comentarios">'+c.cm+'</span>':'')+'</div>'+
       '<div class="r2"><span class="pri p-'+esc(c.pr)+'">'+esc(c.pr)+'</span><span class="plate"><i></i>'+esc(c.pl)+'</span></div>'+
       '<div class="car">'+esc(c.car)+' · '+esc(c.col)+'</div>'+
       '<div class="ins">Seguro: '+esc(c.ins)+'</div>'+
-      '<div class="ics">'+icons(c.ic)+'</div>'+vChips(c)+
-      '<div class="hrs">'+hrs.join(' · ')+' <b>'+fe(c.eur)+'</b></div>'+'<div class="sp'+(sa.k==='green'?' g':'')+'" title="Estado y operario"><i></i><span><b>'+esc(sa.who)+'</b>, '+esc(sa.txt)+'</span></div>'+phBadge(c)+
-      '<div class="foot"><span class="who">Recepción '+c.rec+' · Asesor '+c.as+' · Gestor '+c.ge+'</span>'+(c.ent?'<span class="sal" title="Fecha de entrada">Ent. '+ddmm(c.ent)+'</span>':'')+(c.cita?'<span class="sal" title="Cita de recepción">Cita '+ddmm(c.cita.slice(0,10))+' '+esc(c.cita.slice(11,16))+'</span>':'')+'</div>'+
+      '<div class="hrs">'+hrs.join(' · ')+' <b>'+fe(c.eur)+'</b></div>'+avance(c)+'<div class="sp'+(sa.k==='green'?' g':'')+'" title="Estado y operario"><i></i><span><b>'+esc(sa.who)+'</b>, '+esc(sa.txt)+'</span></div>'+(al?'<div class="al '+al.k+'">'+esc(al.t)+'</div>':'')+vChips(c)+phBadge(c)+
+      '<div class="foot">'+(c.ent?'<span class="sal" title="Fecha de entrada">Ent. '+ddmm(c.ent)+'</span>':'')+(c.cita?'<span class="sal" title="Cita de recepción">Cita '+ddmm(c.cita.slice(0,10))+' '+esc(c.cita.slice(11,16))+'</span>':'')+'</div>'+
     '</article>';
   }
 
