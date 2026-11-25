@@ -10,7 +10,7 @@
   --bg:#e6e4e1; --panel:#f3f2ef; --chip:#ffffff; --ink:#1f2124; --mute:#666a70; --line:#d2cfca;
   --bar:#2b2c2f; --bar-ink:#f2f1ee; --accent:#e5532d; --accent-ink:#ffffff;
   --ok:#3f9d3a; --warn:#e28a1c; --bad:#d6382d;
-  --k-gray:#c9cacd; --k-white:#fbfaf7; --k-red:#ee7767; --k-purple:#b98ec6; --k-green:#8fe04f; --k-blue:#5fb7dc; --k-orange:#f5a03a; --k-yellow:#f2d03f; --k-ink:#1b1c1e;
+  --k-gray:#c9cacd; --k-amber:#f2b33d; --k-cream:#fbf1b8; --k-white:#fbfaf7; --k-red:#ee7767; --k-purple:#b98ec6; --k-green:#8fe04f; --k-blue:#5fb7dc; --k-orange:#f5a03a; --k-yellow:#f2d03f; --k-ink:#1b1c1e;
   --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif; --body:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
@@ -92,7 +92,7 @@ button{cursor:pointer}
 .card{position:relative;border-radius:8px;padding:9px 10px 8px;color:var(--k-ink);box-shadow:0 1px 0 rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.1);cursor:grab;display:flex;flex-direction:column;gap:3px}
 .card:active{cursor:grabbing}
 .card.drag{opacity:.45}
-.t-gray{background:var(--k-gray)}.t-white{background:var(--k-white)}.t-red{background:var(--k-red)}.t-purple{background:var(--k-purple)}
+.t-gray{background:var(--k-gray)}.t-amber{background:var(--k-amber)}.t-cream{background:var(--k-cream)}.t-white{background:var(--k-white)}.t-red{background:var(--k-red)}.t-purple{background:var(--k-purple)}
 .t-green{background:var(--k-green)}.t-blue{background:var(--k-blue)}.t-orange{background:var(--k-orange)}.t-yellow{background:var(--k-yellow)}
 .r1{display:flex;align-items:center;gap:6px}
 .or{font:700 17px/1 var(--display);letter-spacing:.01em;flex:1}
@@ -142,6 +142,9 @@ button{cursor:pointer}
 .egt{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;color:var(--mute);font-size:13px}.egt label{display:flex;gap:6px;align-items:center;color:var(--ink)}
 @media (max-width:980px){.egh2{display:none}.egr{grid-template-columns:1fr 1fr;gap:6px 12px}.egr .why{grid-column:1/-1}}
 
+.vs span.pt{background:#e9e0f6!important;border-color:#b7a2dc!important}.vs span.rg{background:#fde3d4!important;border-color:#e3a47d!important}.vs span.fc{background:#d8e9f4!important;border-color:#8fb5d2!important}
+.vs span.pt.r,.vs span.rg.r,.vs span.fc.r{box-shadow:inset 4px 0 #c92f26}.vs span.pt.w,.vs span.rg.w,.vs span.fc.w{box-shadow:inset 4px 0 #d9a300}.vs span.pt.g,.vs span.rg.g,.vs span.fc.g{box-shadow:inset 4px 0 #2e9e57}
+.gst.pt{background:#f3eefa;border-color:#cdbfe6}.gst.rg{background:#fef1e8;border-color:#efc3a6}.gst.fc{background:#eaf3f9;border-color:#b4cfe2}
 .gst{border:1px solid var(--line,#ccc);border-radius:10px;padding:8px 10px;margin:8px 0}.gst h4{margin:0 0 6px;font-size:13px}.gst .g2{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}.gst label{display:flex;flex-direction:column;font-size:11.5px;gap:2px}.gst select{font:inherit;font-size:13px}@media (max-width:520px){.gst .g2{grid-template-columns:1fr}}
 .ics{display:flex;gap:5px;margin-block:1px}
 .ics svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.75}
@@ -165,6 +168,11 @@ button{cursor:pointer}
 .due{font:700 10px var(--body);border-radius:3px;padding:2px 6px;color:#fff}
 .due.v{background:#c92f26}.due.h{background:#e8671c}.due.f{background:#fff7e0;color:#8a4b00;border:1px solid #e0a64a}.due.n{background:rgba(0,0,0,.15);color:var(--k-ink)}
 .sal{font:600 10px var(--body);opacity:.85}
+.r0{display:flex}.or{white-space:nowrap}
+.dtag{font:700 10px var(--body);padding:1px 7px;border-radius:999px;background:rgba(0,0,0,.13);color:var(--k-ink);white-space:nowrap}.dtag.r{background:#c92f26;color:#fff}
+.sp{display:flex;align-items:center;gap:6px;align-self:flex-start;max-width:100%;background:rgba(255,255,255,.6);border-radius:6px;padding:3px 8px;font:500 11.5px var(--body);color:var(--k-ink)}
+.sp i{width:8px;height:8px;border-radius:50%;background:var(--k-ink);flex:none}.sp b{font-weight:700}.sp span{min-width:0}
+.sp.g i{animation:wkp 1.8s infinite}
 
 .msg{padding:60px 16px;text-align:center;color:var(--mute)}
 
@@ -293,14 +301,29 @@ table.heat{min-width:640px}
   var DOW=[['1','Lunes','blue'],['2','Martes','green'],['3','Miércoles','yellow'],['4','Jueves','orange'],['5','Viernes','purple']];
   var DOWF=DOW.map(function(d){return [d[0],d[1]]}).concat([['we','Fin de semana']]);
   function dowOf(c){return new Date((c.sal||'2000-01-03')+'T00:00:00').getDay()}
-  /* Color de la tarjeta (criterio reducido): gris = stock, verde = con operario, rojo = entrega vencida o hoy, azul = lista/entregada, blanco = resto */
-  var LEGC=[['gray','En stock'],['green','Con operario trabajando'],['red','Entrega vencida u hoy'],['blue','Lista para entrega'],['white','En taller']];
-  function dayCol(c){
-    if(c.st==='stk')return 'gray';
-    if(WK[c.id]&&WK[c.id].length)return 'green';
-    if(c.st==='lst'||c.st==='ent'||c.st==='arc')return 'blue';
-    var d=due(c.sal);if(d.d<=0)return 'red';
-    return 'white'}
+  /* Color de la tarjeta = qué se mueve: verde alguien trabaja · azul listo · ámbar bloqueado · gris en stock */
+  var BQ=['Esperando cliente','Esperando aprobación','Falta equipo o cabina','Otro motivo'];
+  var LEGC=[['green','Alguien está trabajando'],['blue','Listo (sin operario o sin empezar)'],['amber','Bloqueado'],['gray','En stock'],['cream','Listo para entrega']];
+  var RM=null;
+  function riskOf(c){ // '' | 'v' vencida | 'r' en riesgo
+    if(due(c.sal).d<0)return 'v';
+    if(!RM){RM={};try{var D=wdays(40);schedule(st.cards.filter(live),D).forEach(function(x){RM[x.c.id]=egInfo(x,D).lvl==='b'?'r':''})}catch(e){}}
+    return RM[c.id]||''}
+  function blockWhy(c){
+    if(c.st==='stk'||c.st==='lst')return '';
+    if(c.bq)return c.bq;
+    if(perOpen(c)&&!perOk(c))return 'peritación';
+    if(rgOpen(c))return 'recambio';
+    return ''}
+  function cardState(c){
+    var w=WK[c.id],op=c.op||'';
+    if(w&&w.length)return {k:'green',who:w.join(', '),txt:'en marcha'};
+    var bw=blockWhy(c);
+    if(bw)return {k:'amber',who:op||'sin asignar',txt:'bloqueado · '+bw};
+    if(c.st==='lst')return {k:'cream',who:op||'sin asignar',txt:'listo para entregar'};
+    if(c.st==='stk')return {k:'gray',who:op||'sin asignar',txt:'en stock'};
+    return {k:'blue',who:op||'sin asignar',txt:'listo'}}
+  function dayCol(c){return cardState(c).k}
   function dayKey(c){var d=dowOf(c);return d>=1&&d<=5?String(d):'we'}
   var KEY='agp-planificador-demo-v1';
   var TABORD=[2,1,0,4,3,5];
@@ -638,23 +661,23 @@ table.heat{min-width:640px}
     var pc=c.per==='CERRADA'?'g':c.per==='NO APLICA'?'n':(c.per==='PENDIENTE COMPROMISO'||c.per==='PETICIÓN AMPLIACIÓN'||c.per==='RECHAZADA O ANULADA')?'r':'w';
     var rc=c.rg==='RECIBIDO'?'g':c.rg==='NO APLICA'?'n':c.rg==='POR PEDIR'?'r':'w';
     var fc=c.fc==='COBRADA'?'g':c.fc==='NO FACTURABLE'?'n':c.fc==='IMPAGADA O RECLAMADA'?'r':'w';
-    chip(pc,'Perit.',c.per,'Gestión de peritación');
-    chip(rc,'Recamb.',c.rg,'Gestión del recambio');
-    chip(fc,'Fact.',c.fc,'Facturación y cobro');
+    chip(pc+' pt','Perit.',c.per,'Gestión de peritación');
+    chip(rc+' rg','Recamb.',c.rg,'Gestión del recambio');
+    chip(fc+' fc','Fact.',c.fc,'Facturación y cobro');
     if(c.rs&&!perOk(c))a.push('<span class="r" title="Empezó sin compromiso de pago">Sin compromiso</span>');
     return '<div class="vs">'+a.join('')+'</div>';
   }
   function cardHtml(c){
-    var d=due(c.sal),hrs=[];
+    var d=due(c.sal),hrs=[],rk=riskOf(c),sa=cardState(c);
     secList().forEach(function(k){var h=hs(c,k[0]);if(h)hrs.push(SECS[k[0]]+' '+fh(h))});
     return '<article class="card t-'+dayCol(c)+'" draggable="true" tabindex="0" data-id="'+esc(c.id)+'" aria-label="OR '+esc(c.id)+', '+esc(c.pl)+'">'+
-      '<div class="r1"><span class="or">'+esc(c.id)+'</span><span class="cm'+(c.cm?' has':'')+'" title="Comentarios">'+c.cm+'</span><span class="ct" title="Control de tareas">CT '+esc(c.ct)+'</span></div>'+
+      '<div class="r0"><span class="dtag'+(rk?' r':'')+'" title="Fecha de entrega comprometida'+(rk==='r'?' · en riesgo de no llegar':'')+'">Entrega '+ddmm(c.sal)+(rk==='v'?' · vencida '+(-d.d)+' d':rk==='r'?' · en riesgo':'')+'</span></div><div class="r1"><span class="or">'+esc(c.id)+'</span><span class="cm'+(c.cm?' has':'')+'" title="Comentarios">'+c.cm+'</span><span class="ct" title="Control de tareas">CT '+esc(c.ct)+'</span></div>'+
       '<div class="r2"><span class="pri p-'+esc(c.pr)+'">'+esc(c.pr)+'</span><span class="plate"><i></i>'+esc(c.pl)+'</span></div>'+
       '<div class="car">'+esc(c.car)+' · '+esc(c.col)+'</div>'+
       '<div class="ins">Seguro: '+esc(c.ins)+'</div>'+
       '<div class="ics">'+icons(c.ic)+'</div>'+vChips(c)+
-      '<div class="hrs">'+hrs.join(' · ')+' <b>'+fe(c.eur)+'</b></div>'+wkHtml(c)+phBadge(c)+
-      '<div class="foot"><span class="who">Recepción '+c.rec+' · Asesor '+c.as+' · Gestor '+c.ge+'</span><span class="due '+d.c+'">'+d.t+'</span>'+(c.ent?'<span class="sal" title="Fecha de entrada">Ent. '+ddmm(c.ent)+'</span>':'')+'<span class="sal" title="Salida prevista">Sal. '+ddmm(c.sal)+'</span>'+(c.cita?'<span class="sal" title="Cita de recepción">Cita '+ddmm(c.cita.slice(0,10))+' '+esc(c.cita.slice(11,16))+'</span>':'')+'</div>'+
+      '<div class="hrs">'+hrs.join(' · ')+' <b>'+fe(c.eur)+'</b></div>'+'<div class="sp'+(sa.k==='green'?' g':'')+'" title="Estado y operario"><i></i><span><b>'+esc(sa.who)+'</b>, '+esc(sa.txt)+'</span></div>'+phBadge(c)+
+      '<div class="foot"><span class="who">Recepción '+c.rec+' · Asesor '+c.as+' · Gestor '+c.ge+'</span>'+(c.ent?'<span class="sal" title="Fecha de entrada">Ent. '+ddmm(c.ent)+'</span>':'')+(c.cita?'<span class="sal" title="Cita de recepción">Cita '+ddmm(c.cita.slice(0,10))+' '+esc(c.cita.slice(11,16))+'</span>':'')+'</div>'+
     '</article>';
   }
 
@@ -716,7 +739,7 @@ table.heat{min-width:640px}
         g.items.map(function(x){
           var c=x.c,e=x.e,ix=stepIx(c.st),dk=dayKey(c),dw=dk==='we'?'Fin de semana':DOW[+dk-1][1];
           var stp=STEP.map(function(k,i){return '<i class="'+(i<ix?'d':i===ix?'n':'')+'"></i>'}).join('');
-          return '<div class="egr '+e.lvl+'" data-open="'+esc(c.id)+'" tabindex="0"><div><div class="dd"><i style="background:var(--k-'+dayCol(c)+')"></i>'+ddmm(c.sal)+'</div><small>'+dw.slice(0,3)+' · '+due(c.sal).t+'</small></div>'+
+          return '<div class="egr '+e.lvl+'" data-open="'+esc(c.id)+'" tabindex="0"><div><div class="dd"><i style="background:var(--k-'+(riskOf(c)?'red':'white')+')"></i>'+ddmm(c.sal)+'</div><small>'+dw.slice(0,3)+' · '+due(c.sal).t+'</small></div>'+
             '<div><b>'+esc(c.pl)+'</b> · OR '+esc(c.id)+'<small>'+esc(c.car)+' · '+esc(c.ins)+'</small></div>'+
             '<div><b>'+esc(colName(c.st))+'</b><small>'+(dIn(c)===1?'1 día':dIn(c)+' días')+' en esta fase</small><div class="stp" title="Avance por fases">'+stp+'</div></div>'+
             '<div><b>'+fh(e.rem)+'</b><small>de '+fh(c.c+c.p+(c.mr||0)+(c.mi||0))+'</small></div>'+
@@ -793,7 +816,7 @@ table.heat{min-width:640px}
   }
 
   function render(){
-    renderTabs();
+    RM=null;renderTabs();
     var m=$('#main');
     if(tab===0){renderPlan();return}
     if(tab===2){renderEntrega();return}
@@ -823,7 +846,7 @@ table.heat{min-width:640px}
       '</div>'+
       '<div class="bars" style="--nb:'+(sl.length+1)+'">'+sl.map(function(k){return bar(SECL[k[0]],all[k[0]],cap(st.ops[k[0]]||0))}).join('')+bar('Total',all.t,capT)+'</div>'+
     '</div></div>';
-    var leg='<div class="wrap"><div class="leg"><b>Color de la tarjeta:</b>'+LEGC.map(function(d){return '<span><i style="background:var(--k-'+d[0]+')"></i>'+d[1]+'</span>'}).join('')+'</div></div>';
+    var leg='<div class="wrap"><div class="leg"><b>Color de la tarjeta:</b>'+LEGC.map(function(d){return '<span><i style="background:var(--k-'+d[0]+')"></i>'+d[1]+'</span>'}).join('')+'<span><span class="dtag r">Entrega</span>&nbsp;roja = en riesgo o vencida</span></div></div>';
     var board='<div class="wrap"><div class="board" id="board">'+COLSV().map(function(col){
       var list=st.cards.filter(function(c){return c.st===col[0]&&visible(c)});
       var s=sums(list);
@@ -839,11 +862,17 @@ table.heat{min-width:640px}
   function closeDlg(){$('#ov').hidden=true;$('#dlg').innerHTML='';$('#dlg').classList.remove('bd','aj')}
 
   function selV(c,k,lab,arr){return '<label>'+lab+'<select data-v="'+k+'" data-id="'+esc(c.id)+'">'+arr.map(function(o){return '<option'+(c[k]===o?' selected':'')+'>'+esc(o)+'</option>'}).join('')+'</select></label>'}
+  function asgDlg(c){
+    var F=fich(),names=(F&&F.emps?F.emps.map(function(e){return e.name}):[]);if(c.op&&names.indexOf(c.op)<0)names.push(c.op);
+    return '<div class="gst"><h4>Operario y bloqueo</h4><div class="g2"><label>Operario asignado<select data-asg="op" data-id="'+esc(c.id)+'"><option value="">Sin asignar</option>'+names.map(function(n){return '<option'+(c.op===n?' selected':'')+'>'+esc(n)+'</option>'}).join('')+'</select></label>'+
+      '<label>Bloqueo manual<select data-asg="bq" data-id="'+esc(c.id)+'"><option value="">Sin bloqueo</option>'+BQ.map(function(n){return '<option'+(c.bq===n?' selected':'')+'>'+esc(n)+'</option>'}).join('')+'</select></label></div>'+
+      '<p class="cap" style="margin:6px 0 0">Estado ahora: <b>'+esc(cardState(c).who)+', '+esc(cardState(c).txt)+'</b>. Se bloquea solo si la peritación o el recambio siguen pendientes.</p></div>';
+  }
   function gestDlg(c){
-    return '<div class="gst"><h4>Gestión de peritación</h4><div class="g2">'+selV(c,'pt','Tipo de peritación',PT)+selV(c,'pg','Pagador',PG)+selV(c,'per','Estado',PER)+'</div>'+
+    return asgDlg(c)+'<div class="gst pt"><h4>Gestión de peritación</h4><div class="g2">'+selV(c,'pt','Tipo de peritación',PT)+selV(c,'pg','Pagador',PG)+selV(c,'per','Estado',PER)+'</div>'+
       (c.rs&&!perOk(c)?'<p class="cap" style="margin:6px 0 0">Inicio sin compromiso de pago desde el '+ddmm(c.rs)+' (riesgo asumido por el taller).</p>':'')+'</div>'+
-      '<div class="gst"><h4>Gestión del recambio</h4><div class="g2">'+selV(c,'rg','Estado',RG)+'</div></div>'+
-      '<div class="gst"><h4>Facturación y cobro</h4><div class="g2">'+selV(c,'fc','Estado',FC)+'</div></div>';
+      '<div class="gst rg"><h4>Gestión del recambio</h4><div class="g2">'+selV(c,'rg','Estado',RG)+'</div></div>'+
+      '<div class="gst fc"><h4>Facturación y cobro</h4><div class="g2">'+selV(c,'fc','Estado',FC)+'</div></div>';
   }
   function otDlg(c){
     var o=c.ot;if(!o)return '';var sp=o.sp||[15,70,15],t=(sp[0]+sp[1]+sp[2])||1,ps=o.hPint*(o.pp||75)/100,mh=(o.mec||[]).reduce(function(a,m){return a+m.h},0);
@@ -1168,6 +1197,10 @@ table.heat{min-width:640px}
       var cs=st.cards.filter(function(x){return x.id===t.dataset.sal})[0];
       if(cs&&t.value&&t.value!==cs.sal&&cs.ent&&t.value<cs.ent){toast('La salida no puede ser anterior a la entrada');t.value=cs.sal;return}
       if(cs&&t.value&&t.value!==cs.sal){(cs.sh=cs.sh||[]).push({d:cs.sal,t:Date.now()});cs.sal=t.value;save();render();var ps2=$('#dlg').scrollTop;cardDlg(cs.id);$('#dlg').scrollTop=ps2}
+      return}
+    if(t.dataset.asg!==undefined){
+      var ca=st.cards.filter(function(x){return x.id===t.dataset.id})[0];
+      if(ca){if(t.value)ca[t.dataset.asg]=t.value;else delete ca[t.dataset.asg];save();render();var pa=$('#dlg').scrollTop;cardDlg(ca.id);$('#dlg').scrollTop=pa}
       return}
     if(t.dataset.v!==undefined){
       var cv=st.cards.filter(function(x){return x.id===t.dataset.id})[0];
