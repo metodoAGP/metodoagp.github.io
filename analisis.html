@@ -230,7 +230,7 @@ var H_CONV = 1760;          // 8 h x 220 días por operario (tiempo de convenio)
 
 // Valores del método (no se muestran en pantalla salvo SHOW_TARGETS)
 var T = { recH:50, matH:28, mix:{mo:.40, mat:.15, rec:.45}, mMO:.30, mRec:.25, mMat:.50, estr:.25, indir:.30,
-          hCh:5.5, hPi:4.5, recM:40, chPorPuesto:1, cabPct:.25, prepPct:.75,
+          hCh:5.5, hPi:4.5, recM:40, chPorPuesto:1, m2Pt:28, m2Pl:28.8, m2Cab:42, circ:.5, cabPct:.25, prepPct:.75,
           litros:{base:.06, barniz:.12, fondo:.04}, precio:{base:70, barniz:19, fondo:17} };
 
 /* ---------- campos ---------- */
@@ -386,6 +386,7 @@ function calc(){
       if(cb!=null)cp.push({k:"cabinas",n:cb/T.cabPct});
       if(pl!=null)cp.push({k:"plenum",n:pl/T.prepPct});
       if(cp.length){cp.sort(function(a,b){return a.n-b.n;});I.maxPi=cp[0].n;I.limPi=cp[0].k;I.cpAll=cp;}}
+    I.req=(pt||0)*T.m2Pt+(cb||0)*T.m2Cab+(pl||0)*T.m2Pl;
     I.ch=chv;I.pi=piv;I.eqPi=chv*T.hPi/T.hCh;I.hu=H_CONV*Math.max(R,0);
     o.inst=I;
   }
@@ -510,9 +511,11 @@ function render(o){
         '<tr><td>Zona primaria</td><td class="n">'+fn(I.m1||0)+' m² · '+pc2(I.m1)+'</td></tr>'+
         '<tr><td>Zona secundaria</td><td class="n">'+fn(I.m2||0)+' m² · '+pc2(I.m2)+'</td></tr>'+
         '<tr><td>Zona terciaria</td><td class="n">'+fn(I.m3||0)+' m² · '+pc2(I.m3)+'</td></tr>'+
+        (I.req>0&&I.m1?'<tr><td>Zona primaria necesaria para tus puestos, cabinas y plenum</td><td class="n">'+fn(I.req)+' m² · '+(I.m1>=I.req?'<span class="st ok">Suficiente</span>':'<span class="st bad">Insuficiente</span>')+'</td></tr>':'')+
+        (I.req>0&&I.m2?'<tr><td>Circulación recomendada (50 % de la zona primaria)</td><td class="n">'+fn(I.req*T.circ)+' m² · '+(I.m2>=I.req*T.circ?'<span class="st ok">Suficiente</span>':'<span class="st warn">Justa</span>')+'</td></tr>':'')+
         (I.pt&&I.m1?'<tr><td>m² de zona primaria por puesto</td><td class="n">'+fn(I.m1/I.pt)+' m²</td></tr>':'')+
         (I.pkp?'<tr><td>Plazas de parking'+(I.pt?' por puesto de trabajo':'')+'</td><td class="n">'+(I.pt?fn(I.pkp/I.pt):I.pkp)+'</td></tr>':'')+
-        '</tbody></table></div><p class="note" style="margin-top:12px">Los m² se muestran como reparto. Falta definir un valor de referencia de m² por puesto para limitar la capacidad por superficie.</p>';
+        '</tbody></table></div><p class="note" style="margin-top:12px">Módulos por vehículo de referencia: 28 m² por puesto de chapa, 28,8 m² por plenum y 42 m² por cabina, más un 50 % de circulación. No incluye bancada ni mecánica; son criterios de anteproyecto sujetos al equipo elegido.</p>';
     }
     h+='</div>';
   }
