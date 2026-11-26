@@ -29,6 +29,26 @@
   --bg:#141517; --surface:#1e2023; --ink:#ecebe8; --mute:#a0a4aa; --line:#33363a;
   --a:#4f9bd0; --g:#4fb883; --p:#ef7a50; --accent:#ef7a50;
   --ok:#4fb883; --warn:#e0a63a; --bad:#ef6a56; --na:#7d838a; color-scheme:dark;}
+
+#catBox{margin-top:18px}
+.mg[hidden],#catPanel[hidden]{display:none}
+.catbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+#catPanel{border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:12px;background:var(--surface)}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.tabs button{font:500 14px var(--body);border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:7px 12px;cursor:pointer}
+.tabs button[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mg{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px 16px;margin:10px 0}
+.mi{display:flex;flex-direction:column;gap:4px;min-width:0;font-size:14px}.mi span{color:var(--mute)}
+.mi input,.mi select{font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-width:0}
+.cmsg{margin:10px 0;font-weight:500}.cmsg.bad{color:var(--bad)}
+.cit,.nv{border:1px solid var(--line);border-radius:10px;padding:14px;margin:10px 0;background:var(--bg)}
+.cd{display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;margin:10px 0;font-size:14px}.cd dt{color:var(--mute)}.cd dd{margin:0}
+.ca{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.nh{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.nv details{margin:10px 0}.nv summary,.dd summary{cursor:pointer;font-weight:500}
+.cc{margin-top:10px;padding:10px 12px;border-left:3px solid var(--a);background:var(--surface);font-size:14px}
+.okk{color:var(--ok)}.badd{color:var(--bad)}
+input.dm{width:84px;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);text-align:right}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--body);-webkit-font-smoothing:antialiased}
 .wrap{max-width:1040px;margin-inline:auto;padding-inline:max(20px,env(safe-area-inset-left,0px))}
@@ -386,7 +406,8 @@ function calc(){
       if(cb!=null)cp.push({k:"cabinas",n:cb/T.cabPct});
       if(pl!=null)cp.push({k:"plenum",n:pl/T.prepPct});
       if(cp.length){cp.sort(function(a,b){return a.n-b.n;});I.maxPi=cp[0].n;I.limPi=cp[0].k;I.cpAll=cp;}}
-    I.req=(pt||0)*T.m2Pt+(cb||0)*T.m2Cab+(pl||0)*T.m2Pl;
+    var D=window.AGP_CAT?window.AGP_CAT.dim:null,aCh=D?D('ch').a:T.m2Pt,aCb=D?D('cb').a:T.m2Cab,aPl=D?D('pl').a:T.m2Pl;
+    I.req=(pt||0)*aCh+(cb||0)*aCb+(pl||0)*aPl;
     I.ch=chv;I.pi=piv;I.eqPi=chv*T.hPi/T.hCh;I.hu=H_CONV*Math.max(R,0);
     o.inst=I;
   }
@@ -520,6 +541,8 @@ function render(o){
     h+='</div>';
   }
 
+  if(window.AGP_CAT)h+=window.AGP_CAT.report(o);
+
   // cuellos de botella
   var cands=R.filter(function(x){return x.s==="warn"||x.s==="bad";}).sort(function(a,b){
     var ea=a.eur||0, eb=b.eur||0; if(ea!==eb) return eb-ea; return (b.dev||0)-(a.dev||0);}).slice(0,3);
@@ -592,6 +615,161 @@ document.getElementById("frm").addEventListener("submit",function(e){
   if(o.errs){ m.textContent="Revisa estos datos: "+o.errs.join(", ")+"."; document.getElementById("res").hidden=true; return; }
   m.textContent=""; render(o);
 });
+})();
+</script>
+<script>
+(function(){
+"use strict";
+/* Buscar mis instalaciones en Catastro · datos no protegidos de la Dirección General del Catastro (servicio OVCCallejero, salida JSON) */
+var BASE="https://ovc.catastro.meh.es/OVCServWeb/OVCWcfCallejero/COVCCallejero.svc/json";
+var PROXY="";   // opcional: URL de una función propia que reenvía a BASE (ver db/catastro-proxy.ts) si el navegador no puede llamar directamente
+var KEYC="agp-autodiag-cat-v1";
+var TIPOS=[["mr","Mecánica rápida",3.6,7.0],["mg","Mecánica general",4.0,7.0],["al","Alineación",4.0,8.0],["ch","Chapa general",4.0,7.0],["bf","Bancada fija",5.0,8.0],["pl","Plénum de lijado y preparación",4.0,7.2],["cb","Cabina de pintura",6.0,7.0],["ac","Acabado y control final",4.0,7.0]];
+var RES=[["of","Oficinas"],["ve","Vestuarios"],["al","Almacén"],["ct","Cuartos técnicos"],["es","Espera"]];
+var VIAS=[["CL","Calle"],["AV","Avenida"],["PS","Paseo"],["CR","Carretera"],["PZ","Plaza"],["CM","Camino"],["PG","Polígono"],["TR","Travesía"],["RD","Ronda"],["GV","Gran Vía"],["UR","Urbanización"],["AU","Autovía"],["PJ","Pasaje"],["CJ","Callejón"]];
+var S={naves:[],dims:{},circ:50,uid:1};
+function esc(x){return String(x==null?"":x).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function num(v){if(v==null)return null;v=String(v).trim().replace(/\s/g,"");if(v==="")return null;if(/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(v))v=v.replace(/\./g,"").replace(",",".");else v=v.replace(",",".");var n=parseFloat(v);return isFinite(n)?n:null;}
+function fm(n){return n.toLocaleString("es-ES",{maximumFractionDigits:1});}
+function arr(x){return x==null?[]:(Array.isArray(x)?x:[x]);}
+function load(){try{var o=JSON.parse(localStorage.getItem(KEYC)||"null");if(o){S.naves=o.naves||[];S.dims=o.dims||{};S.circ=o.circ!=null?o.circ:50;S.uid=o.uid||1;}}catch(e){}}
+function save(){try{localStorage.setItem(KEYC,JSON.stringify(S));}catch(e){}}
+function dim(k){var t=TIPOS.filter(function(x){return x[0]===k;})[0],d=S.dims[k]||{};var w=d.w!=null&&d.w!==""?d.w:t[2],f=d.d!=null&&d.d!==""?d.d:t[3];return{w:w,d:f,a:w*f};}
+/* ---------- servicio ---------- */
+function call(op,p){
+  var q=Object.keys(p).map(function(k){return encodeURIComponent(k)+"="+encodeURIComponent(p[k]);}).join("&");
+  var url=(PROXY||BASE)+"/"+op+"?"+q;
+  var ctl=("AbortController" in window)?new AbortController():null,tm=setTimeout(function(){if(ctl)ctl.abort();},20000);
+  return fetch(url,{signal:ctl?ctl.signal:undefined}).then(function(r){clearTimeout(tm);if(!r.ok)throw new Error("HTTP "+r.status);return r.json();});
+}
+function dfind(o,k){if(o==null||typeof o!=="object")return undefined;if(Object.prototype.hasOwnProperty.call(o,k))return o[k];for(var i in o){var r=dfind(o[i],k);if(r!==undefined)return r;}return undefined;}
+function rcOf(rc){if(!rc)return "";return [rc.pc1,rc.pc2,rc.car,rc.cc1,rc.cc2].map(function(x){return x==null?"":x;}).join("");}
+function dirOf(dt){if(!dt)return "";var u=dt.locs&&dt.locs.lous&&dt.locs.lous.lourb||dt.lourb||dfind(dt,"lourb")||{},d=u.dir||{},li=u.loint||{},o=[];
+  if(d.tv||d.nv)o.push((d.tv||"")+" "+(d.nv||""));if(d.pnp)o.push(d.pnp);
+  var e=[];if(li.bl)e.push("Bl. "+li.bl);if(li.es)e.push("Esc. "+li.es);if(li.pt)e.push("Planta "+li.pt);if(li.pu)e.push("Puerta "+li.pu);
+  var s=o.join(" ").trim();if(e.length)s+=" · "+e.join(" ");
+  var m=[dt.nm,dt.np].filter(Boolean).join(", ");if(m)s+=(s?" · ":"")+m;return s.trim();}
+function errOf(r){var root=r&&(r.consulta_dnp||r)||{};var le=root.lerr;if(le){var e=arr(le.err)[0]||arr(le)[0]||{};return (e.des||e.cod||"El servicio devolvió un error");}
+  var c=root.control;if(c&&Number(c.cuerr)>0)return "El servicio devolvió un error";return null;}
+function detalle(bico){var bi=bico.bi||bico,deb=bi.debi||{},sfc=deb.sfc!=null&&String(deb.sfc).trim()!==""?num(deb.sfc):null;
+  var cons=arr(bico.lcons&&bico.lcons.cons).map(function(c){var s=dfind(c,"stl");return{d:(c.lcd||"").toString(),s:s!=null?num(s):null};}).filter(function(c){return c.d||c.s!=null;});
+  var pf=dfind(bico,"supf");
+  var idbi=bi.idbi||{};
+  return{rc:rcOf(idbi.rc),dir:dirOf(bi.dt),uso:deb.luso||"",sfc:sfc,parcela:pf!=null&&String(pf).trim()!==""?num(pf):null,desglose:cons,cn:idbi.cn||""};}
+function parse(r){var e=errOf(r);if(e)return{err:e};var root=r.consulta_dnp||r;
+  if(root.lrcdnp){return{lista:arr(root.lrcdnp.rcdnp).map(function(x){return{rc:rcOf(x.rc),dir:dirOf(x.dt)};})};}
+  if(root.bico){return{uno:detalle(root.bico)};}
+  return{err:"Sin resultados"};}
+/* ---------- panel ---------- */
+var R={items:[],msg:"",busy:false};
+function norm(s){return String(s||"").toUpperCase().replace(/\s+/g,"").replace(/[^A-Z0-9]/g,"");}
+function link(rc){var a=norm(rc).slice(0,14);return"https://www1.sedecatastro.gob.es/Cartografia/mapa.aspx?refcat="+encodeURIComponent(a);}
+function ficha(rc){var a=norm(rc);return"https://www1.sedecatastro.gob.es/CYCBienInmueble/OVCConCiud.aspx?UrbRus=U&RefC="+a+"&esBice=&RCBice1=&RCBice2=&DenoBice=&from=OVCBusqueda&pest=rc&RCCompleta="+a+"&final=&del=&mun=";}
+function setMsg(t,bad){R.msg=t;R.bad=!!bad;drawRes();}
+function fallo(e){setMsg("No se ha podido consultar Catastro ("+(e&&e.name==="AbortError"?"tiempo agotado":"el servicio no responde o el navegador no permite la llamada")+"). Puedes añadir la nave manualmente o consultarla en la web oficial de Catastro.",true);R.items=[];drawRes();}
+function buscarRef(){
+  var v=norm(document.getElementById("cat_rc").value);
+  if(v.length!==20&&v.length!==14){setMsg("La referencia catastral tiene 20 caracteres (o 14 para buscar la parcela). Has escrito "+v.length+".",true);return;}
+  if(!/^[0-9A-Z]{14}/.test(v)||(v.length===20&&!/^[0-9A-Z]{18}[A-Z]{2}$/.test(v))){setMsg("El formato no es válido: 7 caracteres, 7 caracteres, 4 dígitos y 2 letras de control.",true);return;}
+  R.busy=true;setMsg("Consultando Catastro…");
+  call("Consulta_DNPRC",{Provincia:"",Municipio:"",RefCat:v}).then(function(r){fin(parse(r),v);}).catch(fallo);
+}
+function buscarDir(){
+  var g=function(i){return document.getElementById(i).value.trim();};
+  var p=g("cat_pr"),m=g("cat_mu"),v=g("cat_vi"),n=g("cat_nu");
+  if(!p||!m||!v||!n){setMsg("Indica provincia, municipio, vía y número.",true);return;}
+  R.busy=true;setMsg("Consultando Catastro…");
+  call("Consulta_DNPLOC",{Provincia:p.toUpperCase(),Municipio:m.toUpperCase(),Sigla:g("cat_tv"),Calle:v.toUpperCase(),Numero:n,Bloque:g("cat_bl"),Escalera:g("cat_es"),Planta:g("cat_pt"),Puerta:g("cat_pu")}).then(function(r){fin(parse(r));}).catch(fallo);
+}
+function fin(p,rc){R.busy=false;
+  if(p.err){R.items=[];setMsg(p.err==="Sin resultados"?"Catastro no ha encontrado ningún inmueble con esos datos.":"Catastro responde: "+p.err,true);return;}
+  if(p.uno){R.items=[p.uno];setMsg("1 inmueble encontrado. Confírmalo para usarlo.");return;}
+  R.items=p.lista.map(function(x){return{rc:x.rc,dir:x.dir,pend:true};});
+  setMsg(R.items.length+" inmuebles encontrados. Elige el que ocupa tu taller y pulsa «Ver datos».");}
+function verDatos(i){var it=R.items[i];if(!it)return;setMsg("Consultando Catastro…");
+  call("Consulta_DNPRC",{Provincia:"",Municipio:"",RefCat:it.rc}).then(function(r){var p=parse(r);if(p.uno){R.items[i]=p.uno;if(!R.items[i].dir)R.items[i].dir=it.dir;setMsg("Confirma el inmueble para usarlo.");}else setMsg(p.err||"No se han podido cargar los datos del inmueble.",true);}).catch(fallo);}
+function usar(i){var it=R.items[i];if(!it||it.pend)return;
+  if(S.naves.some(function(n){return n.rc&&n.rc===it.rc;})){setMsg("Ese inmueble ya está añadido.",true);return;}
+  S.naves.push({id:S.uid++,rc:it.rc,dir:it.dir,uso:it.uso,sfc:it.sfc,parcela:it.parcela,desglose:it.desglose,fecha:new Date().toISOString().slice(0,10),origen:"Catastro (datos no protegidos)",util:"",res:{},disp:"",cnt:{}});
+  save();drawNaves();setMsg("Inmueble añadido a tu autodiagnóstico.");}
+function manual(){S.naves.push({id:S.uid++,rc:"",dir:"Nave introducida manualmente",uso:"",sfc:null,parcela:null,desglose:[],fecha:"",origen:"Entrada manual",util:"",res:{},disp:"",cnt:{}});save();drawNaves();}
+/* ---------- cálculo por nave ---------- */
+function dispOf(n){var d=num(n.disp);if(d!=null)return{v:d,src:"introducida"};var u=num(n.util);if(u==null)return null;var r=0;RES.forEach(function(x){r+=num(n.res&&n.res[x[0]])||0;});return{v:Math.max(0,u-r),src:"útil menos reservas"};}
+function estim(n){var d=dispOf(n),pm=0,pu=0;TIPOS.forEach(function(t){var c=num(n.cnt&&n.cnt[t[0]])||0;pu+=c;pm+=c*dim(t[0]).a;});
+  var pas=num(document.getElementById("i_m2")&&document.getElementById("i_m2").value);var one=S.naves.length===1;
+  var circ,cs;if(one&&pas!=null&&pas>0){circ=pas;cs="pasillos reales";}else{circ=pm*S.circ/100;cs=S.circ+" % de los puestos";}
+  return{d:d,pm:pm,pu:pu,circ:circ,cs:cs,saldo:d?d.v-pm-circ:null};}
+function calcHtml(n){var e=estim(n);var h='<div class="cc"><b>Estimación por superficie</b><br>';
+  if(!e.d)return h+'Pendiente: confirma la superficie disponible (aunque sea aproximada) para estimar los puestos.</div>';
+  if(!e.pu)return h+'Disponible: '+fm(e.d.v)+' m² ('+e.d.src+'). Indica cuántos puestos quieres en esta nave.</div>';
+  var ok=e.saldo>=0;return h+e.pu+' puestos físicos · '+fm(e.pm)+' m² + circulación '+fm(e.circ)+' m² ('+e.cs+') sobre '+fm(e.d.v)+' m² disponibles → saldo <b class="'+(ok?"okk":"badd")+'">'+(ok?"+":"−")+fm(Math.abs(e.saldo))+' m²</b>.'+(ok?' Aunque sobren m², hay que comprobar la distribución con las dimensiones interiores, pilares, portones, rampas y recorridos de maniobra.':' No caben con estas medidas.')+'</div>';}
+function totales(){var ok=S.naves.filter(function(n){return n.sfc!=null;}),cat=S.naves.filter(function(n){return n.origen.indexOf("Catastro")===0;}),s=0;ok.forEach(function(n){s+=n.sfc;});
+  if(!cat.length)return "";var t='<p class="note" style="margin:10px 0 0">Superficie construida registrada: <b>'+(ok.length?fm(s)+" m²":"sin dato")+'</b>';
+  if(ok.length<cat.length)t+=' · <b>suma parcial</b>: '+ok.length+' de '+cat.length+' inmuebles con superficie disponible';
+  return t+'.</p>';}
+/* ---------- dibujo ---------- */
+function drawRes(){var b=document.getElementById("cat_res");if(!b)return;
+  var h=R.msg?'<p class="cmsg'+(R.bad?" bad":"")+'" role="status">'+esc(R.msg)+'</p>':"";
+  R.items.forEach(function(it,i){
+    h+='<div class="cit"><div><b>'+esc(it.rc)+'</b><br>'+esc(it.dir||"Dirección no disponible")+'</div>';
+    if(it.pend){h+='<div class="cd">Sin detalle todavía.</div><div class="ca"><button type="button" class="btn ghost" data-ver="'+i+'">Ver datos</button> <a href="'+ficha(it.rc)+'" target="_blank" rel="noopener">Ficha en Catastro</a></div></div>';return;}
+    h+='<dl class="cd"><dt>Uso catastral</dt><dd>'+esc(it.uso||"No disponible")+'</dd><dt>Superficie construida registrada</dt><dd>'+(it.sfc!=null?fm(it.sfc)+" m²":"No disponible")+'</dd>'+
+      (it.desglose&&it.desglose.length?'<dt>Desglose</dt><dd>'+it.desglose.map(function(c){return esc(c.d||"—")+(c.s!=null?": "+fm(c.s)+" m²":"");}).join(" · ")+'</dd>':"")+
+      '<dt>Superficie de parcela</dt><dd>'+(it.parcela!=null?fm(it.parcela)+" m²":"No disponible")+'</dd></dl>'+
+      '<div class="ca"><button type="button" class="btn" data-usar="'+i+'">Usar estos datos en mi autodiagnóstico</button> <a href="'+link(it.rc)+'" target="_blank" rel="noopener">Consultar cartografía y croquis en Catastro</a></div></div>';});
+  b.innerHTML=h;}
+function inp(id,f,v,u){return '<label class="mi"><span>'+u+'</span><input inputmode="decimal" data-n="'+id+'" data-f="'+f+'" value="'+esc(v==null?"":v)+'"></label>';}
+function drawNaves(){var b=document.getElementById("cat_naves");if(!b)return;var h="";
+  S.naves.forEach(function(n){var man=n.origen==="Entrada manual";
+    h+='<div class="nv" data-nv="'+n.id+'"><div class="nh"><div><b>'+esc(n.dir||"Nave")+'</b>'+(n.rc?'<br><small>'+esc(n.rc)+(n.uso?" · "+esc(n.uso):"")+'</small>':"")+'<br><small>Origen: '+esc(n.origen)+(n.fecha?" · consulta "+n.fecha.split("-").reverse().join("/"):"")+'</small></div><button type="button" class="btn ghost" data-del="'+n.id+'">Quitar</button></div>'+
+    '<div class="mg">'+(man?inp(n.id,"dir",n.dir,"Nombre o dirección de la nave")+inp(n.id,"sfc",n.sfc,"Superficie construida (opcional, m²)"):'<div class="mi"><span>Superficie construida según Catastro</span><b>'+(n.sfc!=null?fm(n.sfc)+" m²":"Sin dato en Catastro")+'</b>'+(n.parcela!=null?'<small>Parcela: '+fm(n.parcela)+' m²</small>':'')+'</div>')+
+    inp(n.id,"util",n.util,"Superficie útil interior del taller (m²)")+'</div>'+
+    '<details><summary>Reservas que se restan de la útil: oficinas, vestuarios, almacén, cuartos técnicos, espera</summary><div class="mg">'+RES.map(function(r){return inp(n.id,"r_"+r[0],(n.res||{})[r[0]],r[1]+" (m²)");}).join("")+'</div></details>'+
+    '<div class="mg">'+inp(n.id,"disp",n.disp,"Superficie disponible para puestos y maniobra (m²)")+'<p class="hint dsp" data-dsp="'+n.id+'"></p></div>'+
+    '<details open><summary>Puestos físicos que quieres en esta nave</summary><div class="mg">'+TIPOS.map(function(t){return inp(n.id,"c_"+t[0],(n.cnt||{})[t[0]],t[1]);}).join("")+'</div></details>'+
+    '<div data-calc="'+n.id+'"></div></div>';});
+  b.innerHTML=h+(S.naves.length?'<div id="cat_tot"></div>':"");updCalc();}
+function updCalc(){S.naves.forEach(function(n){var c=document.querySelector('[data-calc="'+n.id+'"]');if(c)c.innerHTML=calcHtml(n);var d=document.querySelector('[data-dsp="'+n.id+'"]'),x=dispOf(n);
+  if(d)d.textContent=x?(x.src==="introducida"?"Se usa la cifra introducida; no se restan de nuevo las reservas.":"Calculada: útil menos reservas = "+fm(x.v)+" m². Si introduces la disponible directamente, prevalece."):"Introdúcela directamente o indica la útil y las reservas.";});
+  var t=document.getElementById("cat_tot");if(t)t.innerHTML=totales();}
+function drawDims(){var b=document.getElementById("cat_dims");if(!b)return;
+  b.innerHTML='<table class="tbl"><thead><tr><th>Puesto</th><th class="n">Ancho (m)</th><th class="n">Fondo (m)</th><th class="n">m²</th></tr></thead><tbody>'+TIPOS.map(function(t){var d=dim(t[0]);var s=S.dims[t[0]]||{};return '<tr><td>'+t[1]+'</td><td class="n"><input class="dm" inputmode="decimal" data-dim="'+t[0]+'" data-k="w" placeholder="'+t[2]+'" value="'+esc(s.w==null?"":s.w)+'"></td><td class="n"><input class="dm" inputmode="decimal" data-dim="'+t[0]+'" data-k="d" placeholder="'+t[3]+'" value="'+esc(s.d==null?"":s.d)+'"></td><td class="n" data-da="'+t[0]+'">'+fm(d.a)+'</td></tr>';}).join("")+'</tbody></table>'+
+    '<div class="mg" style="margin-top:12px"><label class="mi"><span>Reserva de circulación y maniobra (% sobre los m² de puestos)</span><input inputmode="decimal" id="cat_circ" value="'+S.circ+'"></label></div><p class="hint">Medidas de anteproyecto editables. La cabina es una reserva inicial: ajústala con el plano del fabricante.</p>';}
+function build(){var fs=document.getElementById("fsI");if(!fs||document.getElementById("catBox"))return;
+  var box=document.createElement("div");box.id="catBox";
+  box.innerHTML='<div class="catbar"><button type="button" class="btn ghost" id="catOpen" aria-expanded="false">Buscar mis instalaciones en Catastro</button><button type="button" class="btn ghost" id="catMan">Añadir nave manualmente</button></div>'+
+  '<div id="catPanel" hidden><div class="tabs"><button type="button" id="ct1" aria-pressed="true">Por referencia catastral</button><button type="button" id="ct2" aria-pressed="false">Por dirección</button></div>'+
+  '<div id="cf1" class="mg"><label class="mi"><span>Referencia catastral (20 caracteres; con 14 se busca la parcela)</span><input id="cat_rc" maxlength="24" autocomplete="off" placeholder="0000000XX0000X0000XX"></label><div class="mi"><span>&nbsp;</span><button type="button" class="btn" id="cat_b1">Buscar</button></div></div>'+
+  '<div id="cf2" class="mg" hidden><label class="mi"><span>Provincia</span><input id="cat_pr"></label><label class="mi"><span>Municipio</span><input id="cat_mu"></label><label class="mi"><span>Tipo de vía</span><select id="cat_tv">'+VIAS.map(function(v){return'<option value="'+v[0]+'">'+v[1]+'</option>';}).join("")+'</select></label><label class="mi"><span>Vía</span><input id="cat_vi"></label><label class="mi"><span>Número</span><input id="cat_nu"></label><label class="mi"><span>Bloque (opcional)</span><input id="cat_bl"></label><label class="mi"><span>Escalera (opcional)</span><input id="cat_es"></label><label class="mi"><span>Planta (opcional)</span><input id="cat_pt"></label><label class="mi"><span>Puerta o nave (opcional)</span><input id="cat_pu"></label><div class="mi"><span>&nbsp;</span><button type="button" class="btn" id="cat_b2">Buscar</button></div></div>'+
+  '<div id="cat_res" aria-live="polite"></div><p class="hint">Se consultan solo datos públicos de la Dirección General del Catastro. Si el servicio falla o no encuentra el inmueble, añade la nave manualmente.</p></div>'+
+  '<p class="note" style="margin:14px 0 0">Catastro muestra la superficie registrada. Para estimar los puestos, confirma la superficie aprovechable con un plano o una medición del taller.</p>'+
+  '<div id="cat_naves"></div><details class="dd"><summary>Dimensiones de los puestos y circulación (editables)</summary><div id="cat_dims"></div></details>';
+  fs.appendChild(box);drawNaves();drawDims();
+  var q=function(i){return document.getElementById(i);};
+  q("catOpen").onclick=function(){var p=q("catPanel");p.hidden=!p.hidden;q("catOpen").setAttribute("aria-expanded",!p.hidden);};
+  q("catMan").onclick=manual;
+  q("ct1").onclick=function(){q("cf1").hidden=false;q("cf2").hidden=true;q("ct1").setAttribute("aria-pressed","true");q("ct2").setAttribute("aria-pressed","false");};
+  q("ct2").onclick=function(){q("cf1").hidden=true;q("cf2").hidden=false;q("ct2").setAttribute("aria-pressed","true");q("ct1").setAttribute("aria-pressed","false");};
+  q("cat_b1").onclick=buscarRef;q("cat_b2").onclick=buscarDir;
+  box.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target.tagName==="INPUT"){e.preventDefault();if(e.target.id==="cat_rc")buscarRef();else if(/^cat_(pr|mu|vi|nu|bl|es|pt|pu)$/.test(e.target.id))buscarDir();}});
+  box.addEventListener("click",function(e){var t=e.target;if(t.dataset.ver!=null)verDatos(+t.dataset.ver);if(t.dataset.usar!=null)usar(+t.dataset.usar);
+    if(t.dataset.del!=null){S.naves=S.naves.filter(function(n){return n.id!==+t.dataset.del;});save();drawNaves();}});
+  box.addEventListener("input",function(e){var t=e.target;
+    if(t.dataset.n){var n=S.naves.filter(function(x){return x.id===+t.dataset.n;})[0];if(!n)return;var f=t.dataset.f;
+      if(f==="dir")n.dir=t.value;else if(f==="sfc")n.sfc=num(t.value);else if(f==="util")n.util=t.value;else if(f==="disp")n.disp=t.value;
+      else if(f.indexOf("r_")===0){n.res=n.res||{};n.res[f.slice(2)]=t.value;}else if(f.indexOf("c_")===0){n.cnt=n.cnt||{};n.cnt[f.slice(2)]=t.value;}
+      save();updCalc();}
+    else if(t.dataset.dim){S.dims[t.dataset.dim]=S.dims[t.dataset.dim]||{};S.dims[t.dataset.dim][t.dataset.k]=t.value===""?null:num(t.value);var c=document.querySelector('[data-da="'+t.dataset.dim+'"]');if(c)c.textContent=fm(dim(t.dataset.dim).a);save();updCalc();}
+    else if(t.id==="cat_circ"){var v=num(t.value);S.circ=v==null?50:Math.max(0,v);save();updCalc();}});
+  var i2=document.getElementById("i_m2");if(i2)i2.addEventListener("input",updCalc);
+}
+function report(o){if(!S.naves.length)return "";var rows=S.naves.map(function(n){var e=estim(n);return '<tr><td>'+esc(n.dir||"Nave")+'</td><td class="n">'+(e.d?fm(e.d.v)+" m²":"Pendiente")+'</td><td class="n">'+e.pu+'</td><td class="n">'+(e.pu?fm(e.pm+e.circ)+" m²":"—")+'</td><td>'+(e.d&&e.pu?(e.saldo>=0?'<span class="st ok">Caben (+'+fm(e.saldo)+' m²)</span>':'<span class="st bad">Faltan '+fm(-e.saldo)+' m²</span>'):'<span class="st na">Sin dato</span>')+'</td></tr>';}).join("");
+  var op=(o.dir||0),pf=S.naves.reduce(function(a,n){return a+(Object.keys(n.cnt||{}).reduce(function(b,k){return b+(num(n.cnt[k])||0);},0));},0);
+  return '<div class="block"><h3>Estimación por superficie</h3><div class="scroll"><table class="tbl"><thead><tr><th>Nave</th><th class="n">Disponible</th><th class="n">Puestos</th><th class="n">m² con circulación</th><th>Resultado</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+   '<p class="note" style="margin-top:12px">Puestos físicos: '+pf+'. Operarios directos: '+op+'. No es lo mismo: un puesto físico no es un operario, y la capacidad de reparación diaria depende de las horas facturables, no de los puestos (pendiente de calcular). La distribución física sigue pendiente de comprobar con las dimensiones interiores, pilares, portones, rampas y recorridos de maniobra.</p></div>';}
+window.AGP_CAT={dim:dim,report:report,clear:function(){S.naves=[];S.dims={};S.circ=50;try{localStorage.removeItem(KEYC);}catch(e){}drawNaves();drawDims();},_parse:parse};
+load();build();
+var c=document.getElementById("clr");if(c)c.addEventListener("click",function(){window.AGP_CAT.clear();});
 })();
 </script>
 </body>
