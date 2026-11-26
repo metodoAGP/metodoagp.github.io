@@ -171,6 +171,7 @@ button{cursor:pointer}
 .pg{display:flex;align-items:center;gap:7px;font:600 10.5px var(--body)}.pgb{flex:1;height:6px;border-radius:99px;background:rgba(0,0,0,.16);overflow:hidden}.pgb i{display:block;height:100%;background:rgba(0,0,0,.62);border-radius:99px}
 .al{align-self:flex-start;max-width:100%;font:700 11px var(--body);padding:3px 8px;border-radius:6px;background:rgba(0,0,0,.14);color:var(--k-ink)}.al.r{background:#c92f26;color:#fff}.al.b{background:#7a4a00;color:#fff}.al.g{background:#1f6b3a;color:#fff}
 .r0{display:flex}.or{white-space:nowrap}
+.ptag{font:700 10px var(--body);padding:1px 7px;border-radius:999px;background:#7a1f1a;color:#fff;white-space:nowrap;margin-right:4px;text-transform:uppercase;letter-spacing:.03em}
 .dtag{font:700 10px var(--body);padding:1px 7px;border-radius:999px;background:rgba(0,0,0,.13);color:var(--k-ink);white-space:nowrap}.dtag.r{background:#c92f26;color:#fff}
 .sp{display:flex;align-items:center;gap:6px;align-self:flex-start;max-width:100%;background:rgba(255,255,255,.6);border-radius:6px;padding:3px 8px;font:500 11.5px var(--body);color:var(--k-ink)}
 .sp i{width:8px;height:8px;border-radius:50%;background:var(--k-ink);flex:none}.sp b{font-weight:700}.sp span{min-width:0}
@@ -393,6 +394,7 @@ table.heat{min-width:640px}
   function COLSV(){return COLS.filter(function(k){return colOn(k[0])||st.cards.some(function(c){return c.st===k[0]})})}
   normSt();
   function norm(c){ // migra estados antiguos y completa los campos de los procesos virtuales
+    c.pr=c.pr==='PRIORITARIO'?'PRIORITARIO':'NORMAL';
     var old=c.st;c.st=lg(c.st);
     if(c.mr===undefined&&c.mi===undefined){c.mr=0;c.mi=c.m||0}
     c.m=(c.mr||0)+(c.mi||0);
@@ -425,7 +427,7 @@ table.heat{min-width:640px}
     if(f.q){var q=f.q.toLowerCase();if(c.id.toLowerCase().indexOf(q)<0&&c.pl.toLowerCase().indexOf(q)<0)return false}
     if(f.as&&String(c.as)!==f.as)return false;
     if(f.ins&&c.ins!==f.ins)return false;
-    if(f.pri&&c.pr!==f.pri)return false;
+    
     if(f.tc&&dayKey(c)!==f.tc)return false;
     if(f.due){var d=due(c.sal).d;
       if(f.due==='v'&&d>=0)return false;
@@ -449,9 +451,20 @@ table.heat{min-width:640px}
     var pct=cap>0?Math.round(v/cap*100):null,cls=pct===null?'':(pct>=100?'':(pct>=70?'mid':'low')),f1=function(x){return String(Math.round(x*10)/10).replace('.',',')};
     return '<div class="bar" title="'+esc(tip||'')+'"><b><span>'+label+'</span> <em>'+(pct===null?'—':pct+'%')+'</em></b><div class="track"><i class="'+cls+'" style="width:'+(pct===null?0:Math.min(pct,100))+'%"></i></div><small>'+(unit?fh(v)+' / '+fh(cap):f1(v)+' / '+f1(cap))+'</small></div>';
   }
+  function m2Sum(I){
+    var a=+I.m1||0,b=+I.m2||0,c=+I.m3||0,t=a+b+c,pt=+I.pt||0,o='';
+    if(!t)return '<p class="cap">Indica los m² de cada zona para ver el reparto.</p>';
+    var pc=function(x){return Math.round(x/t*100)+' %'};
+    o+='<dl class="kv"><dt>Total del local</dt><dd><b>'+t+' m²</b></dd><dt>Primaria</dt><dd>'+a+' m² · '+pc(a)+'</dd><dt>Secundaria</dt><dd>'+b+' m² · '+pc(b)+'</dd><dt>Terciaria</dt><dd>'+c+' m² · '+pc(c)+'</dd>';
+    if(pt&&a)o+='<dt>m² primaria por puesto</dt><dd>'+(a/pt).toFixed(1).replace('.',',')+' m²</dd>';
+    if(pt&&b&&a)o+='<dt>Circulación por m² de puesto</dt><dd>'+(b/a).toFixed(2).replace('.',',')+' m²</dd>';
+    if(+I.pkp&&+I.pk)o+='<dt>m² por plaza de parking</dt><dd>'+(I.pk/I.pkp).toFixed(1).replace('.',',')+' m²</dd>';
+    return o+'</dl>';
+  }
   function instBars(all){
     var I=st.inst||{},o='',n=0;
     if(I.cab>0&&st.ops.p>0){o+=barU('Cabina',all.p*0.25,I.cab*st.hpd*st.days,' h','Horas de cabina (25 % de las horas de pintura) frente a la capacidad de las cabinas');n++}
+    if(I.pkp>0){var fu=st.cards.filter(function(c){return live(c)&&c.st!=='stk'}).length-(I.pt||0);o+=barU('Parking',Math.max(0,fu),I.pkp,'','Vehículos que no caben en puestos de trabajo frente a plazas de parking');n++}
     if(I.pt>0){var enT=st.cards.filter(function(c){return live(c)&&c.st!=='stk'}).length;o+=barU('Puestos',enT,I.pt,'','Vehículos en el taller (sin stock) frente a puestos de trabajo');n++}
     return {h:o,n:n}}
   function bar(label,h,cap){
@@ -692,7 +705,7 @@ table.heat{min-width:640px}
     var d=due(c.sal),hrs=[],rk=riskOf(c),sa=cardState(c),al=alertOf(c,rk,sa);
     secList().forEach(function(k){var h=hs(c,k[0]);if(h)hrs.push(SECS[k[0]]+' '+fh(h))});
     return '<article class="card t-'+dayCol(c)+'" draggable="true" tabindex="0" data-id="'+esc(c.id)+'" aria-label="OR '+esc(c.id)+', '+esc(c.pl)+'">'+
-      '<div class="r0"><span class="dtag'+(rk?' r':'')+'" title="Fecha de entrega comprometida'+(rk==='r'?' · en riesgo de no llegar':'')+'">Entrega '+ddmm(c.sal)+'</span></div><div class="r1"><span class="or">'+esc(c.id)+'</span>'+(c.cm?'<span class="cm has" title="Comentarios">'+c.cm+'</span>':'')+'</div>'+
+      '<div class="r0">'+(c.pr==='PRIORITARIO'?'<span class="ptag" title="Prioritario: se hace antes que el resto">Prioritario</span>':'')+'<span class="dtag'+(rk?' r':'')+'" title="Fecha de entrega comprometida'+(rk==='r'?' · en riesgo de no llegar':'')+'">Entrega '+ddmm(c.sal)+'</span></div><div class="r1"><span class="or">'+esc(c.id)+'</span>'+(c.cm?'<span class="cm has" title="Comentarios">'+c.cm+'</span>':'')+'</div>'+
       '<div class="r2"><span class="plate"><i></i>'+esc(c.pl)+'</span></div>'+
       '<div class="car">'+esc(c.car)+' · '+esc(c.col)+'</div>'+
       '<div class="ins">Seguro: '+esc(c.ins)+'</div>'+
@@ -867,7 +880,7 @@ table.heat{min-width:640px}
     '</div></div>';
     var leg='<div class="wrap"><div class="leg"><b>Color de la tarjeta:</b>'+LEGC.map(function(d){return '<span><i style="background:var(--k-'+d[0]+')"></i>'+d[1]+'</span>'}).join('')+'<span><span class="dtag r">Entrega</span>&nbsp;roja = en riesgo o vencida</span></div></div>';
     var board='<div class="wrap"><div class="board" id="board">'+COLSV().map(function(col){
-      var list=st.cards.filter(function(c){return c.st===col[0]&&visible(c)});
+      var list=st.cards.filter(function(c){return c.st===col[0]&&visible(c)}).sort(function(a,b){return (b.pr==='PRIORITARIO')-(a.pr==='PRIORITARIO')});
       var s=sums(list);
       return '<section class="col" data-col="'+col[0]+'"><h2>'+col[1]+'<em>'+s.n+'</em></h2>'+
         '<div class="tot">'+fe(s.eur)+' T:'+fh(s.t)+' '+tots(s)+'</div>'+
@@ -883,7 +896,7 @@ table.heat{min-width:640px}
   function selV(c,k,lab,arr){return '<label>'+lab+'<select data-v="'+k+'" data-id="'+esc(c.id)+'">'+arr.map(function(o){return '<option'+(c[k]===o?' selected':'')+'>'+esc(o)+'</option>'}).join('')+'</select></label>'}
   function asgDlg(c){
     var F=fich(),names=(F&&F.emps?F.emps.map(function(e){return e.name}):[]);if(c.op&&names.indexOf(c.op)<0)names.push(c.op);
-    return '<div class="gst"><h4>Operario y bloqueo</h4><div class="g2"><label>Operario asignado<select data-asg="op" data-id="'+esc(c.id)+'"><option value="">Sin asignar</option>'+names.map(function(n){return '<option'+(c.op===n?' selected':'')+'>'+esc(n)+'</option>'}).join('')+'</select></label>'+
+    return '<div class="gst"><h4>Operario, prioridad y bloqueo</h4><div class="g2"><label>Prioridad<select data-asg="pr" data-id="'+esc(c.id)+'"><option value="NORMAL"'+(c.pr!=='PRIORITARIO'?' selected':'')+'>Normal</option><option value="PRIORITARIO"'+(c.pr==='PRIORITARIO'?' selected':'')+'>Prioritario</option></select></label><label>Operario asignado<select data-asg="op" data-id="'+esc(c.id)+'"><option value="">Sin asignar</option>'+names.map(function(n){return '<option'+(c.op===n?' selected':'')+'>'+esc(n)+'</option>'}).join('')+'</select></label>'+
       '<label>Bloqueo manual<select data-asg="bq" data-id="'+esc(c.id)+'"><option value="">Sin bloqueo</option>'+BQ.map(function(n){return '<option'+(c.bq===n?' selected':'')+'>'+esc(n)+'</option>'}).join('')+'</select></label></div>'+
       '<p class="cap" style="margin:6px 0 0">Estado ahora: <b>'+esc(cardState(c).who)+', '+esc(cardState(c).txt)+'</b>. Se bloquea solo si la peritación o el recambio siguen pendientes.</p></div>';
   }
@@ -917,6 +930,7 @@ table.heat{min-width:640px}
       '<label>Matrícula<input id="n-pl" required maxlength="10" placeholder="0000ABC"></label>'+
       '<label class="full">Vehículo<input id="n-car" required placeholder="Toyota Corolla"></label>'+
       '<label>Seguro<input id="n-ins" placeholder="Aseguradora"></label>'+
+      '<label>Prioridad<select id="n-pri"><option value="NORMAL">Normal</option><option value="PRIORITARIO">Prioritario</option></select></label>'+
       '<label>Fecha de entrada<input id="n-ent" type="date" required value="'+iso(1)+'"></label>'+
       '<label>Fecha de salida prevista<input id="n-sal" type="date" required value="'+iso(5)+'"></label>'+
       (secOn('c')?'<label>Horas chapa<input id="n-c" type="number" min="0" step="0.5" value="0"></label>':'')+
@@ -947,6 +961,13 @@ table.heat{min-width:640px}
         '<label>Cabinas de pintura<input type="number" min="0" step="1" id="s-cab" value="'+((st.inst&&st.inst.cab)||0)+'"></label>'+
         '<label>Puestos de trabajo<input type="number" min="0" step="1" id="s-pt" value="'+((st.inst&&st.inst.pt)||0)+'"></label>'+
       '</div></div>'+
+      '<div class="gst"><h4>Superficie del taller (m²)</h4><p class="cap">El local se reparte en tres zonas. El parking es exterior.</p><div class="g2">'+
+        '<label>Zona primaria · puestos de trabajo<input type="number" min="0" step="1" id="s-m1" value="'+((st.inst&&st.inst.m1)||0)+'"></label>'+
+        '<label>Zona secundaria · pasillos y circulación<input type="number" min="0" step="1" id="s-m2" value="'+((st.inst&&st.inst.m2)||0)+'"></label>'+
+        '<label>Zona terciaria · baños, oficinas, almacén<input type="number" min="0" step="1" id="s-m3" value="'+((st.inst&&st.inst.m3)||0)+'"></label>'+
+        '<label>Parking exterior (m²)<input type="number" min="0" step="1" id="s-pk" value="'+((st.inst&&st.inst.pk)||0)+'"></label>'+
+        '<label>Plazas de parking<input type="number" min="0" step="1" id="s-pkp" value="'+((st.inst&&st.inst.pkp)||0)+'"></label></div>'+
+        '<div id="m2sum">'+m2Sum(st.inst||{})+'</div></div>'+
       '<div class="gst"><h4>Secciones del taller</h4><p class="cap">Marca las secciones que tiene tu taller. Lo que no marques se oculta en todo el planificador.</p>'+SECK.map(function(k){return '<label class="chk"><input type="checkbox" data-sec="'+k[0]+'"'+(secOn(k[0])?' checked':'')+'> '+k[1]+'</label>'}).join('')+'<p class="cap">Mecánica rápida: mantenimiento (aceite, filtros, ruedas). Mecánica incidental: averías, motor y diagnosis.</p></div>'+
       '<p class="note" style="padding-bottom:0">La capacidad de cada sección es operarios × horas del horario productivo × días laborables. Las cabinas y los puestos de trabajo sirven para vigilar el cuello de botella de cabina y la ocupación del taller (y, más adelante, el ciclo y la estructura óptima).</p>'+
       '<div class="row"><button class="btn danger" type="button" id="clrAll">Vaciar todos los coches</button><button class="btn danger" type="button" id="rst">Restaurar datos de ejemplo</button><button class="btn" type="button" data-close>Cerrar</button><button class="btn primary" type="button" id="sOk">Guardar</button></div>');
@@ -1037,7 +1058,7 @@ table.heat{min-width:640px}
       return h>1e-9?N:end;
     }
     function need(h,l){return h>0?Math.ceil(h/l-1e-9):0}
-    return list.slice().sort(function(a,b){return a.sal<b.sal?-1:a.sal>b.sal?1:0}).map(function(c){
+    return list.slice().sort(function(a,b){var pa=a.pr==='PRIORITARIO'?0:1,pb=b.pr==='PRIORITARIO'?0:1;if(pa!==pb)return pa-pb;return a.sal<b.sal?-1:a.sal>b.sal?1:0}).map(function(c){
       var r=REM[c.st]||[1,1,1],rc=hs(c,'c')*r[0],rp=hs(c,'p')*r[1],rr=hs(c,'r')*r[2],ri=hs(c,'i')*r[2],rm=rr+ri,s0=delayOf(c);
       var ec=alloc('c',rc,s0),ep=alloc('p',rp,ec+1),er=alloc('r',rr,s0),ei=alloc('i',ri,s0);
       var fin=Math.max(ec,ep,er,ei,s0);
@@ -1188,7 +1209,7 @@ table.heat{min-width:640px}
         else if(o.p&&w[1][0]<w[0][1])bad='La tarde no puede empezar antes de acabar la mañana'});
       if(bad){toast(bad);return}
       st.hor=nh;secList().forEach(function(k){var e=$('#s-op-'+k[0]);if(e)st.ops[k[0]]=Math.max(0,Math.round(num(e.value)||0))});
-      st.ops.n=Math.max(0,Math.round(num($('#s-op-n').value)||0));st.days=Math.min(7,Math.max(1,Math.round(num($('#s-days').value)||5)));st.inst={cab:Math.max(0,Math.round(num($('#s-cab').value)||0)),pt:Math.max(0,Math.round(num($('#s-pt').value)||0))};
+      st.ops.n=Math.max(0,Math.round(num($('#s-op-n').value)||0));st.days=Math.min(7,Math.max(1,Math.round(num($('#s-days').value)||5)));st.inst={cab:Math.max(0,Math.round(num($('#s-cab').value)||0)),pt:Math.max(0,Math.round(num($('#s-pt').value)||0))};['m1','m2','m3','pk','pkp'].forEach(function(k){st.inst[k]=Math.max(0,Math.round(num($('#s-'+k).value)||0))});
       st.hpd=hrsOf(nh.prod);save();closeDlg();render();toast('Ajustes guardados · jornada productiva de '+hrSum('prod').replace(' al día',''));return}
     var op=t.closest('[data-open]');if(op){cardDlg(op.dataset.open);return}
     var card=t.closest('.card');if(card&&!card.classList.contains('drag')){cardDlg(card.dataset.id)}
@@ -1241,12 +1262,13 @@ table.heat{min-width:640px}
     if(e.target.id==='nf'){
       if($('#n-ent').value&&$('#n-sal').value<$('#n-ent').value){toast('La salida no puede ser anterior a la entrada');return}
       var max=0;st.cards.forEach(function(c){var n=parseInt(c.id,10);if(n>max)max=n});
-      st.cards.push({id:(max+1)+'-2026',pr:'NORMAL',pl:$('#n-pl').value.toUpperCase().trim(),car:$('#n-car').value.trim(),col:'',ins:$('#n-ins').value.trim()||'Particular',
+      st.cards.push({id:(max+1)+'-2026',pr:($('#n-pri')&&$('#n-pri').value)||'NORMAL',pl:$('#n-pl').value.toUpperCase().trim(),car:$('#n-car').value.trim(),col:'',ins:$('#n-ins').value.trim()||'Particular',
         c:$('#n-c')?num($('#n-c').value):0,mr:$('#n-mr')?num($('#n-mr').value):0,mi:$('#n-mi')?num($('#n-mi').value):0,p:$('#n-p')?num($('#n-p').value):0,eur:num($('#n-e').value),st:$('#n-st').value,tc:'white',rec:1,as:1,ge:1,sal:$('#n-sal').value,ct:'0/0',cm:0,ic:['car'],ent:$('#n-ent').value||iso(0),mv:iso(0),prov:''});
       norm(st.cards[st.cards.length-1]);save();closeDlg();render();toast('Cita añadida');
     }
   });
-  document.addEventListener('input',function(e){if(e.target.dataset&&e.target.dataset.arq!==undefined){arQ=e.target.value;var pos=e.target.selectionStart;render();var q=$('[data-arq]');if(q){q.focus();q.setSelectionRange(pos,pos)}return}if(e.target.id==='q'&&e.target.value===''&&f.q){f.q='';render()}});
+  document.addEventListener('input',function(e){if(e.target.id&&/^s-(m1|m2|m3|pk|pkp|pt)$/.test(e.target.id)&&$('#m2sum')){var I={};['m1','m2','m3','pk','pkp','pt'].forEach(function(k){I[k]=num($('#s-'+k).value)||0});$('#m2sum').innerHTML=m2Sum(I)}
+    if(e.target.dataset&&e.target.dataset.arq!==undefined){arQ=e.target.value;var pos=e.target.selectionStart;render();var q=$('[data-arq]');if(q){q.focus();q.setSelectionRange(pos,pos)}return}if(e.target.id==='q'&&e.target.value===''&&f.q){f.q='';render()}});
 
   // arrastrar y soltar
   var dragId=null;
@@ -1270,7 +1292,7 @@ table.heat{min-width:640px}
       var ex=st.cards.filter(function(c){return c.src===x.uid})[0];
       if(ex){if(x.ot)ex.ot=x.ot;if(x.cita){ex.cita=x.cita;ex.ent=x.cita.slice(0,10);if(x.tel)ex.tel=x.tel;if(x.email)ex.email=x.email;n++}return}
       var max=0;st.cards.forEach(function(c){var k=parseInt(c.id,10);if(k>max)max=k});
-      st.cards.push({id:(max+1)+'-2026',pr:x.pr||'NORMAL',pl:(x.pl||'SIN MATRÍCULA').toUpperCase(),car:x.car||'Vehículo',col:'',ins:x.ins||'Particular',
+      st.cards.push({id:(max+1)+'-2026',pr:x.pr==='PRIORITARIO'?'PRIORITARIO':'NORMAL',pl:(x.pl||'SIN MATRÍCULA').toUpperCase(),car:x.car||'Vehículo',col:'',ins:x.ins||'Particular',
         c:num(x.c),m:num(x.m),mr:num(x.mr),mi:num(x.mi),p:num(x.p),ot:x.ot||null,eur:num(x.eur),st:x.st||'rec',tc:'white',rec:1,as:1,ge:1,sal:x.sal||iso(7),ct:'0/0',cm:0,ic:['car'],ent:iso(0),mv:iso(0),prov:'',src:x.uid,origen:'Tasador rápido',cliente:x.cliente||'',obs:x.obs||'',tel:x.tel||'',email:x.email||'',cita:x.cita||''});
       norm(st.cards[st.cards.length-1]);
       if(x.cita)st.cards[st.cards.length-1].ent=x.cita.slice(0,10);
