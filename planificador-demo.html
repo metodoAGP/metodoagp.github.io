@@ -445,6 +445,15 @@ table.heat{min-width:640px}
     return '<option value="">'+first+'</option>'+arr.map(function(a){var v=Array.isArray(a)?a[0]:a,l=Array.isArray(a)?a[1]:a;return '<option value="'+esc(v)+'"'+(String(sel)===String(v)?' selected':'')+'>'+esc(l)+'</option>'}).join('');
   }
 
+  function barU(label,v,cap,unit,tip){
+    var pct=cap>0?Math.round(v/cap*100):null,cls=pct===null?'':(pct>=100?'':(pct>=70?'mid':'low')),f1=function(x){return String(Math.round(x*10)/10).replace('.',',')};
+    return '<div class="bar" title="'+esc(tip||'')+'"><b><span>'+label+'</span> <em>'+(pct===null?'—':pct+'%')+'</em></b><div class="track"><i class="'+cls+'" style="width:'+(pct===null?0:Math.min(pct,100))+'%"></i></div><small>'+(unit?fh(v)+' / '+fh(cap):f1(v)+' / '+f1(cap))+'</small></div>';
+  }
+  function instBars(all){
+    var I=st.inst||{},o='',n=0;
+    if(I.cab>0&&st.ops.p>0){o+=barU('Cabina',all.p*0.25,I.cab*st.hpd*st.days,' h','Horas de cabina (25 % de las horas de pintura) frente a la capacidad de las cabinas');n++}
+    if(I.pt>0){var enT=st.cards.filter(function(c){return live(c)&&c.st!=='stk'}).length;o+=barU('Puestos',enT,I.pt,'','Vehículos en el taller (sin stock) frente a puestos de trabajo');n++}
+    return {h:o,n:n}}
   function bar(label,h,cap){
     var pct=cap>0?Math.round(h/cap*100):null;
     var cls=pct===null?'':(pct>=100?'':(pct>=70?'mid':'low'));
@@ -684,7 +693,7 @@ table.heat{min-width:640px}
     secList().forEach(function(k){var h=hs(c,k[0]);if(h)hrs.push(SECS[k[0]]+' '+fh(h))});
     return '<article class="card t-'+dayCol(c)+'" draggable="true" tabindex="0" data-id="'+esc(c.id)+'" aria-label="OR '+esc(c.id)+', '+esc(c.pl)+'">'+
       '<div class="r0"><span class="dtag'+(rk?' r':'')+'" title="Fecha de entrega comprometida'+(rk==='r'?' · en riesgo de no llegar':'')+'">Entrega '+ddmm(c.sal)+'</span></div><div class="r1"><span class="or">'+esc(c.id)+'</span>'+(c.cm?'<span class="cm has" title="Comentarios">'+c.cm+'</span>':'')+'</div>'+
-      '<div class="r2"><span class="pri p-'+esc(c.pr)+'">'+esc(c.pr)+'</span><span class="plate"><i></i>'+esc(c.pl)+'</span></div>'+
+      '<div class="r2"><span class="plate"><i></i>'+esc(c.pl)+'</span></div>'+
       '<div class="car">'+esc(c.car)+' · '+esc(c.col)+'</div>'+
       '<div class="ins">Seguro: '+esc(c.ins)+'</div>'+
       '<div class="hrs">'+hrs.join(' · ')+' <b>'+fe(c.eur)+'</b></div>'+avance(c)+'<div class="sp'+(sa.k==='green'?' g':'')+'" title="Estado y operario"><i></i><span><b>'+esc(sa.who)+'</b>, '+esc(sa.txt)+'</span></div>'+(al?'<div class="al '+al.k+'">'+esc(al.t)+'</div>':'')+vChips(c)+phBadge(c)+
@@ -842,12 +851,11 @@ table.heat{min-width:640px}
     var filt='<div class="filters"><div class="wrap">'+
       '<label class="chip"><span>Asesor:</span><select data-f="as">'+opts(asesores.map(function(a){return [a,'Asesor '+a]}),f.as,'todos')+'</select></label>'+
       '<label class="chip"><span>Seguro:</span><select data-f="ins">'+opts(seguros,f.ins,'todos')+'</select></label>'+
-      '<label class="chip"><span>Prioridad:</span><select data-f="pri">'+opts(['RÁPIDO','FUERTE','MEDIO','NORMAL'],f.pri,'todas')+'</select></label>'+
       '<label class="chip"><span>Plazo:</span><select data-f="due">'+opts([['v','Vencidas'],['h','Hoy'],['f','Próximas']],f.due,'todos')+'</select></label>'+
       '<label class="chip"><span>Día de entrega:</span><select data-f="tc">'+opts(DOWF,f.tc,'todos')+'</select></label>'+
       (f.q||f.as||f.ins||f.pri||f.due||f.tc?'<button class="clear" type="button" id="clr">Quitar filtros</button>':'')+
     '</div></div>';
-    var sl=secList(),capT=0;sl.forEach(function(k){capT+=cap(st.ops[k[0]]||0)});
+    var sl=secList(),capT=0,ib=instBars(all);sl.forEach(function(k){capT+=cap(st.ops[k[0]]||0)});
     var sum='<div class="sum"><div class="wrap">'+
       '<div class="big">'+all.n+'<small>VEHÍCULOS</small></div>'+
       '<div class="stats">'+
@@ -855,7 +863,7 @@ table.heat{min-width:640px}
         sl.map(function(k){return '<div class="stat"><b>'+SECL[k[0]]+'</b><span>'+fh(all[k[0]])+'</span></div>'}).join('')+
         '<div class="stat"><b>Importe</b><span>'+fe(all.eur)+'</span></div>'+
       '</div>'+
-      '<div class="bars" style="--nb:'+(sl.length+1)+'">'+sl.map(function(k){return bar(SECL[k[0]],all[k[0]],cap(st.ops[k[0]]||0))}).join('')+bar('Total',all.t,capT)+'</div>'+
+      '<div class="bars" style="--nb:'+(sl.length+1+ib.n)+'">'+sl.map(function(k){return bar(SECL[k[0]],all[k[0]],cap(st.ops[k[0]]||0))}).join('')+bar('Total',all.t,capT)+ib.h+'</div>'+
     '</div></div>';
     var leg='<div class="wrap"><div class="leg"><b>Color de la tarjeta:</b>'+LEGC.map(function(d){return '<span><i style="background:var(--k-'+d[0]+')"></i>'+d[1]+'</span>'}).join('')+'<span><span class="dtag r">Entrega</span>&nbsp;roja = en riesgo o vencida</span></div></div>';
     var board='<div class="wrap"><div class="board" id="board">'+COLSV().map(function(col){
@@ -907,7 +915,6 @@ table.heat{min-width:640px}
   function newDlg(){
     openDlg('<h3>Nueva cita</h3><form id="nf"><div class="grid">'+
       '<label>Matrícula<input id="n-pl" required maxlength="10" placeholder="0000ABC"></label>'+
-      '<label>Prioridad<select id="n-pr"><option>NORMAL</option><option>MEDIO</option><option>FUERTE</option><option>RÁPIDO</option></select></label>'+
       '<label class="full">Vehículo<input id="n-car" required placeholder="Toyota Corolla"></label>'+
       '<label>Seguro<input id="n-ins" placeholder="Aseguradora"></label>'+
       '<label>Fecha de entrada<input id="n-ent" type="date" required value="'+iso(1)+'"></label>'+
@@ -937,9 +944,11 @@ table.heat{min-width:640px}
         secs.map(function(k){return '<label>'+SECL[k[0]]+' (operarios)<input type="number" min="0" step="1" id="s-op-'+k[0]+'" value="'+(st.ops[k[0]]||0)+'"></label>'}).join('')+
         '<label>Indirecto (personas)<input type="number" min="0" step="1" id="s-op-n" value="'+(st.ops.n||0)+'"></label>'+
         '<label>Días laborables / semana<input type="number" min="1" max="7" step="1" id="s-days" value="'+st.days+'"></label>'+
+        '<label>Cabinas de pintura<input type="number" min="0" step="1" id="s-cab" value="'+((st.inst&&st.inst.cab)||0)+'"></label>'+
+        '<label>Puestos de trabajo<input type="number" min="0" step="1" id="s-pt" value="'+((st.inst&&st.inst.pt)||0)+'"></label>'+
       '</div></div>'+
       '<div class="gst"><h4>Secciones del taller</h4><p class="cap">Marca las secciones que tiene tu taller. Lo que no marques se oculta en todo el planificador.</p>'+SECK.map(function(k){return '<label class="chk"><input type="checkbox" data-sec="'+k[0]+'"'+(secOn(k[0])?' checked':'')+'> '+k[1]+'</label>'}).join('')+'<p class="cap">Mecánica rápida: mantenimiento (aceite, filtros, ruedas). Mecánica incidental: averías, motor y diagnosis.</p></div>'+
-      '<p class="note" style="padding-bottom:0">La capacidad de cada sección es operarios × horas del horario productivo × días laborables.</p>'+
+      '<p class="note" style="padding-bottom:0">La capacidad de cada sección es operarios × horas del horario productivo × días laborables. Las cabinas y los puestos de trabajo sirven para vigilar el cuello de botella de cabina y la ocupación del taller (y, más adelante, el ciclo y la estructura óptima).</p>'+
       '<div class="row"><button class="btn danger" type="button" id="clrAll">Vaciar todos los coches</button><button class="btn danger" type="button" id="rst">Restaurar datos de ejemplo</button><button class="btn" type="button" data-close>Cerrar</button><button class="btn primary" type="button" id="sOk">Guardar</button></div>');
     $('#dlg').classList.add('aj');
   }
@@ -975,7 +984,6 @@ table.heat{min-width:640px}
       '<label class="chip"><span>Horizonte:</span><select data-hz="1">'+[5,10,15].map(function(n){return '<option value="'+n+'"'+(n===hz?' selected':'')+'>'+n+' días laborables</option>'}).join('')+'</select></label>'+
       '<label class="chip"><span>Asesor:</span><select data-f="as">'+opts(asesores.map(function(a){return [a,'Asesor '+a]}),f.as,'todos')+'</select></label>'+
       '<label class="chip"><span>Seguro:</span><select data-f="ins">'+opts(seguros,f.ins,'todos')+'</select></label>'+
-      '<label class="chip"><span>Prioridad:</span><select data-f="pri">'+opts(['RÁPIDO','FUERTE','MEDIO','NORMAL'],f.pri,'todas')+'</select></label>'+
       (f.q||f.as||f.ins||f.pri||f.due||f.tc?'<button class="clear" type="button" id="clr">Quitar filtros</button>':'')+
     '</div></div>';
   }
@@ -1180,7 +1188,7 @@ table.heat{min-width:640px}
         else if(o.p&&w[1][0]<w[0][1])bad='La tarde no puede empezar antes de acabar la mañana'});
       if(bad){toast(bad);return}
       st.hor=nh;secList().forEach(function(k){var e=$('#s-op-'+k[0]);if(e)st.ops[k[0]]=Math.max(0,Math.round(num(e.value)||0))});
-      st.ops.n=Math.max(0,Math.round(num($('#s-op-n').value)||0));st.days=Math.min(7,Math.max(1,Math.round(num($('#s-days').value)||5)));
+      st.ops.n=Math.max(0,Math.round(num($('#s-op-n').value)||0));st.days=Math.min(7,Math.max(1,Math.round(num($('#s-days').value)||5)));st.inst={cab:Math.max(0,Math.round(num($('#s-cab').value)||0)),pt:Math.max(0,Math.round(num($('#s-pt').value)||0))};
       st.hpd=hrsOf(nh.prod);save();closeDlg();render();toast('Ajustes guardados · jornada productiva de '+hrSum('prod').replace(' al día',''));return}
     var op=t.closest('[data-open]');if(op){cardDlg(op.dataset.open);return}
     var card=t.closest('.card');if(card&&!card.classList.contains('drag')){cardDlg(card.dataset.id)}
@@ -1233,7 +1241,7 @@ table.heat{min-width:640px}
     if(e.target.id==='nf'){
       if($('#n-ent').value&&$('#n-sal').value<$('#n-ent').value){toast('La salida no puede ser anterior a la entrada');return}
       var max=0;st.cards.forEach(function(c){var n=parseInt(c.id,10);if(n>max)max=n});
-      st.cards.push({id:(max+1)+'-2026',pr:$('#n-pr').value,pl:$('#n-pl').value.toUpperCase().trim(),car:$('#n-car').value.trim(),col:'',ins:$('#n-ins').value.trim()||'Particular',
+      st.cards.push({id:(max+1)+'-2026',pr:'NORMAL',pl:$('#n-pl').value.toUpperCase().trim(),car:$('#n-car').value.trim(),col:'',ins:$('#n-ins').value.trim()||'Particular',
         c:$('#n-c')?num($('#n-c').value):0,mr:$('#n-mr')?num($('#n-mr').value):0,mi:$('#n-mi')?num($('#n-mi').value):0,p:$('#n-p')?num($('#n-p').value):0,eur:num($('#n-e').value),st:$('#n-st').value,tc:'white',rec:1,as:1,ge:1,sal:$('#n-sal').value,ct:'0/0',cm:0,ic:['car'],ent:$('#n-ent').value||iso(0),mv:iso(0),prov:''});
       norm(st.cards[st.cards.length-1]);save();closeDlg();render();toast('Cita añadida');
     }
