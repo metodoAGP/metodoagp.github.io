@@ -465,6 +465,7 @@ table.heat{min-width:640px}
     var I=st.inst||{},o='',n=0;
     if(I.cab>0&&st.ops.p>0){o+=barU('Cabina',all.p*0.25,I.cab*st.hpd*st.days,' h','Horas de cabina (25 % de las horas de pintura) frente a la capacidad de las cabinas');n++}
     if(I.pkp>0){var fu=st.cards.filter(function(c){return live(c)&&c.st!=='stk'}).length-(I.pt||0);o+=barU('Parking',Math.max(0,fu),I.pkp,'','Vehículos que no caben en puestos de trabajo frente a plazas de parking');n++}
+    if(I.pl>0&&st.ops.p>0){o+=barU('Plenum',all.p*0.75,I.pl*st.hpd*st.days,' h','Horas de preparación (75 % de las horas de pintura) frente a la capacidad de los plenum');n++}
     if(I.pt>0){var enT=st.cards.filter(function(c){return live(c)&&c.st!=='stk'}).length;o+=barU('Puestos',enT,I.pt,'','Vehículos en el taller (sin stock) frente a puestos de trabajo');n++}
     return {h:o,n:n}}
   function bar(label,h,cap){
@@ -959,6 +960,7 @@ table.heat{min-width:640px}
         '<label>Indirecto (personas)<input type="number" min="0" step="1" id="s-op-n" value="'+(st.ops.n||0)+'"></label>'+
         '<label>Días laborables / semana<input type="number" min="1" max="7" step="1" id="s-days" value="'+st.days+'"></label>'+
         '<label>Cabinas de pintura<input type="number" min="0" step="1" id="s-cab" value="'+((st.inst&&st.inst.cab)||0)+'"></label>'+
+        '<label>Plenum (lijado y piezas sueltas)<input type="number" min="0" step="1" id="s-pl" value="'+((st.inst&&st.inst.pl)||0)+'"></label>'+
         '<label>Puestos de trabajo<input type="number" min="0" step="1" id="s-pt" value="'+((st.inst&&st.inst.pt)||0)+'"></label>'+
       '</div></div>'+
       '<div class="gst"><h4>Superficie del taller (m²)</h4><p class="cap">El local se reparte en tres zonas. El parking es exterior.</p><div class="g2">'+
@@ -1209,7 +1211,7 @@ table.heat{min-width:640px}
         else if(o.p&&w[1][0]<w[0][1])bad='La tarde no puede empezar antes de acabar la mañana'});
       if(bad){toast(bad);return}
       st.hor=nh;secList().forEach(function(k){var e=$('#s-op-'+k[0]);if(e)st.ops[k[0]]=Math.max(0,Math.round(num(e.value)||0))});
-      st.ops.n=Math.max(0,Math.round(num($('#s-op-n').value)||0));st.days=Math.min(7,Math.max(1,Math.round(num($('#s-days').value)||5)));st.inst={cab:Math.max(0,Math.round(num($('#s-cab').value)||0)),pt:Math.max(0,Math.round(num($('#s-pt').value)||0))};['m1','m2','m3','pk','pkp'].forEach(function(k){st.inst[k]=Math.max(0,Math.round(num($('#s-'+k).value)||0))});
+      st.ops.n=Math.max(0,Math.round(num($('#s-op-n').value)||0));st.days=Math.min(7,Math.max(1,Math.round(num($('#s-days').value)||5)));st.inst={cab:Math.max(0,Math.round(num($('#s-cab').value)||0)),pt:Math.max(0,Math.round(num($('#s-pt').value)||0))};['pl','m1','m2','m3','pk','pkp'].forEach(function(k){st.inst[k]=Math.max(0,Math.round(num($('#s-'+k).value)||0))});
       st.hpd=hrsOf(nh.prod);save();closeDlg();render();toast('Ajustes guardados · jornada productiva de '+hrSum('prod').replace(' al día',''));return}
     var op=t.closest('[data-open]');if(op){cardDlg(op.dataset.open);return}
     var card=t.closest('.card');if(card&&!card.classList.contains('drag')){cardDlg(card.dataset.id)}

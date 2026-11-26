@@ -198,6 +198,11 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 2
         <p class="sub" style="margin-bottom:16px">Los datos de este bloque son opcionales. Cuantos más des, más indicadores se calculan; los que falten se te indicarán.</p>
         <div class="grid" id="gP"></div>
       </fieldset>
+      <fieldset id="fsI">
+        <legend><i style="background:var(--ink)">I</i>Instalaciones · tu estructura</legend>
+        <p class="sub" style="margin-bottom:16px">Opcional. Con estos datos se calcula cuánta gente admite tu estructura y si la estás infraexplotando o saturando.</p>
+        <div class="grid" id="gI"></div>
+      </fieldset>
       <div class="actions">
         <button class="btn" type="submit">Calcular mi diagnóstico</button>
         <button class="btn ghost" type="button" id="clr">Borrar datos</button>
@@ -225,7 +230,7 @@ var H_CONV = 1760;          // 8 h x 220 días por operario (tiempo de convenio)
 
 // Valores del método (no se muestran en pantalla salvo SHOW_TARGETS)
 var T = { recH:50, matH:28, mix:{mo:.40, mat:.15, rec:.45}, mMO:.30, mRec:.25, mMat:.50, estr:.25, indir:.30,
-          hCh:5.5, hPi:4.5, recM:40,
+          hCh:5.5, hPi:4.5, recM:40, chPorPuesto:1, cabPct:.25, prepPct:.75,
           litros:{base:.06, barniz:.12, fondo:.04}, precio:{base:70, barniz:19, fondo:17} };
 
 /* ---------- campos ---------- */
@@ -248,6 +253,14 @@ var F = [
  {id:"mat",  b:"G", l:"Facturación de material de pintura", u:"€/año", m:"qf", s:"p", h:"Sin IVA. Si no lo sabes, déjalo vacío: lo indicaremos como dato pendiente."},
  {id:"recM", b:"G", l:"Facturación de recambios de mecánica", u:"€/año", m:"qf", s:"m", h:"Sin IVA. Opcional."},
  // bloque P
+ {id:"pt",  b:"I", l:"Puestos de trabajo", u:"puestos", m:"f", h:"Puestos de chapa y montaje donde trabaja un operario a la vez."},
+ {id:"cab", b:"I", l:"Cabinas de pintura", u:"cabinas", m:"f", s:"p", h:"Cabinas de pintado y secado."},
+ {id:"pl",  b:"I", l:"Plenum", u:"plenum", m:"f", s:"p", h:"Zonas de lijado y preparación donde también se pintan piezas sueltas y smart repair."},
+ {id:"m1",  b:"I", l:"Zona primaria", u:"m²", m:"f", h:"Los puestos de trabajo en sí mismos."},
+ {id:"m2",  b:"I", l:"Zona secundaria", u:"m²", m:"f", h:"Pasillos por donde circula el coche para cambiar de puesto."},
+ {id:"m3",  b:"I", l:"Zona terciaria", u:"m²", m:"f", h:"Baños, oficinas y almacén."},
+ {id:"pk",  b:"I", l:"Parking exterior", u:"m²", m:"f", h:"Superficie de parking fuera del local."},
+ {id:"pkp", b:"I", l:"Plazas de parking", u:"plazas", m:"f", h:"Número de plazas del parking exterior."},
  {id:"pers", b:"P", l:"Gasto de personal", u:"€/año", m:"f", h:"Toda la plantilla (directa e indirecta), con seguridad social."},
  {id:"estr", b:"P", l:"Gastos de estructura", u:"€/año", m:"f", h:"Gastos no facturables: alquiler, suministros, seguros, etc."},
  {id:"cRec", b:"P", l:"Costes / compra de recambios", u:"€/año", m:"f", s:"cm", h:"Lo que te han costado los recambios en el año, sin IVA."},
@@ -282,6 +295,7 @@ function applyMode(){
   document.getElementById("mq").setAttribute("aria-pressed", mode==="q");
   document.getElementById("mf").setAttribute("aria-pressed", mode==="f");
   document.getElementById("fsP").hidden = (mode==="q");
+  document.getElementById("fsI").hidden = (mode==="q");
   document.getElementById("modehint").textContent = mode==="q"
     ? "Con pocos datos obtienes rendimiento, potencial perdido y los ratios de recambios y pintura."
     : "Añade tiempos, costes y consumos para calcular también absentismo, márgenes y costes de mano de obra.";
@@ -362,6 +376,19 @@ function calc(){
   var recAll=(rec||0)+(recM||0);
   o.mRec = (v.cRec!=null && recAll>0) ? (recAll-v.cRec)/recAll : null;
   o.mMat = (SEC.p && v.cMat!=null && mat>0) ? (mat-v.cMat)/mat : null;
+
+  // estructura: cuánta gente admite
+  var pt=v.pt,cb=SEC.p?v.cab:null,pl=SEC.p?v.pl:null,m1=v.m1,m2=v.m2,m3=v.m3,mt=(m1||0)+(m2||0)+(m3||0);
+  if(mode==="f" && (pt!=null||cb!=null||pl!=null||mt>0||v.pk!=null||v.pkp!=null)){
+    var I={mt:mt,m1:m1,m2:m2,m3:m3,pk:v.pk,pkp:v.pkp,pt:pt,cab:cb,pl:pl,lim:[]};
+    if(SEC.c&&pt!=null) I.maxCh=pt/T.chPorPuesto;
+    if(SEC.p){var cp=[];
+      if(cb!=null)cp.push({k:"cabinas",n:cb/T.cabPct});
+      if(pl!=null)cp.push({k:"plenum",n:pl/T.prepPct});
+      if(cp.length){cp.sort(function(a,b){return a.n-b.n;});I.maxPi=cp[0].n;I.limPi=cp[0].k;I.cpAll=cp;}}
+    I.ch=chv;I.pi=piv;I.eqPi=chv*T.hPi/T.hCh;I.hu=H_CONV*Math.max(R,0);
+    o.inst=I;
+  }
 
   // pintura: litros esperados
   var L=T.litros,P=T.precio;
@@ -453,6 +480,42 @@ function render(o){
      (o.mec?'<tr><td>Recambios de mecánica (estimación 40 €/h)</td><td class="n">'+(o.recM!=null?eur(o.recM):'<span class="miss">Sin dato</span>')+'</td><td class="n">'+eur(T.recM*o.Cm)+'</td></tr>':'')+
      '<tr><td><b>Total</b></td><td class="n"><b>'+(o.partial?'<span class="miss">Incompleto</span>':eur(o.tot))+'</b></td><td class="n"><b>'+eur(o.potTot)+'</b></td></tr>'+
      '</tbody></table></div>'+(o.partial?'<p class="note" style="margin-top:12px">Falta la facturación de '+missTxt(o)+'. Añádela para ver el total y todos los indicadores asociados.</p>':'')+'</div>';
+
+  // estructura
+  if(o.inst){var I=o.inst,rr=[];
+    function fn(n){return n.toLocaleString("es-ES",{maximumFractionDigits:1});}
+    function estado(t,m){var q=t/m;return q<.9?'<span class="st warn">Infraexplotada</span>':(q>1.1?'<span class="st bad">Saturada</span>':'<span class="st ok">Equilibrada</span>');}
+    if(I.maxCh!=null) rr.push('<tr><td>Chapistas</td><td class="n">'+fn(I.maxCh)+'</td><td class="n">'+I.ch+'</td><td>'+estado(I.ch,I.maxCh)+'</td></tr>');
+    if(I.maxPi!=null) rr.push('<tr><td>Pintores <small>(limita: '+I.limPi+')</small></td><td class="n">'+fn(I.maxPi)+'</td><td class="n">'+I.pi+'</td><td>'+estado(I.pi,I.maxPi)+'</td></tr>');
+    h+='<div class="block"><h3>Tu estructura: cuánta gente admite</h3>';
+    if(rr.length){
+      h+='<div class="scroll"><table class="tbl"><thead><tr><th>Sección</th><th class="n">La estructura admite</th><th class="n">Tienes</th><th>Estado</th></tr></thead><tbody>'+rr.join("")+'</tbody></table></div>';
+      var ex=0;
+      if(I.maxCh!=null) ex+=Math.max(0,I.maxCh-I.ch);
+      if(I.maxPi!=null) ex+=Math.max(0,I.maxPi-I.pi);
+      var tx=[];
+      if(I.maxCh!=null&&I.ch<I.maxCh*.9)tx.push("En chapa tienes menos operarios que puestos: hay puestos sin ocupar.");
+      if(I.maxCh!=null&&I.ch>I.maxCh*1.1)tx.push("En chapa hay más operarios que puestos: se pisan unos a otros y se pierde rendimiento.");
+      if(I.maxPi!=null&&I.pi<I.maxPi*.9)tx.push("En pintura la estructura admite más pintores de los que tienes.");
+      if(I.maxPi!=null&&I.pi>I.maxPi*1.1)tx.push("En pintura hay más pintores de los que admiten "+I.limPi+": la instalación es el cuello de botella.");
+      if(SEC.c&&SEC.p&&I.maxCh!=null&&I.maxPi!=null)tx.push("Con tus chapistas, el equilibrio del método (5,5 h de chapa por 4,5 h de pintura) pide "+fn(I.eqPi)+" pintores.");
+      if(ex>0&&o.precio)tx.push("Llenar la estructura sumaría hasta "+fn(ex)+" personas. A tu rendimiento actual ("+pct(o.R)+") serían unos "+eur(ex*H_CONV*o.R*o.precio)+" de mano de obra al año.");
+      h+='<ul class="check" style="margin-top:14px">'+tx.map(function(t){return '<li>'+t+'</li>';}).join("")+'</ul>';
+      h+='<p class="note" style="margin-top:12px">Criterios: 1 chapista por puesto de trabajo; en pintura, el 25 % del tiempo es cabina (una cabina da para 4 pintores) y el 75 % preparación (1 pintor por plenum a la vez, es decir, 1,33 pintores por plenum). Son criterios de trabajo orientativos.</p>';
+    }
+    if(I.mt>0){
+      var pc2=function(x){return pct((x||0)/I.mt);};
+      h+='<h4 style="margin:18px 0 8px;font:600 15px var(--body)">Superficie</h4><div class="scroll"><table class="tbl"><tbody>'+
+        '<tr><td>Total del local</td><td class="n">'+fn(I.mt)+' m²</td></tr>'+
+        '<tr><td>Zona primaria</td><td class="n">'+fn(I.m1||0)+' m² · '+pc2(I.m1)+'</td></tr>'+
+        '<tr><td>Zona secundaria</td><td class="n">'+fn(I.m2||0)+' m² · '+pc2(I.m2)+'</td></tr>'+
+        '<tr><td>Zona terciaria</td><td class="n">'+fn(I.m3||0)+' m² · '+pc2(I.m3)+'</td></tr>'+
+        (I.pt&&I.m1?'<tr><td>m² de zona primaria por puesto</td><td class="n">'+fn(I.m1/I.pt)+' m²</td></tr>':'')+
+        (I.pkp?'<tr><td>Plazas de parking'+(I.pt?' por puesto de trabajo':'')+'</td><td class="n">'+(I.pt?fn(I.pkp/I.pt):I.pkp)+'</td></tr>':'')+
+        '</tbody></table></div><p class="note" style="margin-top:12px">Los m² se muestran como reparto. Falta definir un valor de referencia de m² por puesto para limitar la capacidad por superficie.</p>';
+    }
+    h+='</div>';
+  }
 
   // cuellos de botella
   var cands=R.filter(function(x){return x.s==="warn"||x.s==="bad";}).sort(function(a,b){
